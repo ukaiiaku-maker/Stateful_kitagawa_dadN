@@ -85,6 +85,12 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # ebb0bd7/11a64e2: identical physics and accepted state; predecessor
+        # recomputed the embedded candidate from the broad physical bound.
+        "driver": "82029215d84b9543d41583003ddade17054afed8145028434731416fd8d6bd03",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+    },
+    {
         "driver": "cf73e1b71c50730ee8c026c2de8894109d23730a4cca26ba3c92f5effeabee01",
         "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
     },
@@ -363,6 +369,7 @@ def _save_case_checkpoint(
     case_name,
     sigma_a_MPa,
     next_block,
+    controller_next_block_cycles,
     cycles,
     Wp_total,
     mesh,
@@ -403,6 +410,7 @@ def _save_case_checkpoint(
         "source_sha256": SOURCE_SHA256,
         "signature": _checkpoint_signature(args, case_name, sigma_a_MPa),
         "next_block": int(next_block),
+        "controller_next_block_cycles": float(controller_next_block_cycles),
         "cycles": float(cycles),
         "Wp_total": float(Wp_total),
         "pd_scalars": pd_scalars,
@@ -487,6 +495,7 @@ def _load_case_checkpoint(
     patch._event_rng.bit_generator.state = metadata["event_rng_state"]
     restored = {
         "next_block": int(metadata["next_block"]), "cycles": float(metadata["cycles"]),
+        "controller_next_block_cycles": float(metadata.get("controller_next_block_cycles", 0.0)),
         "Wp_total": float(metadata["Wp_total"]), "root_xy": root_xy,
         "ep_gp": np.asarray(data["ep_gp"], float).copy(),
         "rho_gp": np.asarray(data["rho_gp"], float).copy(),
@@ -761,6 +770,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     last_residual = np.zeros(mesh.nn)
     start_block = 0
     resumed = False
+    controller_next_block_cycles = 0.0
     geometry_saturated = False
     geometry_saturation_cycles = None
     geometry_invalid_reason = None
@@ -787,6 +797,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         last_residual = restored["last_residual"]
         pd_state = restored["pd_state"]
         rows = restored["rows"]
+        controller_next_block_cycles = restored["controller_next_block_cycles"]
         resumed = True
         if rows:
             geometry_saturated = bool(rows[-1].get("geometry_saturated", False))
@@ -953,6 +964,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             if max_dh_cycle > 0.0:
                 dN = min(dN, args.target_surface_move_fraction * mesh.hbar_tip / max_dh_cycle)
 
+        # Reuse the accepted embedded controller's next proposal.  Starting
+        # every macro-step from the broad physical bound caused 5--8 discarded
+        # FEM solves per accepted interval in quiet long-life trajectories.
+        if controller_next_block_cycles > 0.0:
+            dN = min(dN, controller_next_block_cycles)
+
         if block_limited_by_birth_clock:
             dN = max(min(dN, remaining), min(args.min_block_cycles, 1e-6))
         else:
@@ -976,6 +993,15 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     "v9 embedded FEM transaction could not satisfy tolerance "
                     f"before minimum block; error={fem_proposal.normalized_error:g}"
                 )
+        if fem_proposal.normalized_error <= 1e-16:
+            controller_factor = 2.0
+        else:
+            controller_factor = min(
+                2.0, max(1.05, 0.9 / math.sqrt(fem_proposal.normalized_error))
+            )
+        controller_next_block_cycles = max(
+            args.min_block_cycles, dN * controller_factor
+        )
         dep_tensor_block = fem_proposal.state.ep_gp - ep_gp
         dep_eq_block = fem_proposal.state.epsp_acc_gp - epsp_acc_gp
         ep_gp = np.asarray(fem_proposal.state.ep_gp).copy()
@@ -1283,6 +1309,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 case_name=case_name,
                 sigma_a_MPa=sigma_a_MPa,
                 next_block=next_block,
+                controller_next_block_cycles=controller_next_block_cycles,
                 cycles=cycles,
                 Wp_total=Wp_total,
                 mesh=mesh,
@@ -1305,6 +1332,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             case_name=case_name,
             sigma_a_MPa=sigma_a_MPa,
             next_block=next_block,
+            controller_next_block_cycles=controller_next_block_cycles,
             cycles=cycles,
             Wp_total=Wp_total,
             mesh=mesh,

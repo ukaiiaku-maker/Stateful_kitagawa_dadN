@@ -1,0 +1,18 @@
+{
+  "K360_CENSOR": {
+    "cumulative_expected_births": 0.3405986844078543,
+    "cycles": 2034746.7175940112,
+    "instantaneous_birth_hazard_per_cycle": 2.160256482256334e-08,
+    "note": "Finite-horizon censoring is not endurance evidence.",
+    "observation": "restartable",
+    "physics_asymptotic_classification": "undetermined"
+  },
+  "K360_FAILURE": {
+    "cumulative_expected_births": 0.9665738930129143,
+    "cycles": 3474029.481029375,
+    "instantaneous_birth_hazard_per_cycle": 0.0,
+    "note": "Finite-horizon censoring is not endurance evidence.",
+    "observation": "physical_handoff",
+    "physics_asymptotic_classification": "undetermined"
+  }
+}

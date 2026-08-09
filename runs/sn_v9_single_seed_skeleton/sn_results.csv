@@ -1,0 +1,3 @@
+condition_id,case,sigma_a_MPa,seed,classification,cycles,geometry_valid,handoff_valid,request_sha256
+K360_CENSOR,shielded,690.4432004940379,1,restartable,2034746.7175940112,True,False,a2c833be839f719c7170d24fc4852947ae7482964752b2750e60f48af0e0e41f
+K360_FAILURE,shielded,735.9214951373579,1,physical_handoff,3474029.481029375,True,True,678706754fc2904073132c4cc2d8fed82b9572d3c627e6fedfba308936167ddc

@@ -1,0 +1,52 @@
+{
+  "active_conditions": [
+    "K360_CENSOR"
+  ],
+  "conditions": [
+    {
+      "accepted_blocks": 310,
+      "active_generation": "generation_ecd9e805301541d5b6a842236d3994a0",
+      "case": "shielded",
+      "case_dir": "runs/sn_v9_single_seed_skeleton/K360_CENSOR/solver_output/shielded/sigmaA_690p443MPa",
+      "classification": "restartable",
+      "condition_id": "K360_CENSOR",
+      "cumulative_expected_births": 0.3405986844078543,
+      "cycles": 2034746.7175940112,
+      "geometry_valid": true,
+      "handoff_valid": false,
+      "instantaneous_birth_hazard_per_cycle": 2.160256482256334e-08,
+      "largest_accepted_dN": 13314.681059651555,
+      "pd_seed": 1,
+      "rejected_substeps": 824,
+      "request_sha256": "a2c833be839f719c7170d24fc4852947ae7482964752b2750e60f48af0e0e41f",
+      "rho_max_m2": 31955812062882.55,
+      "seed": 1,
+      "sigma_a_MPa": 690.4432004940379,
+      "summary_path": null
+    },
+    {
+      "accepted_blocks": 852,
+      "active_generation": "generation_67408bbd7c0542dbb1f9fcb7330832fe",
+      "case": "shielded",
+      "case_dir": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa",
+      "classification": "physical_handoff",
+      "condition_id": "K360_FAILURE",
+      "cumulative_expected_births": 0.9665738930129143,
+      "cycles": 3474029.481029375,
+      "geometry_valid": true,
+      "handoff_valid": true,
+      "instantaneous_birth_hazard_per_cycle": 0.0,
+      "largest_accepted_dN": 14922.934348776183,
+      "pd_seed": 1,
+      "rejected_substeps": 3139,
+      "request_sha256": "678706754fc2904073132c4cc2d8fed82b9572d3c627e6fedfba308936167ddc",
+      "rho_max_m2": 140045048023659.75,
+      "seed": 1,
+      "sigma_a_MPa": 735.9214951373579,
+      "summary_path": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa/summary.json"
+    }
+  ],
+  "next_condition": null,
+  "policy": "one_condition_at_a_time_adaptive_log_life_gap",
+  "schema": "V9_SINGLE_SEED_SN_CAMPAIGN_1"
+}
