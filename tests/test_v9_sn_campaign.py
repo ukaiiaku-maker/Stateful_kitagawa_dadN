@@ -34,6 +34,15 @@ class V9SNCampaignTests(unittest.TestCase):
         self.assertAlmostEqual(result["sigma_a_MPa"], 802.5)
         self.assertEqual(result["method"], "upper_stress_bracket_from_anchor_spacing")
 
+    def test_selector_bounds_short_life_extrapolation(self):
+        result = select_next_stress([
+            {"classification": "physical_handoff", "sigma_a_MPa": 800.0, "cycles": 1e6},
+            {"classification": "physical_handoff", "sigma_a_MPa": 700.0, "cycles": 1e7},
+        ])
+        self.assertEqual(result["sigma_a_MPa"], 950.0)
+        self.assertAlmostEqual(result["target_log10_cycles"], 4.5)
+        self.assertEqual(result["method"], "bounded_upper_stress_log_life_extrapolation")
+
 
 if __name__ == "__main__":
     unittest.main()

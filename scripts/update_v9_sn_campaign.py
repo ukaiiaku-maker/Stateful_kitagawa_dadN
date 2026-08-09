@@ -191,6 +191,18 @@ def select_next_stress(conditions: list[dict[str, Any]]) -> dict[str, Any] | Non
     by_life = sorted((life, stress) for stress, life in finite_lives)
     lo, hi = min(by_life), max(by_life)
     if not lo[0] <= target <= hi[0]:
+        if target < lo[0]:
+            (n0, s0), (n1, s1) = by_life[:2]
+            slope = (s1 - s0) / (n1 - n0)
+            proposed = s0 + slope * (target - n0)
+            max_increment = 1.5 * abs(s1 - s0)
+            stress = min(proposed, s0 + max_increment)
+            predicted = n0 + (stress - s0) / slope
+            return {
+                "sigma_a_MPa": stress,
+                "target_log10_cycles": predicted,
+                "method": "bounded_upper_stress_log_life_extrapolation",
+            }
         return None
     for (n0, s0), (n1, s1) in zip(by_life, by_life[1:]):
         if n0 <= target <= n1:

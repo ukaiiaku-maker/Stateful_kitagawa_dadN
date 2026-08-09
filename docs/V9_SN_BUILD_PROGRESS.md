@@ -54,6 +54,7 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | Real atomic restart proof | passed at production K360 geometry through schema-9 ACTIVE generation |
 | K360 735.921 MPa | valid physical handoff at `N=3,474,029.481029375` |
 | K360 690.443 MPa | valid right-censored long-life diagnostic at `N=1e8`; no realized birth |
+| S001 804.139 MPa | valid physical handoff at `N=1,632,430.857` |
 
 ## First physical anchor result
 
@@ -100,11 +101,13 @@ blocks consequently grew to roughly `2e5` cycles through the late tail.
 
 ## Next automatic action
 
-Use the two completed anchors to select one upper-stress bracket condition.
-The deterministic bootstrap rule takes 1.5 times the anchor stress spacing
-above the finite-life point, proposing approximately `804.139 MPa`.  After it
-completes, interpolate stress versus `log10(N_handoff)` to fill the largest
-useful uncovered life gap with one condition at a time.
+The first bootstrap condition completed with 75 connected bonds, a `62.625 um`
+centerline, width ratio `0.2395`, orientation coherence `0.9784`, and every
+handoff/geometry gate passing.  It used 182 accepted blocks and 28 rejected
+proposals.  The next one-at-a-time choice uses the two finite lives and bounds
+upper-stress extrapolation to 1.5 times their stress spacing, proposing
+`906.4651000498077 MPa` with predicted `log10(N)=5.721`.  After it completes,
+recompute the selector from all valid conditions.
 
 The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 
