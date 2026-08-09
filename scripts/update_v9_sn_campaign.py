@@ -101,6 +101,8 @@ def inspect_condition(case_dir: Path) -> dict[str, Any]:
         "request_sha256": canonical_hash(signature),
         "classification": classification,
         "cycles": cycles,
+        "cycles_first_stable": finite((summary or {}).get("cycles_first_stable")),
+        "cycles_front_capture": finite((summary or {}).get("cycles_front_capture")),
         "accepted_blocks": accepted,
         "rejected_substeps": sum(int(float(row.get("v9_fem_rejections", 0) or 0)) for row in _rows(case_dir)),
         "largest_accepted_dN": largest,
@@ -171,6 +173,15 @@ def select_next_stress(conditions: list[dict[str, Any]]) -> dict[str, Any] | Non
         for c in conditions
         if c["classification"] == "physical_handoff" and c["cycles"] > 0
     )
+    high = sorted(
+        (c for c in conditions if c["classification"] == "physical_handoff"),
+        key=lambda c: float(c["sigma_a_MPa"]),
+    )[-3:]
+    if len(high) == 3 and all(c.get("cycles_first_stable") for c in high):
+        handoff_span = max(math.log10(c["cycles"]) for c in high) - min(math.log10(c["cycles"]) for c in high)
+        birth_span = max(math.log10(c["cycles_first_stable"]) for c in high) - min(math.log10(c["cycles_first_stable"]) for c in high)
+        if handoff_span < 0.5 and birth_span > 2.0:
+            return None
     if len(finite_lives) == 1:
         finite_stress, finite_life = finite_lives[0]
         lower = [float(c["sigma_a_MPa"]) for c in conditions
@@ -220,6 +231,12 @@ def update(root: Path) -> list[dict[str, Any]]:
         "conditions": conditions,
         "next_condition": select_next_stress(conditions),
     }
+    finite = [c for c in conditions if c["classification"] == "physical_handoff"]
+    if finite:
+        lives = [math.log10(c["cycles"]) for c in finite]
+        manifest["finite_life_log10_span"] = max(lives) - min(lives)
+    if manifest["next_condition"] is None and len(finite) >= 3:
+        manifest["selection_status"] = "high_stress_progression_plateau_no_useful_next_condition"
     atomic_text(root / "campaign_manifest.json", json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     fields = ["condition_id", "case", "sigma_a_MPa", "seed", "classification", "cycles", "geometry_valid", "handoff_valid", "request_sha256"]
     lines: list[str] = []

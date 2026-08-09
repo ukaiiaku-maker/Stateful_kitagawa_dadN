@@ -43,6 +43,14 @@ class V9SNCampaignTests(unittest.TestCase):
         self.assertAlmostEqual(result["target_log10_cycles"], 4.5)
         self.assertEqual(result["method"], "bounded_upper_stress_log_life_extrapolation")
 
+    def test_selector_stops_birth_insensitive_handoff_plateau(self):
+        conditions = [
+            {"classification": "physical_handoff", "sigma_a_MPa": 800.0, "cycles": 1.6e6, "cycles_first_stable": 1e5},
+            {"classification": "physical_handoff", "sigma_a_MPa": 900.0, "cycles": 1.5e6, "cycles_first_stable": 5e3},
+            {"classification": "physical_handoff", "sigma_a_MPa": 1060.0, "cycles": 1.1e6, "cycles_first_stable": 1e2},
+        ]
+        self.assertIsNone(select_next_stress(conditions))
+
 
 if __name__ == "__main__":
     unittest.main()

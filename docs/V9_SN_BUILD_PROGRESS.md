@@ -56,6 +56,7 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | K360 690.443 MPa | valid right-censored long-life diagnostic at `N=1e8`; no realized birth |
 | S001 804.139 MPa | valid physical handoff at `N=1,632,430.857` |
 | S002 906.465 MPa | valid physical handoff at `N=1,530,050.877` |
+| S003 1059.954 MPa | valid physical handoff at `N=1,121,439.555` |
 
 ## First physical anchor result
 
@@ -126,6 +127,20 @@ memory map contracts by `e^-1` per cycle, so the threshold is now 32 cycles
 (`exp(-32)<1.3e-14`).  A 100-cycle accelerated calculation matches four direct
 25-cycle spans within `2e-10` in log hazard.  S002 then completed in 287
 accepted blocks with 30 rejected proposals.
+
+S003 completed with first stable birth at `N=112.155`, front capture at
+`N=621,098.527`, and physical handoff at `N=1,121,439.555`.  Its terminal crack
+had 43 broken bonds and a `64.341 um` centerline; every geometry and handoff gate
+passed.  The trajectory retained 14 realized births and nine seed reselections.
+
+The three upper finite-life points establish a frozen-physics progression
+plateau.  From S001 to S003, first stable birth shifted by almost three decades
+(`1.089e5` to `1.122e2` cycles), while physical handoff shifted only 0.163
+decades (`1.632e6` to `1.121e6`).  Higher stress therefore changes nucleation
+but cannot supply the requested short-life decades without changing the frozen
+growth/linkage/front kinetics.  The adaptive selector now detects this pattern
+and stops redundant upper-stress extrapolation.  Multi-seed replication remains
+deferred as required.
 
 The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 
