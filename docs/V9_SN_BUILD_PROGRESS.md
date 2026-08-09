@@ -55,6 +55,7 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | K360 735.921 MPa | valid physical handoff at `N=3,474,029.481029375` |
 | K360 690.443 MPa | valid right-censored long-life diagnostic at `N=1e8`; no realized birth |
 | S001 804.139 MPa | valid physical handoff at `N=1,632,430.857` |
+| S002 906.465 MPa | valid physical handoff at `N=1,530,050.877` |
 
 ## First physical anchor result
 
@@ -108,6 +109,23 @@ proposals.  The next one-at-a-time choice uses the two finite lives and bounds
 upper-stress extrapolation to 1.5 times their stress spacing, proposing
 `906.4651000498077 MPa` with predicted `log10(N)=5.721`.  After it completes,
 recompute the selector from all valid conditions.
+
+S002 completed with first stable birth at `N=5,602.142`, front capture at
+`N=705,449.704`, and physical handoff at `N=1,530,050.877`.  The terminal crack
+had 43 broken bonds, `63.173 um` centerline, width ratio `0.2082`, orientation
+coherence `0.9718`, and all handoff/geometry gates passed.  Five births and two
+primary-seed reselections were preserved.  The weak life reduction from S001
+despite much earlier nucleation indicates a front-progression-controlled
+finite-life plateau under the frozen physics.  The bounded selector proposes
+`1059.9543444710125 MPa` next to test whether shorter-life decades remain
+physically accessible.
+
+During S002, a hot-stack capture found exact phase integration below an
+arbitrary 1024-cycle acceleration threshold.  At `tau=1 ms` and `f=1 kHz`, the
+memory map contracts by `e^-1` per cycle, so the threshold is now 32 cycles
+(`exp(-32)<1.3e-14`).  A 100-cycle accelerated calculation matches four direct
+25-cycle spans within `2e-10` in log hazard.  S002 then completed in 287
+accepted blocks with 30 rejected proposals.
 
 The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 

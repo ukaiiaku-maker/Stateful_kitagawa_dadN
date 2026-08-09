@@ -52,5 +52,14 @@
     "note": "Finite-horizon censoring is not endurance evidence.",
     "observation": "physical_handoff",
     "physics_asymptotic_classification": "undetermined"
+  },
+  "S002_906p465": {
+    "cumulative_expected_births": 5.635245054838955,
+    "cycles": 1530050.8767582285,
+    "empirical_tail_evidence": "not_applicable_after_physical_handoff",
+    "instantaneous_birth_hazard_per_cycle": 0.0,
+    "note": "Finite-horizon censoring is not endurance evidence.",
+    "observation": "physical_handoff",
+    "physics_asymptotic_classification": "undetermined"
   }
 }

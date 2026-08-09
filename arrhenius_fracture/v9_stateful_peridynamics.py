@@ -105,7 +105,12 @@ class V9StatefulPDPatch(StatefulPDPatch):
         # by exp[-period/tau]. Iterate real cycles until both memory and gated
         # hazard reach a certified periodic orbit, then sum identical cycles in
         # log space. No 512-cycle cutoff or fixed physical rate floor is used.
-        if remaining > 1024.0:
+        # With tau=1 ms and f=1 kHz the exact memory map contracts by e^-1
+        # each cycle.  Waiting 1024 cycles before using the certified periodic
+        # map forced tens of thousands of unnecessary phase updates around a
+        # localized event.  Thirty-two cycles already bound the unrepresented
+        # initial memory by exp(-32) < 1.3e-14.
+        if remaining > 32.0:
             previous_hazard = None
             converged = False
             contraction = math.exp(-(1.0 / frequency) / self.cfg.delivery_memory_s)

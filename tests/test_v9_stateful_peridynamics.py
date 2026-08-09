@@ -88,6 +88,32 @@ class V9StatefulPDTests(unittest.TestCase):
             accelerated_hazard, np.logaddexp(first_hazard, second_hazard), atol=2e-10
         )
 
+    def test_periodic_acceleration_matches_direct_subthreshold_spans(self):
+        patch = _TransitionHarness()
+        patch.cfg.delivery_memory_s = 1e-3
+        delivery = np.array([[2e-4], [7e-5], [3e-4], [1e-5]])
+        cleavage = np.array([[2e-3], [1e-3], [4e-3], [8e-4]])
+
+        def advance(memory, cycle, dN):
+            patch._v9_log_memory_context = memory
+            patch._v9_phase_cycle_context = cycle
+            patch._phase_resolved_delivery_nucleation(
+                delivery, cleavage, 1000.0, np.zeros(1), dN=dN
+            )
+            result = patch._v9_log_memory_result.copy(), patch._v9_log_birth_increment.copy()
+            for name in ("_v9_log_memory_context", "_v9_phase_cycle_context", "_v9_log_memory_result", "_v9_log_birth_increment", "_v9_periodic_remainder_bound"):
+                if hasattr(patch, name):
+                    delattr(patch, name)
+            return result
+
+        accelerated_memory, accelerated_hazard = advance(np.array([-np.inf]), 0.0, 100.0)
+        memory = np.array([-np.inf]); hazard = np.array([-np.inf])
+        for start in (0.0, 25.0, 50.0, 75.0):
+            memory, increment = advance(memory, start, 25.0)
+            hazard = np.logaddexp(hazard, increment)
+        np.testing.assert_allclose(accelerated_memory, memory, atol=2e-12)
+        np.testing.assert_allclose(accelerated_hazard, hazard, atol=2e-10)
+
 
 if __name__ == "__main__":
     unittest.main()

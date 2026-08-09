@@ -63,12 +63,33 @@
       "seed": 1,
       "sigma_a_MPa": 804.1389371023378,
       "summary_path": "runs/sn_v9_single_seed_skeleton/S001_BOOTSTRAP_804p139/solver_output/shielded/sigmaA_804p139MPa/summary.json"
+    },
+    {
+      "accepted_blocks": 287,
+      "active_generation": "generation_0da6da298f764ed68b893ea2a550b6ce",
+      "case": "shielded",
+      "case_dir": "runs/sn_v9_single_seed_skeleton/S002_906p465/solver_output/shielded/sigmaA_906p465MPa",
+      "classification": "physical_handoff",
+      "condition_id": "S002_906p465",
+      "cumulative_expected_births": 5.635245054838955,
+      "cycles": 1530050.8767582285,
+      "geometry_valid": true,
+      "handoff_valid": true,
+      "instantaneous_birth_hazard_per_cycle": 0.0,
+      "largest_accepted_dN": 34203.84740011612,
+      "pd_seed": 1,
+      "rejected_substeps": 30,
+      "request_sha256": "3843fdc56e6b89885fba6d13a3f96c547ae96e4d73f9c504eb02b8e67dcc1811",
+      "rho_max_m2": 508259053836810.0,
+      "seed": 1,
+      "sigma_a_MPa": 906.4651000498077,
+      "summary_path": "runs/sn_v9_single_seed_skeleton/S002_906p465/solver_output/shielded/sigmaA_906p465MPa/summary.json"
     }
   ],
   "next_condition": {
     "method": "bounded_upper_stress_log_life_extrapolation",
-    "sigma_a_MPa": 906.4651000498077,
-    "target_log10_cycles": 5.720836739344242
+    "sigma_a_MPa": 1059.9543444710125,
+    "target_log10_cycles": 6.142512486946335
   },
   "policy": "one_condition_at_a_time_adaptive_log_life_gap",
   "schema": "V9_SINGLE_SEED_SN_CAMPAIGN_1"
