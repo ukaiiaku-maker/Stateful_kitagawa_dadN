@@ -1,0 +1,30 @@
+{
+  "manifest_version": "STATEFUL_PD_V8_7_BASELINE_DEPENDENCY_CLOSURE_V1",
+  "canonical_lineage": "v8.7 generalized features/local-front spacing plus v2.8.1 orchestration correction",
+  "recovery_date": "2026-08-09",
+  "entries": [
+    {"path": "arrhenius_fracture/sn_pd2d_stateful_v8_7_generalized_features.py", "sha256": "09e993183efff4857819b4ede0d668c909e20810936c775638edbc9b2c5809d6", "source": "REFERENCE_ROOT", "original_path": "arrhenius_fracture/sn_pd2d_stateful_v8_7_generalized_features.py", "status": "exact_frozen_baseline"},
+    {"path": "arrhenius_fracture/stateful_peridynamics_v8_7_local_front_spacing.py", "sha256": "bb8341a3d8ed883f605bd99f6d74b4b011837d436d913cc1914a882a133f05b3", "source": "REFERENCE_ROOT", "original_path": "arrhenius_fracture/stateful_peridynamics_v8_7_local_front_spacing.py", "status": "exact_frozen_baseline"},
+    {"path": "arrhenius_fracture/sn_feature_geometry_v8_7.py", "sha256": "8ae3e8c454297fcbc61f179b747ffbd05129aa3c8598528113aa2edf8913396e", "source": "REFERENCE_ROOT", "original_path": "arrhenius_fracture/sn_feature_geometry_v8_7.py", "status": "exact_frozen_baseline"},
+    {"path": "arrhenius_fracture/__init__.py", "sha256": "a03242fedfab74357488291c165301880d0199ebe61ed4bb4d1716540f7a3b84", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/__init__.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/config.py", "sha256": "edcb5a60ae3d7757e054588dcaffcb3f4303c45c9aa31dfb7a6b3d89dd133193", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/config.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/fatigue_v1.py", "sha256": "0b4ef7279247f6df45bd1932d15d0e2e612d82346dcdb4fbfa35c72b8d0de32e", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/fatigue_v1.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/mesh.py", "sha256": "338816960399cdc0f3c2b054e448fa2aefa1651db5b8989887f7cc5ec6de49ab", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/mesh.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/sn_arrhenius_chain.py", "sha256": "3b0f9c0bfba902f8eac24946a5c85a39706c0ba2682c0421657e8e7ec25dab5f", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/sn_arrhenius_chain.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/sn_geometry.py", "sha256": "681352144fa1390d10955685566e8b55feb57649e57ae39e4260fe58e044e51a", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/sn_geometry.py", "status": "exact_historical_artifact"},
+    {"path": "arrhenius_fracture/sn_intact_fem.py", "sha256": "0eef60cc87bf23bd93d01a3bd43c7acad6a1960deac09d9f3b3b7ac8484af0d5", "source": "Fatigue-PF/dist/stateful_pd_kitagawa_production_v2_standalone", "original_path": "arrhenius_fracture/sn_intact_fem.py", "status": "exact_historical_artifact"}
+  ],
+  "local_dependency_edges": {
+    "sn_pd2d_stateful_v8_7_generalized_features": ["config", "sn_arrhenius_chain", "sn_feature_geometry_v8_7", "sn_intact_fem", "stateful_peridynamics_v8_7_local_front_spacing"],
+    "stateful_peridynamics_v8_7_local_front_spacing": ["config", "sn_geometry", "sn_intact_fem"],
+    "sn_feature_geometry_v8_7": ["mesh"],
+    "sn_intact_fem": ["config", "mesh", "sn_arrhenius_chain", "sn_geometry"],
+    "sn_arrhenius_chain": ["fatigue_v1"],
+    "fatigue_v1": ["config"],
+    "sn_geometry": ["mesh"],
+    "mesh": ["config"],
+    "config": []
+  },
+  "third_party_dependencies": {"python": "3.12.13", "numpy": "2.5.1", "scipy": "1.18.0", "matplotlib": "3.11.0"},
+  "compatibility_reconstructions": []
+}
