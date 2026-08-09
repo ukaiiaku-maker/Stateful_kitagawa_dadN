@@ -22,6 +22,17 @@ The first real numerical layer is now implemented in `v9_physical_integrator.py`
 - persistent competing-risk selection from preassigned uniforms;
 - semigroup, restart, >10x partition and real-v8.7 rate-equivalence tests.
 
+The real v9 driver and PD bridge now additionally provide:
+
+- side-effect-free Heun/Euler FEM, plastic-strain and rho proposals;
+- componentwise embedded error rejection before any PD/RNG commit;
+- rho cap/floor boundary rejection instead of accepted-state clipping;
+- a persistent physical cycle-phase coordinate for fractional blocks;
+- exact ordered log-domain phase continuation for Lambda and gated cleavage;
+- converged periodic-orbit acceleration with a geometric memory remainder;
+- schema-9 persistent embryo competing-risk thresholds/outcome uniforms;
+- hash-verified atomic array generations used as the resume authority.
+
 The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value as the frozen barrier implementation. The prior rounded decimal caused approximately `7e-13` relative drift in otherwise identical representable rates.
 
 ## Physical migration decisions resolved from the frozen equations
@@ -38,12 +49,24 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | Log temporal primitives | passed focused tests |
 | Persistent competing clocks | passed focused tests |
 | Frozen representable-rate equivalence | passed |
-| Full FEM/rho embedded transaction | in progress |
-| Real shortened partition proof | not yet qualified |
-| Real atomic restart proof | not yet qualified |
+| Full FEM/rho embedded transaction | implemented; PD error coupling still being extended |
+| Real shortened partition proof | passed at production K360 geometry for `dN_max=1` versus `0.05` |
+| Real atomic restart proof | passed at production K360 geometry through schema-9 ACTIVE generation |
 | K360 735.921 MPa | not started; correctly gated |
 | K360 690.443 MPa | not started; correctly gated |
 
 ## Next automatic action
 
-Implement the full FEM/rho/PD proposal-reject-commit bridge. It must use embedded full/half-step errors, localize rho/state/cap boundaries, advance deterministic progression hazards once, and serialize the new persistent transition state through atomic array generations. Then rerun the shortened real >10x partition and restart proofs before starting K360.
+Run the K360 735.921 MPa anchor from its immutable request with the now-qualified schema-9 driver. Monitor accepted/rejected blocks and periodic remainder behavior; preserve and resume the newest valid ACTIVE generation for any implementation interruption.
+
+### Real shortened proof evidence
+
+At `N=1` on the production K360 mesh, initial candidate maxima `1.0` and `0.05` cycles produced identical RNG states and no events. Maximum relative endpoint differences were approximately:
+
+- FEM plastic strain: `2.48e-11`;
+- rho: `1.22e-15`;
+- log delivery memory: `1.55e-8` absolute (`8.78e-10` scaled);
+- log cumulative birth hazard: `3.06e-7` absolute (`5.26e-9` scaled);
+- linear cumulative birth hazard: `3.06e-7` relative.
+
+The prior 77–99% Lambda/Q/hazard discrepancy was traced to v8.7 restarting phase zero at every fractional block. Persistent phase continuation removed it. An interruption at `N=0.1`, atomic reload, and continuation to `N=0.2` succeeded from the ACTIVE generation with all component hashes, schema, stochastic arrays and cycle identity verified.
