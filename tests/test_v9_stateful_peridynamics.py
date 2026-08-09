@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from arrhenius_fracture.stateful_peridynamics_v8_7_local_front_spacing import (
-    _SITE_EMBRYO, StatefulPDConfig,
+    _SITE_EMBRYO, _SITE_STABLE, StatefulPDConfig,
 )
 from arrhenius_fracture.v9_stateful_peridynamics import V9StatefulPDPatch
 
@@ -60,6 +60,27 @@ class V9StatefulPDTests(unittest.TestCase):
         self.assertAlmostEqual(float(split.site_stable_cycle[0]), 3.65, places=13)
         self.assertAlmostEqual(float(whole.site_transition_cumulative_hazard[0]), 0.73)
         self.assertAlmostEqual(float(split.site_transition_cumulative_hazard[0]), 0.73)
+
+    def test_stable_endpoint_boundary_matches_full_trajectory_event(self):
+        patch = _TransitionHarness()
+        full = make_state()
+        event_rng_before = patch._event_rng.bit_generator.state
+        patch._advance_discrete_embryo_transitions(full, np.array([0.15]), np.array([0.05]), 0.0, 5.0)
+
+        endpoint = make_state()
+        wait = patch.next_embryo_transition_wait_cycles(
+            endpoint, np.array([0.15]), np.array([0.05])
+        )
+        self.assertEqual(wait, 3.65)
+        patch._advance_discrete_embryo_transitions(
+            endpoint, np.array([0.15]), np.array([0.05]), 0.0, wait
+        )
+        self.assertEqual(int(endpoint.site_status[0]), _SITE_STABLE)
+        self.assertEqual(float(endpoint.site_stable_cycle[0]), float(full.site_stable_cycle[0]))
+        self.assertEqual(float(endpoint.site_transition_cumulative_hazard[0]), 0.73)
+        self.assertEqual(endpoint.site_transition_threshold[0], full.site_transition_threshold[0])
+        self.assertEqual(endpoint.site_transition_outcome_uniform[0], full.site_transition_outcome_uniform[0])
+        self.assertEqual(patch._event_rng.bit_generator.state, event_rng_before)
 
     def test_periodic_large_n_acceleration_matches_partitioned_kernel(self):
         patch = _TransitionHarness()

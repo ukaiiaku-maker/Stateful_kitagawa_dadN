@@ -257,7 +257,8 @@ class V9StatefulPDPatch(StatefulPDPatch):
             old_hazard = float(cumulative[site])
             increment = rate * exposure
             new_hazard = old_hazard + increment
-            if new_hazard < float(threshold[site]):
+            crossing_tol = 8.0 * np.finfo(float).eps * max(1.0, abs(float(threshold[site])))
+            if new_hazard + crossing_tol < float(threshold[site]):
                 cumulative[site] = new_hazard
                 continue
             fraction = (float(threshold[site]) - old_hazard) / increment
@@ -287,3 +288,21 @@ class V9StatefulPDPatch(StatefulPDPatch):
                     state.site_status[site] = _SITE_INACTIVE
         self._refresh_node_counts_from_site_ledger(state)
         return stabilized_counts, healed_counts, (min(stable_cycles) if stable_cycles else None)
+
+    def next_embryo_transition_wait_cycles(self, state, mu_stab, mu_heal):
+        """Exact wait to the next persistent embryo transition at frozen rates."""
+        self._sync_site_ledger(state)
+        extra = self.v9_extra_state_arrays(state)
+        threshold = np.asarray(extra["site_transition_threshold"], float)
+        cumulative = np.asarray(extra["site_transition_cumulative_hazard"], float)
+        nodes = np.asarray(state.site_node_index, dtype=np.int64)
+        embryo = np.asarray(state.site_status, dtype=np.uint8) == _SITE_EMBRYO
+        if not np.any(embryo):
+            return float("inf")
+        rates = (
+            np.maximum(np.asarray(mu_stab, float), 0.0)
+            + np.maximum(np.asarray(mu_heal, float), 0.0)
+        )[nodes[embryo]]
+        residual = np.maximum(threshold[embryo] - cumulative[embryo], 0.0)
+        waits = np.divide(residual, rates, out=np.full_like(residual, np.inf), where=rates > 0.0)
+        return float(np.min(waits)) if waits.size else float("inf")

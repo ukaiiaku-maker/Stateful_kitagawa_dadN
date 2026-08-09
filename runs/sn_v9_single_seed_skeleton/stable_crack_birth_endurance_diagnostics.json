@@ -1,0 +1,42 @@
+{
+  "K360_CENSOR": {
+    "embryo_birth_endurance_diagnostic": "empirical_integrable_tail",
+    "no_embryo_survival_exp_minus_H": 0.5722119311041882,
+    "observation": "right_censored",
+    "semantics": "stable_birth_survival_not_identified_from_single_seed_or_embryo_hazard_alone",
+    "stable_crack_birth_endurance_classification": "undetermined",
+    "stable_crack_birth_survival_probability": null
+  },
+  "K360_FAILURE": {
+    "embryo_birth_endurance_diagnostic": "event_realized",
+    "no_embryo_survival_exp_minus_H": null,
+    "observation": "stable_crack_birth",
+    "semantics": "stable_birth_survival_not_identified_from_single_seed_or_embryo_hazard_alone",
+    "stable_crack_birth_endurance_classification": "undetermined",
+    "stable_crack_birth_survival_probability": null
+  },
+  "S001_BOOTSTRAP_804p139": {
+    "embryo_birth_endurance_diagnostic": "event_realized",
+    "no_embryo_survival_exp_minus_H": null,
+    "observation": "stable_crack_birth",
+    "semantics": "stable_birth_survival_not_identified_from_single_seed_or_embryo_hazard_alone",
+    "stable_crack_birth_endurance_classification": "undetermined",
+    "stable_crack_birth_survival_probability": null
+  },
+  "S002_906p465": {
+    "embryo_birth_endurance_diagnostic": "event_realized",
+    "no_embryo_survival_exp_minus_H": null,
+    "observation": "stable_crack_birth",
+    "semantics": "stable_birth_survival_not_identified_from_single_seed_or_embryo_hazard_alone",
+    "stable_crack_birth_endurance_classification": "undetermined",
+    "stable_crack_birth_survival_probability": null
+  },
+  "S003_1059p954": {
+    "embryo_birth_endurance_diagnostic": "event_realized",
+    "no_embryo_survival_exp_minus_H": null,
+    "observation": "stable_crack_birth",
+    "semantics": "stable_birth_survival_not_identified_from_single_seed_or_embryo_hazard_alone",
+    "stable_crack_birth_endurance_classification": "undetermined",
+    "stable_crack_birth_survival_probability": null
+  }
+}

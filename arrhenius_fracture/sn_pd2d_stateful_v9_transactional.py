@@ -883,6 +883,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     last_hist = None
     last_diag = None
     next_block = start_block
+    stable_endpoint = args.fatigue_endpoint == "stable_crack_birth"
 
     for ib in range(start_block, args.max_blocks):
         if (
@@ -892,6 +893,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             or pd_state.cycles_front_stalled is not None
             or pd_state.cycles_precapture_stalled is not None
             or geometry_invalid_reason is not None
+            or (stable_endpoint and pd_state.cycles_first_stable is not None)
         ):
             break
 
@@ -997,6 +999,19 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 )
                 block_limited_by_birth_clock = True
 
+        # Apply this exact event limiter after the birth-clock safety factor:
+        # that factor intentionally overshoots a birth threshold and must
+        # never overshoot an already-active embryo's stable/heal transition.
+        next_embryo_transition_wait = patch.next_embryo_transition_wait_cycles(
+            pd_state, pre_rates["mu_stab"], pre_rates["mu_heal"]
+        )
+        block_limited_by_embryo_transition = bool(
+            np.isfinite(next_embryo_transition_wait)
+            and next_embryo_transition_wait <= dN
+        )
+        if np.isfinite(next_embryo_transition_wait):
+            dN = min(dN, next_embryo_transition_wait)
+
         if geometry_active and max_dep_cycle > 0.0:
             dh_cycle, _, _ = surface_morphology_proposal(
                 mesh,
@@ -1017,7 +1032,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         if controller_next_block_cycles > 0.0:
             dN = min(dN, controller_next_block_cycles)
 
-        if block_limited_by_birth_clock:
+        if block_limited_by_embryo_transition:
+            # Exact first-passage boundaries take precedence over the normal
+            # macro-step floor, including when the residual wait is sub-floor.
+            dN = min(dN, remaining)
+        elif block_limited_by_birth_clock:
             dN = max(min(dN, remaining), min(args.min_block_cycles, 1e-6))
         else:
             dN = max(min(dN, remaining), args.min_block_cycles)
@@ -1349,6 +1368,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 or pd_state.cycles_front_stalled is not None
                 or pd_state.cycles_precapture_stalled is not None
                 or geometry_invalid_reason is not None
+                or (stable_endpoint and pd_state.cycles_first_stable is not None)
             )
         )
         if checkpoint_due:
@@ -1484,7 +1504,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_audit_final = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
-    if geometry_invalid_reason is not None:
+    if stable_endpoint and pd_state.cycles_first_stable is not None:
+        status = "stable_crack_birth"
+    elif geometry_invalid_reason is not None:
         status = "geometry_invalid_underresolved"
     elif pd_state.cycles_precapture_stalled is not None:
         status = "morphology_invalid_precapture_stalled"
@@ -1510,6 +1532,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     nucleation_final = np.asarray(final_rates.get("nucleation_rate_s", np.zeros(len(patch.xy))), float)
     effective_final = np.asarray(final_rates.get("smax", np.zeros(len(patch.xy))), float)
     site_nodes_final = np.asarray(pd_state.site_node_index, dtype=np.int64)
+    stable_site_ids = np.where(np.isfinite(np.asarray(pd_state.site_stable_cycle, float)))[0]
+    first_stable_site_id = (
+        int(stable_site_ids[np.argmin(np.asarray(pd_state.site_stable_cycle, float)[stable_site_ids])])
+        if stable_site_ids.size else None
+    )
     site_available_final = np.asarray(pd_state.site_status, dtype=np.uint8) == 0
     if np.any(site_available_final):
         birth_residual_final = (
@@ -1755,6 +1782,29 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "residual_sigma1_final_max_Pa": float(np.max(last_residual)),
         "plastic_work_final_J_per_m": Wp_total,
         "history_csv": str(outdir / "sn_stateful_pd_history.csv"),
+        "fatigue_endpoint": args.fatigue_endpoint,
+        "stable_crack_birth_site_id": first_stable_site_id,
+        "stable_crack_birth_node": (
+            int(site_nodes_final[first_stable_site_id]) if first_stable_site_id is not None else None
+        ),
+        "stable_crack_birth_embryo_cycle": (
+            float(pd_state.site_birth_cycle[first_stable_site_id]) if first_stable_site_id is not None else None
+        ),
+        "stable_crack_birth_cycle": pd_state.cycles_first_stable,
+        "stable_crack_birth_transition_threshold": (
+            float(pd_state.site_transition_threshold[first_stable_site_id]) if first_stable_site_id is not None else None
+        ),
+        "stable_crack_birth_transition_cumulative_hazard": (
+            float(pd_state.site_transition_cumulative_hazard[first_stable_site_id]) if first_stable_site_id is not None else None
+        ),
+        "stable_crack_birth_outcome_uniform": (
+            float(pd_state.site_transition_outcome_uniform[first_stable_site_id]) if first_stable_site_id is not None else None
+        ),
+        "stable_crack_birth_at_accepted_boundary": bool(
+            pd_state.cycles_first_stable is not None
+            and abs(float(cycles) - float(pd_state.cycles_first_stable))
+            <= 16.0 * np.finfo(float).eps * max(1.0, abs(float(cycles)))
+        ),
     }
     audit_payload = {
         k: (bool(v) if isinstance(v, (np.bool_, bool)) else float(v) if isinstance(v, (np.floating, float)) else int(v) if isinstance(v, (np.integer, int)) else v)
@@ -2071,6 +2121,10 @@ def build_parser():
     p.add_argument("--resume", action="store_true", dest="resume")
     p.add_argument("--snapshot-every", type=int, default=25, dest="snapshot_every")
     p.add_argument("--print-every", type=int, default=1, dest="print_every")
+    p.add_argument(
+        "--fatigue-endpoint", choices=("physical_handoff", "stable_crack_birth"),
+        default="physical_handoff", dest="fatigue_endpoint",
+    )
     return p
 
 
