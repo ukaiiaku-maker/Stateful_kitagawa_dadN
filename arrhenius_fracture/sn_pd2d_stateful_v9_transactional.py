@@ -56,6 +56,7 @@ from .v9_stateful_peridynamics import V9StatefulPDPatch as StatefulPDPatch
 from .v9_fem_transaction import EmbeddedFEMTransaction, FEMPhysicalState
 from .v9_physical_integrator import plastic_chain_log_rates
 from .v9_array_codec import AtomicArrayGenerationStore
+from .v9_cached_fem import CachedIntactFEM
 
 
 MODEL_ID = "SN_2D_intact_FEM_stateful_local_peridynamics_v9_transactional_log_domain"
@@ -82,6 +83,12 @@ def _active_source_sha256() -> dict[str, str]:
 
 
 SOURCE_SHA256 = _active_source_sha256()
+VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        "driver": "cf73e1b71c50730ee8c026c2de8894109d23730a4cca26ba3c92f5effeabee01",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+    },
+)
 
 
 class ScratchExpFloorBarrier:
@@ -441,8 +448,12 @@ def _load_case_checkpoint(
         raise RuntimeError("unsupported STATEFUL_PD_V9 checkpoint version")
     if metadata.get("model_id") != MODEL_ID:
         raise RuntimeError("checkpoint model identifier does not match v9")
-    if metadata.get("source_sha256") != SOURCE_SHA256:
-        raise RuntimeError("checkpoint source hashes do not match active v9 code")
+    checkpoint_sources = metadata.get("source_sha256")
+    if (
+        checkpoint_sources != SOURCE_SHA256
+        and checkpoint_sources not in VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES
+    ):
+        raise RuntimeError("checkpoint source hashes do not match active or verified-compatible v9 code")
     expected = _checkpoint_signature(args, case_name, sigma_a_MPa)
     if metadata.get("signature") != expected:
         raise RuntimeError("checkpoint arguments do not match this case")
@@ -662,6 +673,8 @@ def _pd_config_from_args(args):
 
 
 def run_case_stress(args, case_name: str, sigma_a_MPa: float):
+    if args.enable_geometry_evolution:
+        raise RuntimeError("v9 cached transactional driver currently requires fixed geometry")
     shield_on = case_name == "shielded"
     mat = ElasticProperties(E=args.E_GPa * 1e9, nu=args.nu, b=args.b_m, Tm=args.Tm_K)
     Dmat = plane_strain_D(mat)
@@ -716,6 +729,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     sigma_max = 2.0 * sigma_a_MPa * 1e6 / max(1.0 - args.R, 1e-30)
     sigma_min = args.R * sigma_max
     patch.remote_sigma_max_Pa = float(sigma_max)
+    cached_fem = CachedIntactFEM(mesh, bnd, mat, Dmat)
     fem_transaction = EmbeddedFEMTransaction(
         mesh=mesh,
         boundaries=bnd,
@@ -725,6 +739,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         args=args,
         sigma_max_Pa=sigma_max,
         sigma_min_Pa=sigma_min,
+        cached_fem=cached_fem,
     )
 
     outdir = Path(args.out) / case_name / (f"sigmaA_{sigma_a_MPa:g}MPa".replace(".", "p"))
@@ -834,28 +849,13 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             if geometry_saturation_cycles is None:
                 geometry_saturation_cycles = float(cycles)
 
-        Umax, Umin, u_zero, F0, _ = affine_stress_control_displacements(
-            mesh, bnd, mat, Dmat, ep_gp, sigma_max, sigma_min, u
+        Umax, Umin, u_zero, F0, _ = cached_fem.affine(
+            ep_gp, sigma_max, sigma_min, u
         )
-        cyc = representative_plastic_cycle(
-            mesh,
-            bnd,
-            mat,
-            Dmat,
-            ep_gp,
-            rho_gp,
-            Umax,
-            Umin,
-            args.T,
-            args.frequency_Hz,
-            args.plastic_n_phase,
-            plast_chain,
-            u_zero,
-            args.k_store,
-            args.k_dyn,
-            args.rho_floor,
-            args.rho_cap,
-            args.max_dep_phase,
+        cyc = cached_fem.representative_cycle(
+            ep_gp, rho_gp, Umax, Umin, args.T, args.frequency_Hz,
+            args.plastic_n_phase, plast_chain, u_zero, args.k_store,
+            args.k_dyn, args.rho_floor, args.rho_cap, args.max_dep_phase,
             args.max_rho_rel_phase,
         )
         dep_tensor_cycle = cyc["dep_tensor_cycle"]
@@ -869,8 +869,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         Gsh = args.Gshield_eV if shield_on else 0.0
         sigma_back = args.sigma_back_max_GPa * 1e9 * P
         state_shift = Gsh * P - args.Gstored_eV * Dloc
-        hist_pre = cycle_stress_histories(
-            mesh, bnd, mat, Dmat, ep_gp, Umax, Umin, args.hazard_n_phase, u_zero
+        hist_pre = cached_fem.stress_histories(
+            ep_gp, Umax, Umin, args.hazard_n_phase, u_zero
         )
         delivery_pre = phase_resolved_delivery_rate(
             args, plast_chain, hist_pre["seq_node"], rho_node_pre, args.T
@@ -962,7 +962,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         fem_initial = FEMPhysicalState(ep_gp, rho_gp, epsp_acc_gp, u, Wp_total)
         fem_rejections = 0
         while True:
-            fem_proposal = fem_transaction.propose(fem_initial, dN)
+            fem_proposal = fem_transaction.propose(fem_initial, dN, first_cycle=cyc)
             if fem_proposal.normalized_error <= 1.0:
                 break
             dN *= 0.5
@@ -1031,8 +1031,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
             )
 
-        Umax2, Umin2, u_zero2, F02, _ = affine_stress_control_displacements(
-            mesh, bnd, mat, Dmat, ep_gp, sigma_max, sigma_min, u_zero
+        Umax2, Umin2, u_zero2, F02, _ = cached_fem.affine(
+            ep_gp, sigma_max, sigma_min, u_zero
         )
         _, _, s1_res, _ = stress_state_intact(mesh, u_zero2, ep_gp, Dmat, mat)
         residual_node = project_gp_to_nodes(mesh, s1_res)
@@ -1043,8 +1043,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         )
         sigma_back = args.sigma_back_max_GPa * 1e9 * P
         state_shift = Gsh * P - args.Gstored_eV * Dloc
-        hist_post = cycle_stress_histories(
-            mesh, bnd, mat, Dmat, ep_gp, Umax2, Umin2, args.hazard_n_phase, u_zero2
+        hist_post = cached_fem.stress_histories(
+            ep_gp, Umax2, Umin2, args.hazard_n_phase, u_zero2
         )
         delivery_post = phase_resolved_delivery_rate(
             args, plast_chain, hist_post["seq_node"], rho_node_post, args.T

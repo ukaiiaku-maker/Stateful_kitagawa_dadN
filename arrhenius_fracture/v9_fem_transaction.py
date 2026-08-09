@@ -58,6 +58,7 @@ class EmbeddedFEMTransaction:
         relative_tolerance: float = 2.0e-4,
         ep_absolute_tolerance: float = 1.0e-18,
         rho_absolute_tolerance: float = 1.0,
+        cached_fem=None,
     ):
         self.mesh = mesh
         self.boundaries = boundaries
@@ -70,20 +71,33 @@ class EmbeddedFEMTransaction:
         self.rtol = float(relative_tolerance)
         self.ep_atol = float(ep_absolute_tolerance)
         self.rho_atol = float(rho_absolute_tolerance)
+        self.cached_fem = cached_fem
 
     def _cycle_derivative(self, state: FEMPhysicalState):
-        Umax, Umin, u_zero, _, _ = affine_stress_control_displacements(
-            self.mesh, self.boundaries, self.material, self.Dmat,
-            state.ep_gp, self.sigma_max_Pa, self.sigma_min_Pa, state.u,
-        )
-        cycle = representative_plastic_cycle(
-            self.mesh, self.boundaries, self.material, self.Dmat,
-            state.ep_gp, state.rho_gp, Umax, Umin,
-            self.args.T, self.args.frequency_Hz, self.args.plastic_n_phase,
-            self.chain, u_zero, self.args.k_store, self.args.k_dyn,
-            self.args.rho_floor, self.args.rho_cap,
-            self.args.max_dep_phase, self.args.max_rho_rel_phase,
-        )
+        if self.cached_fem is None:
+            Umax, Umin, u_zero, _, _ = affine_stress_control_displacements(
+                self.mesh, self.boundaries, self.material, self.Dmat,
+                state.ep_gp, self.sigma_max_Pa, self.sigma_min_Pa, state.u,
+            )
+            cycle = representative_plastic_cycle(
+                self.mesh, self.boundaries, self.material, self.Dmat,
+                state.ep_gp, state.rho_gp, Umax, Umin,
+                self.args.T, self.args.frequency_Hz, self.args.plastic_n_phase,
+                self.chain, u_zero, self.args.k_store, self.args.k_dyn,
+                self.args.rho_floor, self.args.rho_cap,
+                self.args.max_dep_phase, self.args.max_rho_rel_phase,
+            )
+        else:
+            Umax, Umin, u_zero, _, _ = self.cached_fem.affine(
+                state.ep_gp, self.sigma_max_Pa, self.sigma_min_Pa, state.u
+            )
+            cycle = self.cached_fem.representative_cycle(
+                state.ep_gp, state.rho_gp, Umax, Umin,
+                self.args.T, self.args.frequency_Hz, self.args.plastic_n_phase,
+                self.chain, u_zero, self.args.k_store, self.args.k_dyn,
+                self.args.rho_floor, self.args.rho_cap,
+                self.args.max_dep_phase, self.args.max_rho_rel_phase,
+            )
         return cycle, np.asarray(cycle["u_end"], dtype=float)
 
     @staticmethod
@@ -93,11 +107,14 @@ class EmbeddedFEMTransaction:
         scale = float(atol) + float(rtol) * np.maximum(np.abs(av), np.abs(bv))
         return float(np.max(np.abs(av - bv) / scale)) if av.size else 0.0
 
-    def propose(self, initial: FEMPhysicalState, dN: float) -> FEMEmbeddedProposal:
+    def propose(self, initial: FEMPhysicalState, dN: float, *, first_cycle=None) -> FEMEmbeddedProposal:
         if not math.isfinite(dN) or dN <= 0.0:
             raise ValueError("dN must be positive and finite")
         state = initial.copy_readonly()
-        first, _ = self._cycle_derivative(state)
+        if first_cycle is None:
+            first, _ = self._cycle_derivative(state)
+        else:
+            first = first_cycle
         k_ep0 = np.asarray(first["dep_tensor_cycle"], dtype=float)
         k_eq0 = np.maximum(np.asarray(first["dep_eq_cycle"], dtype=float), 0.0)
         k_rho0 = np.asarray(first["drho_cycle"], dtype=float)

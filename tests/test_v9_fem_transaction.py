@@ -14,6 +14,7 @@ from arrhenius_fracture.sn_pd2d_stateful_v8_7_generalized_features import (
 from arrhenius_fracture.v9_fem_transaction import (
     EmbeddedFEMTransaction, FEMPhysicalState,
 )
+from arrhenius_fracture.v9_cached_fem import CachedIntactFEM
 
 
 class V9FEMTransactionTests(unittest.TestCase):
@@ -42,6 +43,12 @@ class V9FEMTransactionTests(unittest.TestCase):
             plastic_chain=chain, args=args, sigma_max_Pa=sigma_max,
             sigma_min_Pa=args.R * sigma_max, relative_tolerance=1e-4,
         )
+        cls.cached_model = EmbeddedFEMTransaction(
+            mesh=mesh, boundaries=bnd, material=mat, Dmat=plane_strain_D(mat),
+            plastic_chain=chain, args=args, sigma_max_Pa=sigma_max,
+            sigma_min_Pa=args.R * sigma_max, relative_tolerance=1e-4,
+            cached_fem=CachedIntactFEM(mesh, bnd, mat, plane_strain_D(mat)),
+        )
         cls.initial = FEMPhysicalState(
             np.zeros((3, mesh.ne)), np.full(mesh.ne, args.rho0),
             np.zeros(mesh.ne), np.zeros(mesh.ndof), 0.0,
@@ -54,6 +61,13 @@ class V9FEMTransactionTests(unittest.TestCase):
         np.testing.assert_array_equal(self.initial.ep_gp, ep_before)
         self.assertTrue(np.isfinite(coarse.normalized_error))
         self.assertLess(fine.normalized_error, coarse.normalized_error)
+
+    def test_cached_real_fem_is_physics_equivalent(self):
+        native = self.model.propose(self.initial, 0.05)
+        cached = self.cached_model.propose(self.initial, 0.05)
+        np.testing.assert_allclose(cached.state.ep_gp, native.state.ep_gp, rtol=2e-12, atol=1e-20)
+        np.testing.assert_allclose(cached.state.rho_gp, native.state.rho_gp, rtol=2e-14, atol=0.02)
+        np.testing.assert_allclose(cached.state.u, native.state.u, rtol=2e-12, atol=1e-20)
 
     def test_accepted_heun_state_converges_under_partition(self):
         whole = self.model.propose(self.initial, 0.02).state

@@ -52,12 +52,14 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | Full FEM/rho embedded transaction | implemented; PD error coupling still being extended |
 | Real shortened partition proof | passed at production K360 geometry for `dN_max=1` versus `0.05` |
 | Real atomic restart proof | passed at production K360 geometry through schema-9 ACTIVE generation |
-| K360 735.921 MPa | not started; correctly gated |
+| K360 735.921 MPa | active; restartable generation at `N=9478.027455854328` |
 | K360 690.443 MPa | not started; correctly gated |
 
 ## Next automatic action
 
 Run the K360 735.921 MPa anchor from its immutable request with the now-qualified schema-9 driver. Monitor accepted/rejected blocks and periodic remainder behavior; preserve and resume the newest valid ACTIVE generation for any implementation interruption.
+
+The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 
 ### Real shortened proof evidence
 
