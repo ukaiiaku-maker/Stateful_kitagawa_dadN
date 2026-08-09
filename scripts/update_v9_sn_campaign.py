@@ -124,12 +124,65 @@ def _rows(case_dir: Path) -> list[dict[str, str]]:
     return []
 
 
+def tail_diagnostics(case_dir: Path) -> dict[str, Any]:
+    rows = _rows(case_dir)
+    points: list[tuple[float, float]] = []
+    previous_n = previous_h = None
+    for row in rows:
+        cycle = finite(row.get("cycles_total"))
+        cumulative = finite(row.get("pd_expected_births_cumulative"))
+        if cycle is None or cumulative is None:
+            continue
+        if previous_n is not None and cycle > previous_n and cumulative > previous_h:
+            points.append((0.5 * (cycle + previous_n), (cumulative - previous_h) / (cycle - previous_n)))
+        previous_n, previous_h = cycle, cumulative
+    result: dict[str, Any] = {"effective_hazard_points": len(points), "nested_power_law_fits": []}
+    if len(points) < 12:
+        result["empirical_tail_evidence"] = "insufficient"
+        return result
+    import numpy as np
+    for fraction in (0.50, 0.65, 0.80):
+        tail = points[int(math.floor(fraction * len(points))):]
+        x = np.log([item[0] for item in tail]); y = np.log([item[1] for item in tail])
+        slope, intercept = np.polyfit(x, y, 1)
+        predicted = slope * x + intercept
+        denom = float(np.sum((y - np.mean(y)) ** 2))
+        r2 = None if denom == 0.0 else 1.0 - float(np.sum((y - predicted) ** 2)) / denom
+        exponent = float(-slope); amplitude = float(math.exp(intercept))
+        remaining = None
+        if exponent > 1.0:
+            remaining = amplitude * tail[-1][0] ** (1.0 - exponent) / (exponent - 1.0)
+        result["nested_power_law_fits"].append({
+            "fraction": fraction, "start_cycle": tail[0][0], "end_cycle": tail[-1][0],
+            "exponent": exponent, "r_squared": r2,
+            "empirical_extrapolated_remaining_integrated_hazard": remaining,
+        })
+    fits = result["nested_power_law_fits"]
+    result["empirical_tail_evidence"] = (
+        "integrable_tail_observed" if all(fit["exponent"] > 1.0 for fit in fits)
+        else "nonintegrable_or_unresolved_tail"
+    )
+    return result
+
+
 def select_next_stress(conditions: list[dict[str, Any]]) -> dict[str, Any] | None:
     finite_lives = sorted(
         (float(c["sigma_a_MPa"]), math.log10(float(c["cycles"])))
         for c in conditions
         if c["classification"] == "physical_handoff" and c["cycles"] > 0
     )
+    if len(finite_lives) == 1:
+        finite_stress, finite_life = finite_lives[0]
+        lower = [float(c["sigma_a_MPa"]) for c in conditions
+                 if c["classification"] == "right_censored" and float(c["sigma_a_MPa"]) < finite_stress]
+        if lower:
+            spacing = finite_stress - max(lower)
+            return {
+                "sigma_a_MPa": finite_stress + 1.5 * spacing,
+                "target_log10_cycles": max(4.0, finite_life - 1.5),
+                "method": "upper_stress_bracket_from_anchor_spacing",
+            }
+        return None
     if len(finite_lives) < 2:
         return None
     targets = [4.0, 5.0, 6.0, 7.0, 8.0]
@@ -159,11 +212,11 @@ def update(root: Path) -> list[dict[str, Any]]:
     fields = ["condition_id", "case", "sigma_a_MPa", "seed", "classification", "cycles", "geometry_valid", "handoff_valid", "request_sha256"]
     lines: list[str] = []
     from io import StringIO
-    stream = StringIO(); writer = csv.DictWriter(stream, fieldnames=fields); writer.writeheader()
+    stream = StringIO(); writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n"); writer.writeheader()
     for condition in conditions:
         writer.writerow({key: condition.get(key) for key in fields})
     atomic_text(root / "sn_results.csv", stream.getvalue())
-    survival = StringIO(); sw = csv.writer(survival); sw.writerow(["condition_id", "cycles", "cumulative_expected_births", "survival_probability"])
+    survival = StringIO(); sw = csv.writer(survival, lineterminator="\n"); sw.writerow(["condition_id", "cycles", "cumulative_expected_births", "survival_probability"])
     for c in conditions:
         hazard = c["cumulative_expected_births"]
         sw.writerow([c["condition_id"], c["cycles"], hazard, None if hazard is None else math.exp(-hazard)])
@@ -175,7 +228,9 @@ def update(root: Path) -> list[dict[str, Any]]:
         "instantaneous_birth_hazard_per_cycle": c["instantaneous_birth_hazard_per_cycle"],
         "cumulative_expected_births": c["cumulative_expected_births"],
         "note": "Finite-horizon censoring is not endurance evidence.",
-    } for c in conditions}
+    } | (tail_diagnostics(Path(c["case_dir"])) if c["classification"] in {"right_censored", "restartable"} else {
+        "empirical_tail_evidence": "not_applicable_after_physical_handoff"
+    }) for c in conditions}
     atomic_text(root / "endurance_diagnostics.json", json.dumps(diagnostics, indent=2, sort_keys=True) + "\n")
     return conditions
 

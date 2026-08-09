@@ -1,28 +1,26 @@
 {
-  "active_conditions": [
-    "K360_CENSOR"
-  ],
+  "active_conditions": [],
   "conditions": [
     {
-      "accepted_blocks": 310,
-      "active_generation": "generation_ecd9e805301541d5b6a842236d3994a0",
+      "accepted_blocks": 971,
+      "active_generation": "generation_c24433f315164320a4742d834bbdbc91",
       "case": "shielded",
       "case_dir": "runs/sn_v9_single_seed_skeleton/K360_CENSOR/solver_output/shielded/sigmaA_690p443MPa",
-      "classification": "restartable",
+      "classification": "right_censored",
       "condition_id": "K360_CENSOR",
-      "cumulative_expected_births": 0.3405986844078543,
-      "cycles": 2034746.7175940112,
+      "cumulative_expected_births": 0.6275936369992176,
+      "cycles": 100000000.0,
       "geometry_valid": true,
       "handoff_valid": false,
-      "instantaneous_birth_hazard_per_cycle": 2.160256482256334e-08,
-      "largest_accepted_dN": 13314.681059651555,
+      "instantaneous_birth_hazard_per_cycle": 6.978931330051745e-13,
+      "largest_accepted_dN": 560889.6224887755,
       "pd_seed": 1,
-      "rejected_substeps": 824,
-      "request_sha256": "a2c833be839f719c7170d24fc4852947ae7482964752b2750e60f48af0e0e41f",
-      "rho_max_m2": 31955812062882.55,
+      "rejected_substeps": 1292,
+      "request_sha256": "de2400d707eb0a1db48ba5c92ce5b8d514a98909de16798912581113d9f500f8",
+      "rho_max_m2": 2485159603032210.0,
       "seed": 1,
       "sigma_a_MPa": 690.4432004940379,
-      "summary_path": null
+      "summary_path": "runs/sn_v9_single_seed_skeleton/K360_CENSOR/solver_output/shielded/sigmaA_690p443MPa/summary.json"
     },
     {
       "accepted_blocks": 852,
@@ -46,7 +44,11 @@
       "summary_path": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa/summary.json"
     }
   ],
-  "next_condition": null,
+  "next_condition": {
+    "method": "upper_stress_bracket_from_anchor_spacing",
+    "sigma_a_MPa": 804.1389371023378,
+    "target_log10_cycles": 5.040833499601596
+  },
   "policy": "one_condition_at_a_time_adaptive_log_life_gap",
   "schema": "V9_SINGLE_SEED_SN_CAMPAIGN_1"
 }

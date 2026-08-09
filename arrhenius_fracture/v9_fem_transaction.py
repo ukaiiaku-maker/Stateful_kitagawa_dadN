@@ -56,7 +56,11 @@ class EmbeddedFEMTransaction:
         self, *, mesh, boundaries, material, Dmat, plastic_chain, args,
         sigma_max_Pa: float, sigma_min_Pa: float,
         relative_tolerance: float = 2.0e-4,
-        ep_absolute_tolerance: float = 1.0e-18,
+        # 1e-8 strain corresponds to roughly 4.1 kPa at tungsten's modulus,
+        # about four parts per million of the local GPa stress scale.
+        # A near-machine-zero tolerance makes inactive tensor components, not
+        # the physical plastic/rho state, control the long-life step size.
+        ep_absolute_tolerance: float = 1.0e-8,
         rho_absolute_tolerance: float = 1.0,
         cached_fem=None,
     ):

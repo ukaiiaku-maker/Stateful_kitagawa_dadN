@@ -26,6 +26,14 @@ class V9SNCampaignTests(unittest.TestCase):
         self.assertEqual(result["sigma_a_MPa"], 750.0)
         self.assertEqual(result["target_log10_cycles"], 6.0)
 
+    def test_selector_bootstraps_above_finite_anchor_from_censor_spacing(self):
+        result = select_next_stress([
+            {"classification": "physical_handoff", "sigma_a_MPa": 735.0, "cycles": 3e6},
+            {"classification": "right_censored", "sigma_a_MPa": 690.0, "cycles": 1e8},
+        ])
+        self.assertAlmostEqual(result["sigma_a_MPa"], 802.5)
+        self.assertEqual(result["method"], "upper_stress_bracket_from_anchor_spacing")
+
 
 if __name__ == "__main__":
     unittest.main()

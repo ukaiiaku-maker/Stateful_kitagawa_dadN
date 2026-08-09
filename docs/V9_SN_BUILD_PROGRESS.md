@@ -53,7 +53,7 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | Real shortened partition proof | passed at production K360 geometry for `dN_max=1` versus `0.05` |
 | Real atomic restart proof | passed at production K360 geometry through schema-9 ACTIVE generation |
 | K360 735.921 MPa | valid physical handoff at `N=3,474,029.481029375` |
-| K360 690.443 MPa | next sequential condition; correctly gated until the failure anchor completed |
+| K360 690.443 MPa | valid right-censored long-life diagnostic at `N=1e8`; no realized birth |
 
 ## First physical anchor result
 
@@ -75,12 +75,36 @@ exactly the reported cycle coordinate.  It contains all 46 array components,
 including log delivery memory, log cumulative birth hazard, persistent
 transition thresholds/outcome uniforms, and both independent RNG states.
 
+## Long-life anchor result and performance hardening
+
+The exact K360 shielded `690.4432004940379 MPa` condition reached `N=1e8` with
+no realized birth, no broken bond, valid fixed geometry, and status
+`right_censored`.  Its cumulative expected births were `0.627593637`; the
+terminal maximum birth intensity was `6.979e-13/cycle`, delivery memory
+`4.986e-6`, and completion `Q=1.243e-11`.  Nested effective-hazard tail fits
+over the last 50%, 35%, and 20% of points gave exponents `2.049`, `2.285`, and
+`2.335` with extrapolated remaining hazards `0.00500`, `0.00355`, and `0.00337`.
+This is empirical integrable-tail evidence, while the physics-asymptotic
+classification remains explicitly `undetermined`; finite runout is not called
+endurance.
+
+The completed trajectory used 971 accepted blocks and a largest accepted block
+of `560,889.6` cycles.  Profiling exposed two v9 controller defects: discarded
+next-step estimates caused repeated FEM solves, and a near-zero `ep_gp`
+component with `1e-18` absolute tolerance controlled quiet-tail steps.  The
+controller candidate is now checkpointed and the strain absolute tolerance is
+`1e-8` (about 4.1 kPa at 410 GPa), with active-component relative error, rho,
+hazard, and event controls unchanged.  The production tolerance was compared
+against `1e-9`; the complete 116-test regression suite passes.  Real accepted
+blocks consequently grew to roughly `2e5` cycles through the late tail.
+
 ## Next automatic action
 
-Start the exact preserved K360 shielded `690.4432004940379 MPa` request as the
-next and only active condition.  Publish logarithmic diagnostic checkpoints,
-classify its large-N tail separately from finite-horizon censoring, and reuse
-its newest valid ACTIVE generation after any interruption.
+Use the two completed anchors to select one upper-stress bracket condition.
+The deterministic bootstrap rule takes 1.5 times the anchor stress spacing
+above the finite-life point, proposing approximately `804.139 MPa`.  After it
+completes, interpolate stress versus `log10(N_handoff)` to fill the largest
+useful uncovered life gap with one condition at a time.
 
 The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 

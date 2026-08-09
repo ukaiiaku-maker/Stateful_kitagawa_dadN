@@ -65,6 +65,30 @@ class V9FEMTransactionTests(unittest.TestCase):
         self.assertTrue(np.isfinite(coarse.normalized_error))
         self.assertLess(fine.normalized_error, coarse.normalized_error)
 
+    def test_absolute_strain_scale_does_not_overresolve_inactive_component(self):
+        a = np.asarray([0.0])
+        b = np.asarray([1.0e-13])
+        controlled = self.model._scaled_error(a, b, 1.0e-8, 2.0e-4)
+        machine_zero = self.model._scaled_error(a, b, 1.0e-18, 2.0e-4)
+        self.assertLess(controlled, 0.11)
+        self.assertGreater(machine_zero, 1.0e3)
+
+    def test_physical_absolute_strain_tolerance_matches_tighter_reference(self):
+        prior = self.cached_model.ep_atol
+        try:
+            self.cached_model.ep_atol = 1.0e-8
+            production = self.cached_model.advance(
+                self.initial, cycle_start=0.0, cycle_end=2.0, initial_block_dN=2.0
+            )
+            self.cached_model.ep_atol = 1.0e-9
+            tighter = self.cached_model.advance(
+                self.initial, cycle_start=0.0, cycle_end=2.0, initial_block_dN=2.0
+            )
+        finally:
+            self.cached_model.ep_atol = prior
+        np.testing.assert_allclose(production.state.ep_gp, tighter.state.ep_gp, rtol=3e-4, atol=2e-8)
+        np.testing.assert_allclose(production.state.rho_gp, tighter.state.rho_gp, rtol=2e-7, atol=2.0)
+
     def test_cached_real_fem_is_physics_equivalent(self):
         native = self.model.propose(self.initial, 0.05)
         cached = self.cached_model.propose(self.initial, 0.05)

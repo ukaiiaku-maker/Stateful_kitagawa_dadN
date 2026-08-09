@@ -71,19 +71,56 @@ def _sha256_file(path: Path) -> str:
 
 
 def _active_source_sha256() -> dict[str, str]:
-    pd_module = sys.modules.get(StatefulPDPatch.__module__)
-    pd_file = Path(getattr(pd_module, "__file__", ""))
     driver_file = Path(__file__)
-    if not driver_file.is_file() or not pd_file.is_file():
-        raise RuntimeError("cannot resolve active v8.3 source files for provenance audit")
-    return {
-        "driver": _sha256_file(driver_file),
-        "pd_module": _sha256_file(pd_file),
+    modules = {
+        "pd_module": StatefulPDPatch.__module__,
+        "fem_transaction": EmbeddedFEMTransaction.__module__,
+        "physical_integrator": plastic_chain_log_rates.__module__,
+        "cached_fem": CachedIntactFEM.__module__,
+        "array_codec": AtomicArrayGenerationStore.__module__,
+    }
+    paths = {name: Path(getattr(sys.modules.get(module), "__file__", "")) for name, module in modules.items()}
+    if not driver_file.is_file() or any(not path.is_file() for path in paths.values()):
+        raise RuntimeError("cannot resolve active v9 source files for provenance audit")
+    return {"driver": _sha256_file(driver_file)} | {
+        name: _sha256_file(path) for name, path in paths.items()
     }
 
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Real K360 accepted boundary with 1e-10 absolute strain control;
+        # 1e-8 successor was separately checked against 1e-9.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "e8b95f80249c6ff4deba9ab63fc4b701aec657677cc9bf94486fcf6945a781cf",
+        "fem_transaction": "be5c8f52a4147e140ce5f803bf4bf6745468d299baf40085a6dfb88e2b02e4e2",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Real K360 accepted boundary with 1e-12 absolute strain control;
+        # 1e-10 successor was separately checked against 1e-11.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "f38bf43c8370822d91f41946f5b9ceed4120f014a6bf12ff37449a42fb4a5199",
+        "fem_transaction": "f342bbd3d20f77be6d40901aca02ac0c695ffdb74c99fdfda44cf2809f38a98e",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Diagnostic-only component-error source preceding the validated
+        # absolute strain tolerance correction in v9_fem_transaction.py.
+        "driver": "7b97d38560021600c1059b03a36c424e65269d6b3f9b9cb6c99e7baa0a278296",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+    },
+    {
+        # c8ab0dc: adds persistent controller scheduling; diagnostic-only
+        # successor adds componentwise embedded error reporting.
+        "driver": "5f035212efdfeb2cb31b783cb0679360ea2467062a1fa18a2dd0f85a335cf018",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+    },
     {
         # ebb0bd7/11a64e2: identical physics and accepted state; predecessor
         # recomputed the embedded candidate from the broad physical bound.
@@ -1131,6 +1168,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "max_blocks_requested": int(args.max_blocks),
             "dN": dN,
             "v9_fem_embedded_error": fem_proposal.normalized_error,
+            "v9_fem_error_ep_gp": fem_proposal.component_errors.get("ep_gp", np.nan),
+            "v9_fem_error_rho_gp": fem_proposal.component_errors.get("rho_gp", np.nan),
+            "v9_fem_error_epsp_acc_gp": fem_proposal.component_errors.get("epsp_acc_gp", np.nan),
             "v9_fem_rejections": fem_rejections,
             "next_birth_wait_cycles_pre": next_birth_wait,
             "block_limited_by_birth_clock": bool(block_limited_by_birth_clock),

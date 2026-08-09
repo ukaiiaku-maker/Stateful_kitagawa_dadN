@@ -1,15 +1,44 @@
 {
   "K360_CENSOR": {
-    "cumulative_expected_births": 0.3405986844078543,
-    "cycles": 2034746.7175940112,
-    "instantaneous_birth_hazard_per_cycle": 2.160256482256334e-08,
+    "cumulative_expected_births": 0.6275936369992176,
+    "cycles": 100000000.0,
+    "effective_hazard_points": 970,
+    "empirical_tail_evidence": "integrable_tail_observed",
+    "instantaneous_birth_hazard_per_cycle": 6.978931330051745e-13,
+    "nested_power_law_fits": [
+      {
+        "empirical_extrapolated_remaining_integrated_hazard": 0.0049999655218174845,
+        "end_cycle": 99910842.32531342,
+        "exponent": 2.048940554612537,
+        "fraction": 0.5,
+        "r_squared": 0.9958954552821238,
+        "start_cycle": 2409276.629819056
+      },
+      {
+        "empirical_extrapolated_remaining_integrated_hazard": 0.0035507966784481537,
+        "end_cycle": 99910842.32531342,
+        "exponent": 2.284539556434782,
+        "fraction": 0.65,
+        "r_squared": 0.9998663034014837,
+        "start_cycle": 22917233.471332923
+      },
+      {
+        "empirical_extrapolated_remaining_integrated_hazard": 0.0033697090099751898,
+        "end_cycle": 99910842.32531342,
+        "exponent": 2.3351686267793452,
+        "fraction": 0.8,
+        "r_squared": 0.9999713235537128,
+        "start_cycle": 57665833.17492485
+      }
+    ],
     "note": "Finite-horizon censoring is not endurance evidence.",
-    "observation": "restartable",
+    "observation": "right_censored",
     "physics_asymptotic_classification": "undetermined"
   },
   "K360_FAILURE": {
     "cumulative_expected_births": 0.9665738930129143,
     "cycles": 3474029.481029375,
+    "empirical_tail_evidence": "not_applicable_after_physical_handoff",
     "instantaneous_birth_hazard_per_cycle": 0.0,
     "note": "Finite-horizon censoring is not endurance evidence.",
     "observation": "physical_handoff",
