@@ -1,0 +1,37 @@
+{
+  "source_archive": "stateful_pd_kitagawa_v2_8_gated_pilot(2).zip",
+  "censor_stress_amplitude_MPa": 690.4432004940379,
+  "cycles_end": 100000000.0,
+  "cumulative_expected_births_end": 0.6223159419460373,
+  "nested_power_law_fits": [
+    {
+      "fraction": 0.5,
+      "start_cycle": 4766224.25137639,
+      "end_cycle": 99586253.71919525,
+      "exponent": 2.1741846858080693,
+      "amplitude": 11917466.134898774,
+      "r_squared": 0.999066470078393,
+      "residual_integrated_hazard": 0.0041217749052907
+    },
+    {
+      "fraction": 0.65,
+      "start_cycle": 13182695.737798817,
+      "end_cycle": 99586253.71919525,
+      "exponent": 2.24921857754149,
+      "amplitude": 44606820.07742166,
+      "r_squared": 0.999855752947341,
+      "residual_integrated_hazard": 0.0036413595114226914
+    },
+    {
+      "fraction": 0.8,
+      "start_cycle": 33575167.25154887,
+      "end_cycle": 99586253.71919525,
+      "exponent": 2.296280533132352,
+      "amplitude": 103704272.010196,
+      "r_squared": 0.999947775777379,
+      "residual_integrated_hazard": 0.0034291578112430445
+    }
+  ],
+  "naive_fit_based_survival_asymptote": 0.5344924270789695,
+  "interpretation": "Observed v2.8 censor tail is consistent over these windows with an integrable power-law birth-hazard tail, but finite-window fitting alone cannot exclude a later positive plateau or crossover. Treat this as evidence, not proof, of endurance."
+}
