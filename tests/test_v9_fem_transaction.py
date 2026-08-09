@@ -7,7 +7,9 @@ from arrhenius_fracture.sn_arrhenius_chain import build_chain_from_namespace
 from arrhenius_fracture.sn_feature_geometry_v8_7 import (
     BluntNotchGeometry, make_blunt_edge_notch_mesh,
 )
-from arrhenius_fracture.sn_intact_fem import plane_strain_D
+from arrhenius_fracture.sn_intact_fem import (
+    affine_stress_control_displacements, cycle_stress_histories, plane_strain_D,
+)
 from arrhenius_fracture.sn_pd2d_stateful_v8_7_generalized_features import (
     apply_representative_fatigue_model, build_parser,
 )
@@ -49,6 +51,7 @@ class V9FEMTransactionTests(unittest.TestCase):
             sigma_min_Pa=args.R * sigma_max, relative_tolerance=1e-4,
             cached_fem=CachedIntactFEM(mesh, bnd, mat, plane_strain_D(mat)),
         )
+        cls.mesh, cls.bnd, cls.mat, cls.args = mesh, bnd, mat, args
         cls.initial = FEMPhysicalState(
             np.zeros((3, mesh.ne)), np.full(mesh.ne, args.rho0),
             np.zeros(mesh.ne), np.zeros(mesh.ndof), 0.0,
@@ -68,6 +71,26 @@ class V9FEMTransactionTests(unittest.TestCase):
         np.testing.assert_allclose(cached.state.ep_gp, native.state.ep_gp, rtol=2e-12, atol=1e-20)
         np.testing.assert_allclose(cached.state.rho_gp, native.state.rho_gp, rtol=2e-14, atol=0.02)
         np.testing.assert_allclose(cached.state.u, native.state.u, rtol=2e-12, atol=1e-20)
+
+    def test_affine_cached_phase_history_matches_repeated_solves(self):
+        Dmat = plane_strain_D(self.mat)
+        Umax, Umin, u_zero, _, _ = affine_stress_control_displacements(
+            self.mesh, self.bnd, self.mat, Dmat, self.initial.ep_gp,
+            self.model.sigma_max_Pa, self.model.sigma_min_Pa, self.initial.u,
+        )
+        native = cycle_stress_histories(
+            self.mesh, self.bnd, self.mat, Dmat, self.initial.ep_gp,
+            Umax, Umin, 16, u_zero,
+        )
+        cached = self.cached_model.cached_fem.stress_histories(
+            self.initial.ep_gp, Umax, Umin, 16, u_zero,
+        )
+        for key in ("sigma_node", "seq_node", "s1_node", "Ftop"):
+            np.testing.assert_allclose(cached[key], native[key], rtol=3e-10, atol=1e-4)
+        # Tensile-energy gating is discontinuous at s1=0; roundoff can toggle
+        # a few essentially unloaded nodes without affecting the rate drivers.
+        np.testing.assert_allclose(cached["psi_node"], native["psi_node"], rtol=1e-3, atol=2e3)
+        np.testing.assert_allclose(cached["u_end"], native["u_end"], rtol=3e-12, atol=2e-20)
 
     def test_accepted_heun_state_converges_under_partition(self):
         whole = self.model.propose(self.initial, 0.02).state

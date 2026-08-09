@@ -88,6 +88,10 @@ VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
         "driver": "cf73e1b71c50730ee8c026c2de8894109d23730a4cca26ba3c92f5effeabee01",
         "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
     },
+    {
+        "driver": "f7678fa38a6cf18a400251effa93f8ed115688b3de6086e6d941f0ef000b685e",
+        "pd_module": "3eeb5707625062d16d4325beab5392638ccff8f96f6c3465039229ad16ce14b0",
+    },
 )
 
 

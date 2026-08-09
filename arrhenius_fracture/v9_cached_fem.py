@@ -122,11 +122,21 @@ class CachedIntactFEM:
     def stress_histories(self, ep_gp, Umax, Umin, n_phase, u_start):
         phase = np.linspace(0.0, 2.0 * np.pi, int(n_phase), endpoint=False)
         Uhist = Umin + (Umax - Umin) * 0.5 * (1.0 + np.cos(phase))
-        u = u_start.copy()
+        # With fixed geometry, intact linear elasticity and fixed eigenstrain,
+        # the displacement/reaction response is affine in prescribed U. Two
+        # factorized solves therefore generate the complete phase history
+        # exactly; solving every phase repeats identical linear algebra.
+        Rstart = self.internal_force(u_start, ep_gp)
+        u_zero, force_zero = self.solve_tension(Rstart, u_start, 0.0, 0.0)
+        Rzero = self.internal_force(u_zero, ep_gp)
+        probe = max(self.mesh.hbar_tip, 1e-8) * 1e-3
+        u_probe, force_probe = self.solve_tension(Rzero, u_zero, probe, -probe)
+        response = (u_probe - u_zero) / probe
+        force_slope = (force_probe - force_zero) / probe
         sig_nodes, seq_nodes, s1_nodes, psi_nodes, forces, displacements = [], [], [], [], [], []
         for U in Uhist:
-            Rint = self.internal_force(u, ep_gp)
-            u, force = self.solve_tension(Rint, u, U, -U)
+            u = u_zero + float(U) * response
+            force = force_zero + float(U) * force_slope
             sig, seq, s1, psi = stress_state_intact(
                 self.mesh, u, ep_gp, self.Dmat, self.material
             )
