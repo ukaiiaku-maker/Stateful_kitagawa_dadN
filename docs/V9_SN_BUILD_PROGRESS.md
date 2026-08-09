@@ -52,12 +52,35 @@ The v9 Boltzmann constant now uses the same exact repository `KB/EV_TO_J` value 
 | Full FEM/rho embedded transaction | implemented; PD error coupling still being extended |
 | Real shortened partition proof | passed at production K360 geometry for `dN_max=1` versus `0.05` |
 | Real atomic restart proof | passed at production K360 geometry through schema-9 ACTIVE generation |
-| K360 735.921 MPa | active; restartable generation at `N=9478.027455854328` |
-| K360 690.443 MPa | not started; correctly gated |
+| K360 735.921 MPa | valid physical handoff at `N=3,474,029.481029375` |
+| K360 690.443 MPa | next sequential condition; correctly gated until the failure anchor completed |
+
+## First physical anchor result
+
+The K360 shielded `735.9214951373579 MPa` condition completed after 852 accepted
+blocks at `N=3,474,029.481029375`.  The terminal classification is
+`physical_handoff`, not a numerical or geometry termination.  The crack was
+root-connected and active with 75 connected bonds, a `62.625 um` centerline,
+slenderness `8.35`, width ratio `0.2395`, orientation coherence `0.9784`, no
+off-front broken bonds, and `527.375 um` boundary clearance.  Every physical
+handoff sub-gate and the production geometry audit passed.
+
+The event differs from the historical v8.7 reference near `3.696e6` cycles by
+about `-6.0%`; no parameter was fitted to reduce that discrepancy.  Persistent
+birth occurred at `N=1,793,122.651`, front capture at `N=2,351,351.153`, and the
+physical-handoff length was reached at the terminal accepted boundary.
+
+The terminal schema-9 ACTIVE generation is an accepted physical boundary at
+exactly the reported cycle coordinate.  It contains all 46 array components,
+including log delivery memory, log cumulative birth hazard, persistent
+transition thresholds/outcome uniforms, and both independent RNG states.
 
 ## Next automatic action
 
-Run the K360 735.921 MPa anchor from its immutable request with the now-qualified schema-9 driver. Monitor accepted/rejected blocks and periodic remainder behavior; preserve and resume the newest valid ACTIVE generation for any implementation interruption.
+Start the exact preserved K360 shielded `690.4432004940379 MPa` request as the
+next and only active condition.  Publish logarithmic diagnostic checkpoints,
+classify its large-N tail separately from finite-horizon censoring, and reuse
+its newest valid ACTIVE generation after any interruption.
 
 The K360 failure anchor has now started and published a valid ACTIVE generation at `N=9478.027455854328` (10 accepted blocks, no birth). Profiling showed repeated assembly/factorization of the unchanged fixed-geometry linear stiffness dominated wall time. The run was interrupted only after that atomic generation was present. A v9-only cached FEM implementation reuses the immutable stiffness and sparse factorization; a production-geometry A/B checkpoint at `N=0.1` agrees with the uncached implementation to about `1e-13` relative or better across FEM, Lambda and birth hazard. The exact predecessor source hashes are explicitly allowlisted for this verified cache-only migration so the K360 generation is resumed rather than restarted.
 
