@@ -11,10 +11,12 @@ import math
 import sys
 from typing import Iterable
 
+from .config import EV_TO_J, KB
+
 
 LOG_MAX_FLOAT = math.log(sys.float_info.max)
 LOG_MIN_SUBNORMAL = math.log(float.fromhex("0x0.0000000000001p-1022"))
-KB_EV_PER_K = 8.617333262145e-5
+KB_EV_PER_K = KB / EV_TO_J
 
 
 @dataclass(frozen=True)
