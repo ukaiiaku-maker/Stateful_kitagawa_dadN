@@ -46,14 +46,17 @@ Production manifests identify it as:
 
 `emission_stochastic = false`
 
-Cleavage first passage and embryo stabilization/healing clocks remain
-stochastic. No emission RNG or source thresholds are added.
+Cleavage first passage remains stochastic.  The legacy PD model retains its
+separate stabilization/healing clocks; the canonical four-class path stops at
+cleavage first passage and never enters that stage. No emission RNG or source
+thresholds are added.
 
-## Unresolved cleavage-to-embryo coupling boundary
+## Cleavage-to-endpoint boundary — resolved by governing decision
 
-The exact signed MPZ state and aggregate emission law are now recoverable and
-restartable without ambiguity. The next connection into the v9 spatial embryo
-state is not defined by either authoritative implementation.
+The exact signed MPZ state and aggregate emission law are recoverable and
+restartable without ambiguity.  `CODEX_CANONICAL_CLEAVAGE_STABLE_BIRTH_DECISION.md`
+now resolves the former connection ambiguity: the canonical four-class path
+does not connect to the v9 spatial embryo state.
 
 The canonical sharp-front engine owns one front-local scalar cleavage renewal
 clock. Its cleavage rate is computed from the effective tip loading and its
@@ -71,7 +74,7 @@ No audited source defines any of the following:
 - how the canonical front-local hazard multiplicity relates to the v9 spatial
   candidate-site density.
 
-Choosing a distribution, retaining/removing the K=2 gate, or allocating a
-front event to a site would change the stable-birth law and is therefore a new
-constitutive mapping rather than an implementation detail. Four-class
-production trajectories remain fail-closed at this boundary.
+Accordingly the production parity path uses one root-local canonical cleavage
+clock, no PD site multiplicity, no K=2 gate, no site allocation, and no
+post-cleavage stabilization/healing stage.  The historical PD candidate-site
+model remains available under its separate legacy model identity.
