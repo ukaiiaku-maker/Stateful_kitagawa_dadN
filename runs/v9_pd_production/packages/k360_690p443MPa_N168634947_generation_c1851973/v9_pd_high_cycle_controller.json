@@ -1,0 +1,110 @@
+{
+  "accepted_projected_cycles": 0.0,
+  "exact_map_evaluations": 17,
+  "mode_history": [
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "current_residual": 1.2102368912012385e-08,
+        "field_residual": {
+          "available": 6.972200594645983e-13,
+          "completion": 1.8452282550741605e-14,
+          "embryo": 4.228547513584751e-13,
+          "ep_gp": 1.2102368912012385e-08,
+          "epsp_acc_gp": 5.168016735953467e-09,
+          "inactive": 3.7893248066424334e-20,
+          "log_delivery_memory": 1.278399863289612e-09,
+          "rho_gp": 8.220182748788842e-09,
+          "stable": 2.7431485902229547e-13,
+          "u": 8.907546209573415e-10
+        }
+      },
+      "exact_map_evaluations": 1,
+      "mode": "periodic_precheck"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 8.080858431209855e-10,
+        "event_safe": true,
+        "hazard_error": 0.007532992307545783,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.905379001877485,
+        "state_error": 1.3292454814245203e-08,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 8.080858138742083e-10,
+        "event_safe": true,
+        "hazard_error": 0.003759402923908084,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.8299565691178676,
+        "state_error": 6.464686581959781e-09,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 8.080858138742083e-10,
+        "event_safe": true,
+        "hazard_error": 0.0018779348242006222,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.7094637043443819,
+        "state_error": 3.2323432947436815e-09,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 8.080858138742083e-10,
+        "event_safe": true,
+        "hazard_error": 0.0009385265822672295,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.5497433173578122,
+        "state_error": 1.6161716419396067e-09,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "projective_reject"
+    }
+  ],
+  "model_id": "v9_stateful_pd_dormant_high_cycle_event_engine_v1",
+  "physical_cycles": 100000000.0,
+  "topology_signature": "712dc8f19f524832a8955c9014a2fe39914c28e1e1683669044b45390ebe3fe5"
+}

@@ -57,6 +57,17 @@ def test_real_callback_uses_fem_pd_path_without_consuming_physical_state():
     assert patch._candidate_rng.bit_generator.state==candidate_rng
     assert patch._event_rng.bit_generator.state==event_rng
 
+    window=evaluate_dormant_exact_cycle(args=args,shield_on=True,mesh=mesh,patch=patch,pd_state=state,
+        crack=crack,plast_chain=chain,cached_fem=cached,fem_transaction=transaction,
+        sigma_max=sigma_max,sigma_min=sigma_min,ep_gp=ep,rho_gp=rho,epsp_acc_gp=eps,u=u,
+        plastic_work=0.0,cycles=0.0,dN=2.0)
+    assert window["diagnostics"]["private_window_cycles"] == 2.0
+    assert np.all(np.isfinite(window["rho_gp"]))
+    np.testing.assert_array_equal(state.site_status,state_before.site_status)
+    np.testing.assert_array_equal(state.birth_cumulative_hazard,state_before.birth_cumulative_hazard)
+    assert patch._candidate_rng.bit_generator.state==candidate_rng
+    assert patch._event_rng.bit_generator.state==event_rng
+
     def evaluator(adapter):
         payload=evaluate_dormant_exact_cycle(args=args,shield_on=True,mesh=adapter.mesh,patch=adapter.patch,
             pd_state=adapter.pd_state,crack=crack,plast_chain=chain,cached_fem=cached,

@@ -76,8 +76,8 @@ def _logdiffexp(log_total, log_old):
 
 def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crack,
         plast_chain, cached_fem, fem_transaction, sigma_max, sigma_min,
-        ep_gp, rho_gp, epsp_acc_gp, u, plastic_work, cycles):
-    """Authoritative private one-cycle operation extracted from the block loop.
+        ep_gp, rho_gp, epsp_acc_gp, u, plastic_work, cycles, dN=1.0):
+    """Authoritative private exact/macro-cycle operation extracted from the block loop.
 
     The same cached FEM, pre/post midpoint construction, PD equilibrium, and
     v9 finite-memory update are used. Persistent thresholds are made unreachable
@@ -97,9 +97,12 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
         args.plastic_n_phase, plast_chain, u_zero, args.k_store, args.k_dyn,
         args.rho_floor, args.rho_cap, args.max_dep_phase, args.max_rho_rel_phase,
     )
-    proposal = fem_transaction.propose(fem0, 1.0, first_cycle=first)
+    dN = float(dN)
+    if not math.isfinite(dN) or dN <= 0.0:
+        raise ValueError("private dormant window dN must be positive and finite")
+    proposal = fem_transaction.propose(fem0, dN, first_cycle=first)
     if proposal.normalized_error > 1.0:
-        raise RuntimeError("one physical cycle fails the accepted FEM transaction tolerance")
+        raise RuntimeError("private dormant window fails the accepted FEM transaction tolerance")
 
     def coupled_fields(ep, rho, epsacc, displacement):
         Uhi, Ulo, uzero, _, _ = cached_fem.affine(ep, sigma_max, sigma_min, displacement)
@@ -127,7 +130,7 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
     born0 = np.asarray(trial.born_cumulative, float).copy()
     healed0 = np.asarray(trial.healed_cumulative, float).copy()
     diagnostics = patch.update(
-        trial, crack, sigma_mid, delivery_mid, args.T, args.frequency_Hz, 1.0,
+        trial, crack, sigma_mid, delivery_mid, args.T, args.frequency_Hz, dN,
         cycles, post[4], post[5], post[6], post[3], point_amp, bond_amp,
         log_delivery_rate_phase_global=log_delivery_mid,
     )
@@ -155,7 +158,8 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
         "diagnostics": {"max_effective_stress_Pa": diagnostics.max_effective_stress_Pa,
                         "max_delivery_memory": diagnostics.max_delivery_memory,
                         "max_completion": diagnostics.max_completion,
-                        "fem_embedded_error": proposal.normalized_error},
+                        "fem_embedded_error": proposal.normalized_error,
+                        "private_window_cycles": dN},
         "transition_signature": "dormant_fixed_topology",
     }
 
@@ -1062,14 +1066,14 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     high_cycle_retry_after = float(args.pd_high_cycle_start_cycles)
 
     def build_high_cycle_adapter():
-        def evaluator(adapter):
+        def evaluator(adapter, dN=1.0):
             payload = evaluate_dormant_exact_cycle(
                 args=args, shield_on=shield_on, mesh=adapter.mesh, patch=adapter.patch,
                 pd_state=adapter.pd_state, crack=crack, plast_chain=plast_chain,
                 cached_fem=cached_fem, fem_transaction=fem_transaction,
                 sigma_max=sigma_max, sigma_min=sigma_min, ep_gp=adapter.ep_gp,
                 rho_gp=adapter.rho_gp, epsp_acc_gp=adapter.epsp_acc_gp, u=adapter.u,
-                plastic_work=adapter.plastic_work, cycles=adapter.cycles,
+                plastic_work=adapter.plastic_work, cycles=adapter.cycles, dN=dN,
             )
             adapter.ep_gp = payload.pop("ep_gp"); adapter.rho_gp = payload.pop("rho_gp")
             adapter.epsp_acc_gp = payload.pop("epsp_acc_gp"); adapter.u = payload.pop("u")
@@ -1082,7 +1086,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         return SpatialPDDormantAdapter(
             patch=patch, pd_state=pd_state, mesh=mesh, ep_gp=ep_gp, rho_gp=rho_gp,
             epsp_acc_gp=epsp_acc_gp, u=u, cycles=cycles, plastic_work=Wp_total,
-            cycle_evaluator=evaluator,
+            cycle_evaluator=evaluator, window_evaluator=evaluator,
         )
 
     for ib in range(start_block, args.max_blocks):
@@ -1108,7 +1112,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                               max(decade - cycles, 1.0))
                 engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
                     projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2),
-                    exact_retry_cycles=0))
+                    exact_retry_cycles=0,
+                    minimum_projected_cycles_per_exact_map=16.0))
                 hc = engine.advance(segment)
                 high_cycle_mode_rows.extend({
                     "cycles_total": adapter.cycles, "requested_segment": segment,

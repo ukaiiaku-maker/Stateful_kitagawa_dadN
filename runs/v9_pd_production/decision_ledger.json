@@ -25,7 +25,8 @@
       "issue": "one mixed-unit residual norm covered strain, density, displacement, and log memory",
       "evidence": "raw ActiveState vector used a universal unit floor",
       "resolution": "declared scaled-linear/log/log1p transforms, inverse maps, bounds, and per-field residuals",
-      "status": "resolved_pending_real_array_tests"
+      "validation": "36dcfb9; tests/test_v9_pd_real_cycle_callback.py and 690.443 MPa generation_c18519735d8640a8b6cad153c26158ff",
+      "status": "resolved"
     },
     {
       "id": "HC-004",
@@ -34,7 +35,8 @@
       "evidence": "transactional driver still owns the coupled block operation",
       "resolution": "shared cached-FEM and midpoint PD operation extracted and integrated behind an opt-in production path",
       "next_action": "extend parity horizons and reproduce historical finite-life/front control",
-      "status": "resolved_pending_historical_qualification"
+      "validation": "2ccd75b and fca763b; real 10-cycle direct/callback parity plus the 735.921495 MPa event-to-front replay",
+      "status": "resolved"
     },
     {
       "id": "HC-005",
@@ -66,7 +68,8 @@
       "issue": "real private maps deep-copied immutable mesh, sparse FEM cache, patch geometry, and topology",
       "evidence": "historical 48x96 K360 1e4 prefix spent over 90 seconds inside adapter deepcopy before completing periodic qualification",
       "resolution": "share immutable geometry/operators and copy only mutable FEM arrays, PD state, ledgers, and cycle state",
-      "status": "resolved_pending_historical_rerun"
+      "validation": "fca763b; 48x96 historical K360 replay completed through active-front capture",
+      "status": "resolved"
     },
     {
       "id": "HC-009",
@@ -82,7 +85,8 @@
       "issue": "out-of-domain projective trial escaped as an exception instead of a rejected proposal",
       "evidence": "historical K360 projection produced a negative smooth embryo coordinate and stopped orchestration",
       "resolution": "convert inverse-transform constitutive-domain failures into side-effect-free projective rejection and halving",
-      "status": "resolved_pending_historical_rerun"
+      "validation": "36dcfb9; projective constitutive-domain regression and real 690.443 MPa reject/halve continuation",
+      "status": "resolved"
     },
     {
       "id": "HC-011",
@@ -99,7 +103,8 @@
       "issue": "sub-ULP embryo-transition wait could not advance the absolute cycle coordinate",
       "evidence": "at N=1805854.1488375247 a 5.56e-11-cycle wait rounded back to the same N for over 100 accepted blocks",
       "resolution": "localize a positive sub-ULP wait at np.nextafter(N,+infinity), the tightest representable boundary",
-      "status": "resolved_pending_historical_resume"
+      "validation": "fca763b; historical replay localized embryo/stabilization and continued to front capture without a cycle-coordinate stall",
+      "status": "resolved"
     },
     {
       "id": "HC-013",
@@ -107,7 +112,8 @@
       "issue": "exact sub-cycle event localization reset the macro-step controller scale",
       "evidence": "after node-23 stabilization the controller doubled from one ULP for over 24 updates, triggering artificial primary-seed reselection before damage growth; preserved control retained node 23",
       "resolution": "preserve the accepted pre-event controller proposal across an embryo-transition localization boundary",
-      "status": "resolved_pending_pre_event_replay"
+      "validation": "fca763b; corrected replay retained primary seed node 23 with zero reselections through front capture",
+      "status": "resolved"
     },
     {
       "id": "HC-014",
@@ -115,7 +121,8 @@
       "issue": "projective ledger validation mixed spatial variation with temporal rate variation",
       "evidence": "spatially nonuniform born/healed ledger arrays reported variation=1 even for steady temporal rates",
       "resolution": "take start/mid/end peak-to-peak along the temporal axis and normalize by the ledger global rate scale",
-      "status": "resolved_pending_low_stress_run"
+      "validation": "36dcfb9; spatial-ledger regression and accepted real projected segments on the 690.443 MPa trajectory",
+      "status": "resolved"
     },
     {
       "id": "HC-015",
@@ -164,6 +171,22 @@
       "evidence": "at N=1e8 physical-state curvature was 8.1e-10, but the smallest two-cycle proposal retained 9.39e-4 log-hazard prediction error; direct continuation to N=1.68634947e8 reduced the rate to 1.4023e-13/cycle and predicted wait to 2.0013e10 cycles",
       "resolution": "preserve the atomic tail and implement a multi-cycle/rate-separated training fit before 1e10-scale continuation; do not brute-force the estimated wait",
       "status": "open"
+    },
+    {
+      "id": "HC-021",
+      "classification": "numerical-method defect",
+      "issue": "locally valid but inefficient projected segments accumulated unacceptable finite-life A/B drift",
+      "evidence": "196 projected cycles shifted the 735.921 MPa embryo by 86.85 cycles and front capture by 4330.74 cycles relative to the same-current-head direct run",
+      "resolution": "require at least 16 projected cycles per exact map in production; repaired A/B accepted zero inefficient segments and matched every event/state diagnostic exactly",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-022",
+      "classification": "physical_result",
+      "issue": "690.443 MPa remained dormant at the preserved final checkpoint and user requested a 150 MPa stress increase",
+      "evidence": "generation_c18519735d8640a8b6cad153c26158ff was packaged; 840.443200494 MPa produced stable birth at N=36021.57494691292 and front capture at N=867148.3411936606",
+      "resolution": "retain both conditions as distinct physical trajectories; no further stress increase is required",
+      "status": "resolved"
     }
   ]
 }

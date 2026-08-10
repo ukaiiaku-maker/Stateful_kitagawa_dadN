@@ -10,6 +10,8 @@ def main():
     p.add_argument("--out",required=True); p.add_argument("--cycles-max",type=float,required=True)
     p.add_argument("--max-blocks",type=int,default=20000); p.add_argument("--resume",action="store_true")
     p.add_argument("--high-cycle-start",type=float,default=1e4)
+    p.add_argument("--disable-high-cycle", action="store_true")
+    p.add_argument("--sigma-a-MPa", type=float, default=None)
     a=p.parse_args(); source=json.loads(Path(a.source_run_args).read_text())
     target=driver.build_parser().parse_args([])
     valid=set(vars(target))
@@ -22,11 +24,12 @@ def main():
     # replay back into its immutable source campaign.
     target.checkpoint_path=""
     target.resume=a.resume; target.skip_existing=False; target.pd_image_policy="none"
-    target.pd_high_cycle=True; target.pd_high_cycle_max_segment=min(a.cycles_max,1e9)
+    target.pd_high_cycle=not a.disable_high_cycle; target.pd_high_cycle_max_segment=min(a.cycles_max,1e9)
     target.pd_high_cycle_start_cycles=min(a.high_cycle_start,a.cycles_max)
     target.checkpoint_every_blocks=10; target.print_every=10
-    case=str(source.get("case","shielded")); sigma=float(source["sigma_a_MPa"])
+    case=str(source.get("case","shielded")); sigma=(float(source["sigma_a_MPa"])
+        if a.sigma_a_MPa is None else float(a.sigma_a_MPa))
     print(json.dumps({"source":a.source_run_args,"case":case,"sigma_a_MPa":sigma,
-                      "cycles_max":a.cycles_max,"pd_high_cycle":True},indent=2))
+                      "cycles_max":a.cycles_max,"pd_high_cycle":target.pd_high_cycle},indent=2))
     driver.run_case_stress(target,case,sigma)
 if __name__=="__main__": main()

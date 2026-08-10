@@ -1,0 +1,50 @@
+{
+  "available_site_rows": 4349,
+  "cycles": 168634947.0289538,
+  "files": {
+    "ACTIVE.json": {
+      "bytes": 61,
+      "sha256": "42a48e1fe77f0759e50a126b949ddcbcb82e21f0f515fc83daf2170069dcc536"
+    },
+    "available_persistent_site_clock_table.csv": {
+      "bytes": 505248,
+      "sha256": "1df7a274e3aeb36f08c00f529c3e84151e073dc639bf74854b27ec9c60e806c7"
+    },
+    "checkpoint_latest.npz": {
+      "bytes": 1815924,
+      "sha256": "aa31e59b7242f21c2c7556df11f1ff40d9c055bffb5bf753cb0655f43ad90aa2"
+    },
+    "run_args.json": {
+      "bytes": 9109,
+      "sha256": "f0f6a58e7db69518f72598fd2f0cda8ac68bffffad86ed1dfe592d5f3b54697f"
+    },
+    "v9_generations/generation_c18519735d8640a8b6cad153c26158ff/manifest.json": {
+      "bytes": 3071,
+      "sha256": "bc3db72bc1814db58c196f74fc95fe7e72daf5cc7876342b0360e75df57d9031"
+    },
+    "v9_generations/generation_c18519735d8640a8b6cad153c26158ff/state_arrays.npz": {
+      "bytes": 838975,
+      "sha256": "3abd050480dc792b81c3f000a42e762a9e5d632d573025d13906e35c8d56dfa3"
+    },
+    "v9_generations/generation_c18519735d8640a8b6cad153c26158ff/state_metadata.json": {
+      "bytes": 4042414,
+      "sha256": "952f01806bb497a4600f2c67f8b4b0d94de0d448a6073caf479c7425354ea603"
+    },
+    "v9_generations/generation_c18519735d8640a8b6cad153c26158ff/summary.json": {
+      "bytes": 155,
+      "sha256": "7f69f279f910f35b12168a0b3d59347232b4e0abdb665c8b733241a5324c3f0c"
+    },
+    "v9_pd_high_cycle_controller.json": {
+      "bytes": 3405,
+      "sha256": "6a7495536edbe167ff4396172e187320ea8c009cf14b530edbf4f8eb4928f993"
+    },
+    "v9_pd_high_cycle_mode_history.json": {
+      "bytes": 13183,
+      "sha256": "05b4db3253ea4d9fdfd690effdb376460ff13ea8f50200323ab077d11a67e8cd"
+    }
+  },
+  "generation": "generation_c18519735d8640a8b6cad153c26158ff",
+  "schema": "V9_PD_ATOMIC_TAIL_PACKAGE_1",
+  "sigma_a_MPa": 690.4432004940379,
+  "source_case_dir": "/Volumes/Data/Data/Nanopillar_calculation/Stateful_kitagawa_dadN/runs/v9_pd_production/historical_k360_low_stress_hc/shielded/sigmaA_690p443MPa"
+}

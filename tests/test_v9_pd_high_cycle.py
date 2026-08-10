@@ -204,3 +204,39 @@ def test_population_ledgers_close_from_validated_available_and_inactive_endpoint
     np.testing.assert_allclose(ledgers["healed_cumulative"], [0.05])
     np.testing.assert_allclose(ledgers["born_cumulative"], [0.10])
     assert constrained == {"healed_cumulative", "born_cumulative"}
+
+
+def test_repeated_projective_halving_obeys_hard_exact_map_budget():
+    model = SyntheticDormantPD(rate=1e-20, threshold=10.0, contraction=0.5, drift=1e-3)
+    engine = DormantPDHighCycleEngine(model, cfg(
+        periodic_admission_distance=0.0,
+        projective_initial_cycles=64,
+        projective_state_tolerance=0.0,
+        projective_log_hazard_tolerance=0.0,
+        projective_curvature_tolerance=0.0,
+        exact_retry_cycles=0,
+        max_exact_map_evaluations=5,
+    ))
+    result = engine.advance(1000)
+    # One periodic precheck plus exactly one four-map rejected proposal. The
+    # next halved proposal is refused before any private map can run.
+    assert result.exact_map_evaluations == 5
+    assert sum(m.mode == "projective_reject" for m in result.modes) == 1
+    assert result.modes[-1].mode == "efficiency_budget"
+    assert result.modes[-1].detail["required_next_maps"] == 4
+
+
+def test_projective_efficiency_floor_rejects_locally_valid_tiny_skip():
+    model = SyntheticDormantPD(rate=1e-20, threshold=10.0, contraction=1.0, drift=1e-6)
+    engine = DormantPDHighCycleEngine(model, cfg(
+        periodic_admission_distance=0.0,
+        projective_initial_cycles=16,
+        exact_retry_cycles=0,
+        max_exact_map_evaluations=5,
+        minimum_projected_cycles_per_exact_map=8.0,
+    ))
+    result = engine.advance(1000)
+    reject = next(m for m in result.modes if m.mode == "projective_reject")
+    assert reject.detail["reason"] == "insufficient_projective_efficiency"
+    assert reject.detail["projected_cycles_per_exact_map"] == 4.0
+    assert result.accepted_projected_cycles == 0.0

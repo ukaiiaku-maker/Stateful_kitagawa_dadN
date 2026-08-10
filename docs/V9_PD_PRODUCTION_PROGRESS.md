@@ -101,3 +101,26 @@ error remains about `9.4e-4`, above the `2e-4` admission tolerance. A longer
 exact training window/rate-separated fit is therefore required before a
 credible 1e10--1e12 continuation; brute-force continuation was stopped at the
 hash-verified atomic boundary.
+
+## Current-head A/B and requested stress increase
+
+A fresh current-head 735.921495137 MPa direct/high-cycle A/B exposed that 196
+locally accepted but inefficient projected cycles shifted the first embryo by
+86.85 cycles and front capture by 4,330.74 cycles. Production admission now
+requires at least 16 projected cycles per exact map; sub-64-cycle proposals
+fail closed pending the multi-cycle operator. The repaired high-cycle leg then
+matched the direct reference exactly at every reported event and terminal
+quantity: embryo `1805740.0338697084`, stable site `1805742.256830253`, first
+softening `1824173.1357521766`, root connection `2322912.5057363925`, front
+capture `2382710.901963831`, seed node 23, zero reselections, 16 broken bonds,
+and maximum damage `0.9701612494297833`.
+
+The accepted dormant 690.443 MPa generation was packaged with all restart
+arrays, context, hashes, controller/mode history, and all 4,349 available site
+clocks under `runs/v9_pd_production/packages/`. Following the requested rule,
+the stress was increased by 150 MPa to `840.4432004940379 MPa` with unchanged
+K360 geometry, temperature, seeds, and physics. This condition formed a stable
+site: first embryo `36019.35198636835`, stable site `36021.57494691292`, first
+softening `45746.295542562904`, and root/front capture
+`867148.3411936606` cycles. The terminal calculation contains two realized
+births/stable sites, 33 broken bonds, and maximum damage `0.956203983658257`.

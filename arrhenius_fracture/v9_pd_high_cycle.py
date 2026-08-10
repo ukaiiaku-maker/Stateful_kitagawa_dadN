@@ -118,6 +118,7 @@ class HighCycleConfig:
     event_guard_cycles: float = 2.0
     minimum_positive_coordinate: float = -math.inf
     max_exact_map_evaluations: int = 128
+    minimum_projected_cycles_per_exact_map: float = 0.0
 
 
 @dataclass
@@ -497,8 +498,30 @@ class DormantPDHighCycleEngine:
 
             proposal = min(int(remaining), next_projective, int(self.config.projective_max_cycles))
             accepted = False
+            budget_exhausted = False
             while proposal >= 2:
+                # One projective trial evaluates four exact maps: start,
+                # second training cycle, projected midpoint, and endpoint.
+                # Enforce the hard budget before starting a side-effect-free
+                # trial so proposal halving can never overshoot it.
+                if self.exact_map_evaluations + 4 > self.config.max_exact_map_evaluations:
+                    self.mode_history.append(ModeRecord(
+                        "efficiency_budget", 0.0, 0, False,
+                        {"exact_map_evaluations": self.exact_map_evaluations,
+                         "required_next_maps": 4,
+                         "accepted_projected_cycles": self.accepted_projected_cycles},
+                    ))
+                    budget_exhausted = True
+                    break
                 accepted, trial = self._projective_trial(proposal)
+                efficiency = proposal / 4.0
+                if accepted and efficiency < self.config.minimum_projected_cycles_per_exact_map:
+                    accepted = False
+                    trial = dict(trial) | {
+                        "reason": "insufficient_projective_efficiency",
+                        "projected_cycles_per_exact_map": efficiency,
+                        "minimum_projected_cycles_per_exact_map": self.config.minimum_projected_cycles_per_exact_map,
+                    }
                 if accepted:
                     self.adapter.restore_active_state(trial["start"], trial["end_vector"])
                     _commit_log_action(self.adapter, trial["log_action"], proposal)
@@ -508,15 +531,16 @@ class DormantPDHighCycleEngine:
                     self.accepted_projected_cycles += proposal
                     next_projective = min(int(max(proposal + 1, proposal * self.config.projective_growth_factor)),
                                           int(self.config.projective_max_cycles))
-                    self.mode_history.append(ModeRecord("projective", proposal, 3, True,
+                    self.mode_history.append(ModeRecord("projective", proposal, 4, True,
                         {k: v for k, v in trial.items() if k not in {"start", "end_vector", "log_action", "ledgers"}}))
                     accepted = True
                     break
-                self.mode_history.append(ModeRecord("projective_reject", 0.0, 3, False,
+                self.mode_history.append(ModeRecord("projective_reject", 0.0, 4, False,
                     {k: v for k, v in trial.items() if k not in {"start", "end_vector", "log_action", "ledgers"}}))
                 proposal //= 2
                 next_projective = max(proposal, 2)
             if accepted: continue
+            if budget_exhausted: break
 
             burst = min(self.config.exact_retry_cycles, int(math.floor(remaining)))
             if burst <= 0: break
@@ -564,18 +588,24 @@ class DormantPDHighCycleEngine:
 
 
 def state_inventory() -> dict[str, tuple[str, ...]]:
-    """Authoritative first-milestone inventory for the v9 spatial-PD adapter."""
+    """Authoritative executable inventory for the v9 spatial-PD adapter."""
     return {
         "active_continuous": ("fem.ep_gp", "fem.rho_gp", "fem.epsp_acc_gp", "fem.u",
-                              "pd.log_delivery_memory"),
+                              "pd.log_delivery_memory", "pd.available", "pd.embryo",
+                              "pd.stable", "pd.inactive", "pd.completion"),
+        "warm_start_only": ("fem.u",),
+        "reconstructed_cycle_diagnostics": ("pd.completion",),
         "monotone_ledgers": ("fem.plastic_work", "pd.born_cumulative",
                              "pd.healed_cumulative", "pd.born_sites_cumulative",
-                             "pd.healed_sites_cumulative", "pd.log_birth_cumulative_hazard"),
+                             "pd.healed_sites_cumulative", "pd.log_birth_cumulative_hazard",
+                             "adapter.born_expectation", "adapter.healed_expectation"),
         "persistent_stochastic": ("pd.site_birth_threshold", "pd.birth_cumulative_hazard",
                                   "pd.site_transition_threshold", "pd.site_transition_cumulative_hazard",
                                   "pd.site_transition_outcome_uniform", "candidate_rng", "event_rng"),
-        "discrete_topology": ("pd.site_status", "pd.bond_damage", "pd.active_front",
-                              "pd.front_masks", "pd.front_path", "mesh.nodes", "bond_connectivity"),
+        "discrete_topology": ("pd.site_status", "pd.bond_damage", "pd.primary_seed_node",
+                              "pd.active_front", "pd.active_front_bonds", "pd.front_backbone_bonds",
+                              "pd.front_wake_bonds", "pd.front_process_bonds",
+                              "pd.active_front_path_xy", "mesh.nodes", "bond_connectivity"),
     }
 
 

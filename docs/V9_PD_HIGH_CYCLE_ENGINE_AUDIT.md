@@ -1,5 +1,11 @@
 # V9 Stateful-PD high-cycle engine audit
 
+> **Historical/superseded audit.** This document records the synthetic-engine
+> boundary at its original milestone and is preserved without rewriting those
+> claims. Real callback extraction, physical qualification, subsequent repairs,
+> and current production results are governed by
+> `docs/V9_PD_PRODUCTION_PROGRESS.md`.
+
 ## Scope
 
 `v9_stateful_pd_dormant_high_cycle_event_engine_v1` is a separately versioned,

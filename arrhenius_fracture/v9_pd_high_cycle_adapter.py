@@ -50,7 +50,8 @@ TOPOLOGY_NAMES = (
 class SpatialPDDormantAdapter:
     def __init__(self, *, patch, pd_state, mesh, ep_gp, rho_gp, epsp_acc_gp, u,
                  cycles: float, plastic_work: float,
-                 cycle_evaluator: Callable[["SpatialPDDormantAdapter"], dict[str, Any]]):
+                 cycle_evaluator: Callable[["SpatialPDDormantAdapter"], dict[str, Any]],
+                 window_evaluator: Callable[["SpatialPDDormantAdapter", float], dict[str, Any]] | None = None):
         self.patch = patch
         self.pd_state = pd_state
         self.mesh = mesh
@@ -62,6 +63,7 @@ class SpatialPDDormantAdapter:
         self.plastic_work = float(plastic_work)
         self.external_ledgers = {"born_expectation": 0.0, "healed_expectation": 0.0}
         self.cycle_evaluator = cycle_evaluator
+        self.window_evaluator = window_evaluator
 
     def dormant_eligibility(self):
         s = self.pd_state
@@ -265,7 +267,7 @@ class SpatialPDDormantAdapter:
         topology["bonds"] = np.asarray(self.patch.bonds)
         return ProtectedSignatures(_digest(ledgers), _digest(stochastic), _digest(topology))
 
-    def exact_private_cycle(self):
+    def _exact_private_evaluation(self, dN: float):
         # Geometry, patch operators, and the FEM cache are immutable in the
         # eligible regime and may be shared. Deep-copying them dominated real
         # 48x96 private-map wall time without adding isolation.
@@ -276,7 +278,12 @@ class SpatialPDDormantAdapter:
         clone.external_ledgers = deepcopy(self.external_ledgers)
         before = clone.protected_signatures()
         start = clone.active_state()
-        payload = clone.cycle_evaluator(clone)
+        if dN == 1.0:
+            payload = clone.cycle_evaluator(clone)
+        elif clone.window_evaluator is not None:
+            payload = clone.window_evaluator(clone, float(dN))
+        else:
+            raise RuntimeError("no authoritative private multi-cycle evaluator is configured")
         end = clone.active_state()
         after = clone.protected_signatures()
         if before != after or clone.cycles != self.cycles:
@@ -288,6 +295,12 @@ class SpatialPDDormantAdapter:
             np.asarray(payload.get("phase_log_birth_rate", []), float),
             dict(payload.get("diagnostics", {})),
             str(payload.get("transition_signature", "dormant")), before.topology)
+
+    def exact_private_cycle(self):
+        return self._exact_private_evaluation(1.0)
+
+    def exact_private_window(self, dN: float):
+        return self._exact_private_evaluation(float(dN))
 
     def commit_private_cycle(self, evaluation):
         self.restore_active_state(evaluation.state_end, evaluation.state_end.vector)
