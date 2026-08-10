@@ -51,6 +51,38 @@ class SignedMPZPortTests(unittest.TestCase):
         for forbidden in ("rng", "threshold", "exponential(", "site_id"):
             self.assertNotIn(forbidden, source)
 
+    def test_atomic_restart_matches_uninterrupted_signed_state(self):
+        option = next(iter(EXPECTED))
+        uninterrupted = self.make(option)
+        interrupted = self.make(option)
+        history = [
+            (2e-4, 300.0, 3.0e9, [1.4e9, -1.1e9]),
+            (3e-4, 300.0, 3.2e9, [-1.2e9, 1.5e9]),
+            (1e-4, 300.0, 2.8e9, [1.0e9, -0.9e9]),
+        ]
+        for step in history:
+            uninterrupted.advance(*step)
+        interrupted.advance(*history[0])
+        capsule = interrupted.capsule()
+        resumed = self.make(option)
+        resumed.restore_capsule(capsule)
+        for step in history[1:]:
+            resumed.advance(*step)
+        for key in uninterrupted._CAPSULE_ARRAYS:
+            np.testing.assert_array_equal(getattr(uninterrupted.state, key), getattr(resumed.state, key))
+        for key in uninterrupted._CAPSULE_SCALARS:
+            self.assertEqual(getattr(uninterrupted.state, key), getattr(resumed.state, key))
+
+    def test_barrier_log_rates_are_exact_audited_manifest_rates(self):
+        for option in EXPECTED:
+            port = self.make(option)
+            for temperature in (300.0, 900.0, 1300.0):
+                stress = 2.7e9
+                direct_c = float(np.log(port.state.manifest.cleavage.rate(stress, temperature)))
+                direct_e = float(np.log(port.state.manifest.emission.rate(stress, temperature)))
+                self.assertAlmostEqual(port.cleavage_log_rate_s(stress, temperature), direct_c, places=10)
+                self.assertAlmostEqual(port.emission_log_rate_per_site_s(stress, temperature), direct_e, places=10)
+
 
 if __name__ == "__main__":
     unittest.main()

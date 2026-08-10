@@ -16,6 +16,8 @@ import types
 
 import numpy as np
 
+from .config import EV_TO_J, KB
+
 from .v9_four_class_registry import select_canonical_option
 
 
@@ -119,10 +121,66 @@ class SignedMPZPreBirthState:
             "constitutive_source_hashes": hashes,
             "signed_kernel_family_path": str(paths["signed_kernel_family_json"]),
             "port_mode": "direct_immutable_audited_executable_closure",
+            "emission_model": "audited_v10221_aggregate_persistent_emission",
+            "emission_stochastic": False,
+            "cleavage_first_passage_stochastic": True,
+            "fatigue_endpoint": "stable_crack_birth",
         }
 
     def copy(self):
         return copy.deepcopy(self)
+
+    _CAPSULE_ARRAYS = (
+        "mobile_positive", "mobile_negative", "retained_positive", "retained_negative",
+        "accumulated_slip_positive", "accumulated_slip_negative",
+        "wake_mobile_positive", "wake_mobile_negative",
+        "wake_retained_positive", "wake_retained_negative",
+        "wake_slip_positive", "wake_slip_negative",
+    )
+    _CAPSULE_SCALARS = (
+        "emitted_total", "escaped_total", "recovered_total", "advance_total_m",
+        "wake_discarded_mobile_total", "wake_discarded_retained_total",
+        "wake_discarded_slip_total", "time_s", "signed_source_activations_total",
+        "signed_line_content_emitted_total",
+    )
+
+    def capsule(self):
+        return {
+            "schema": "V9_SIGNED_MPZ_PREBIRTH_CAPSULE_1",
+            "option_id": self.option_id,
+            "audit": copy.deepcopy(self.audit),
+            "arrays": {name: np.asarray(getattr(self.state, name)).copy() for name in self._CAPSULE_ARRAYS},
+            "scalars": {name: float(getattr(self.state, name)) for name in self._CAPSULE_SCALARS},
+        }
+
+    def restore_capsule(self, capsule):
+        if capsule.get("schema") != "V9_SIGNED_MPZ_PREBIRTH_CAPSULE_1":
+            raise RuntimeError("unsupported signed-MPZ capsule schema")
+        if capsule.get("option_id") != self.option_id or capsule.get("audit") != self.audit:
+            raise RuntimeError("signed-MPZ capsule provenance/request mismatch")
+        for name in self._CAPSULE_ARRAYS:
+            target = np.asarray(getattr(self.state, name))
+            value = np.asarray(capsule["arrays"][name], float)
+            if value.shape != target.shape or np.any(~np.isfinite(value)) or np.any(value < 0.0):
+                raise RuntimeError(f"invalid signed-MPZ capsule array: {name}")
+            setattr(self.state, name, value.copy())
+        for name in self._CAPSULE_SCALARS:
+            value = float(capsule["scalars"][name])
+            if not np.isfinite(value) or value < 0.0:
+                raise RuntimeError(f"invalid signed-MPZ capsule scalar: {name}")
+            setattr(self.state, name, value)
+        self.modules["signed_burgers_shared_v1025"]._sync_active(self.state)
+        self.modules["signed_burgers_shared_v1025"]._sync_wake(self.state)
+
+    def cleavage_log_rate_s(self, opening_stress_Pa: float, T_K: float) -> float:
+        barrier = self.state.manifest.cleavage
+        G = float(np.asarray(barrier.values_eV(opening_stress_Pa, T_K)))
+        return float(np.log(barrier.attempt_frequency_s) - G * EV_TO_J / (KB * float(T_K)))
+
+    def emission_log_rate_per_site_s(self, stress_Pa: float, T_K: float) -> float:
+        barrier = self.state.manifest.emission
+        G = float(np.asarray(barrier.values_eV(stress_Pa, T_K)))
+        return float(np.log(barrier.attempt_frequency_s) - G * EV_TO_J / (KB * float(T_K)))
 
     def advance(self, dt_s: float, T_K: float, opening_stress_Pa: float, signed_shear_Pa):
         signed = np.asarray(signed_shear_Pa, float).reshape(-1)

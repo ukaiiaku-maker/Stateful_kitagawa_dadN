@@ -16,11 +16,11 @@ theta=30 and is not used by this adapter.
 
 All four mandated registry rows execute with independent cleavage/emission/PT
 parameters and full positive/negative mobile, retained, accumulated-slip, and
-wake arrays. Tightening only the implicit root solve tolerance to `1e-20`
+wake arrays. Tightening only the implicit root solve tolerance to `1e-30`
 removes tolerance-scale quantization and passes a ten-way prescribed-history
 partition comparison. This changes no constitutive equation or parameter row.
 
-## Unresolved exact-source conflict
+## Aggregate-emission decision
 
 The governing plan asks the port to preserve persistent source-site identities,
 thresholds, and stochastic emission state. Those coordinates do not exist in
@@ -38,15 +38,40 @@ threshold, emission outcome uniform, or emission RNG is read or written by
 this function. The stochastic cleavage first-passage machinery is separate;
 it does not make emission events discrete.
 
-Therefore both requirements cannot be satisfied simultaneously:
+The subsequent governing decision selects this exact aggregate closure and
+removes the earlier request for fictional discrete emission coordinates.
+Production manifests identify it as:
 
-1. exact executable transfer of the audited persistent-source closure; and
-2. preservation of per-source stochastic identities/thresholds that the
-   audited closure never defined.
+`emission_model = audited_v10221_aggregate_persistent_emission`
 
-Adding a discrete stochastic source ledger would be a new constitutive model,
-not a direct port. Treating the aggregate mean source population as if it had
-identities would create false provenance. Four-class production runs remain
-fail-closed pending clarification of whether exact v10.2.21 aggregate emission
-is authoritative or a different audited discrete-emission implementation is
-intended.
+`emission_stochastic = false`
+
+Cleavage first passage and embryo stabilization/healing clocks remain
+stochastic. No emission RNG or source thresholds are added.
+
+## Unresolved cleavage-to-embryo coupling boundary
+
+The exact signed MPZ state and aggregate emission law are now recoverable and
+restartable without ambiguity. The next connection into the v9 spatial embryo
+state is not defined by either authoritative implementation.
+
+The canonical sharp-front engine owns one front-local scalar cleavage renewal
+clock. Its cleavage rate is computed from the effective tip loading and its
+event reward is crack advance. The current v9 stable-birth model instead owns
+many PD candidate sites, each with an exponential birth threshold, and its
+legacy birth rate is a local cleavage rate multiplied by the separate K=2
+delivery-memory completion factor.
+
+No audited source defines any of the following:
+
+- how one signed-MPZ shielding value is distributed over PD candidate nodes;
+- whether canonical cleavage renewal replaces or multiplies the v9 K=2
+  delivery-completion gate;
+- how a scalar front cleavage crossing selects a PD embryo-site identity;
+- how the canonical front-local hazard multiplicity relates to the v9 spatial
+  candidate-site density.
+
+Choosing a distribution, retaining/removing the K=2 gate, or allocating a
+front event to a site would change the stable-birth law and is therefore a new
+constitutive mapping rather than an implementation detail. Four-class
+production trajectories remain fail-closed at this boundary.
