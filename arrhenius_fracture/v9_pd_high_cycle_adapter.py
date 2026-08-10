@@ -91,6 +91,7 @@ class SpatialPDDormantAdapter:
             if rule["transform"] == "scaled_linear": value = a / scale
             elif rule["transform"] == "log_positive": value = np.log(a / scale)
             elif rule["transform"] == "log1p_nonnegative": value = np.log1p(a / scale)
+            elif rule["transform"] == "log_positive_offset": value = np.log((a + rule["offset"]) / scale)
             else:
                 linear = np.where(np.isfinite(a), np.exp(np.minimum(a, 709.0)), 0.0)
                 value = np.log1p(linear / scale)
@@ -115,13 +116,23 @@ class SpatialPDDormantAdapter:
             if rule["transform"] == "scaled_linear": field = value * scale
             elif rule["transform"] == "log_positive": field = scale * np.exp(value)
             elif rule["transform"] == "log1p_nonnegative": field = scale * np.expm1(value)
+            elif rule["transform"] == "log_positive_offset": field = scale * np.exp(value) - rule["offset"]
             else:
                 linear = scale * np.expm1(value)
                 field = np.full_like(linear, -math.inf)
                 positive = linear > 0.0
                 field[positive] = np.log(linear[positive])
-            if np.any(field < rule["lower"]) or np.any(field > rule["upper"]) or np.any(np.isnan(field)):
-                raise ValueError(f"projected {name} violates its constitutive domain")
+            below = field < rule["lower"]
+            above = field > rule["upper"]
+            nan = np.isnan(field)
+            if np.any(below) or np.any(above) or np.any(nan):
+                raise ValueError(
+                    f"projected {name} violates its constitutive domain "
+                    f"(coordinate=[{float(np.min(value)):.17g}, {float(np.max(value)):.17g}], "
+                    f"physical=[{float(np.nanmin(field)):.17g}, {float(np.nanmax(field)):.17g}], "
+                    f"below={int(np.count_nonzero(below))}, above={int(np.count_nonzero(above))}, "
+                    f"nan={int(np.count_nonzero(nan))})"
+                )
             physical.append(field)
         (self.ep_gp,self.rho_gp,self.epsp_acc_gp,self.u,logmem,available,embryo,
          stable,inactive,completion)=physical
@@ -136,6 +147,110 @@ class SpatialPDDormantAdapter:
             size = int(np.prod(shape, dtype=int)); av=a.vector[offset:offset+size]; bv=b.vector[offset:offset+size]; offset += size
             by_field[name] = float(np.max(np.abs(av-bv) / np.maximum.reduce([np.abs(av),np.abs(bv),np.ones_like(av)]))) if size else 0.0
         return max(by_field.values(), default=0.0), by_field
+
+    def project_active_state(self, start, first, second, horizon):
+        """Project smooth population recurrences without crossing their bounds.
+
+        The expected embryo/stable/inactive and completion fields have additive
+        sources, so logarithmic tangent projection is singular when a component
+        first leaves exact zero.  Their exact fixed-rate recurrence is affine.
+        A three-point geometric sum is therefore the appropriate local model;
+        exact midpoint/end cycle maps still qualify every proposed segment.
+        Other constitutive coordinates retain ordinary tangent projection.
+        """
+        h = int(horizon)
+        out = start.vector + h * (first.vector - start.vector)
+        offset = 0
+        geometric_names = {"embryo", "stable", "inactive", "completion"}
+        for name, shape, _ in start.specification:
+            size = int(np.prod(shape, dtype=int))
+            sl = slice(offset, offset + size); offset += size
+            if name == "u":
+                # ``u`` is the converged quasistatic solve used only as the
+                # next nonlinear-solver warm start. It is not constitutive
+                # memory and must not acquire a projective tangent drift.
+                out[sl] = second.vector[sl]
+                continue
+            if name not in geometric_names:
+                continue
+            x0, x1, x2 = start.vector[sl], first.vector[sl], second.vector[sl]
+            if name == "completion":
+                # Completion is the cycle maximum reconstructed from the
+                # finite delivery-memory state, not an accumulated inventory.
+                # Hold the last trained value; exact endpoint maps validate it.
+                out[sl] = x2
+                continue
+            d1, d2 = x1 - x0, x2 - x1
+            projected = x0 + h * d1
+            informative = np.abs(d1) > 32.0 * np.finfo(float).eps * np.maximum(1.0, np.abs(x0))
+            ratio = np.zeros_like(d1)
+            np.divide(d2, d1, out=ratio, where=informative)
+            geometric = informative & (ratio >= 0.0) & (ratio < 1.0 - 1e-12)
+            if np.any(geometric):
+                r = ratio[geometric]
+                factor = np.ones_like(r)
+                positive_r = r > 0.0
+                factor[positive_r] = (-np.expm1(h * np.log(r[positive_r]))) / (1.0 - r[positive_r])
+                projected[geometric] = x0[geometric] + d1[geometric] * factor
+            # The closed affine recurrence is nonnegative analytically.  Remove
+            # only cancellation at the exact constitutive boundary (tens of
+            # machine eps), leaving any material negative proposal to fail.
+            roundoff = 64.0 * np.finfo(float).eps * np.maximum.reduce(
+                [np.ones_like(projected), np.abs(x0), np.abs(x1), np.abs(x2)]
+            )
+            projected[(projected < 0.0) & (projected >= -roundoff)] = 0.0
+            out[sl] = projected
+        return out
+
+    def projective_curvature(self, start, first, second):
+        """Second-difference metric on physical memory, excluding diagnostics.
+
+        Quasistatic ``u`` is a solver warm start and completion is reconstructed
+        from delivery memory; neither is an evolving constitutive coordinate.
+        """
+        offset = 0
+        values = []
+        for name, shape, _ in start.specification:
+            size = int(np.prod(shape, dtype=int)); sl = slice(offset, offset + size); offset += size
+            if name in {"u", "completion"} or size == 0:
+                continue
+            d1 = first.vector[sl] - start.vector[sl]
+            d2 = second.vector[sl] - first.vector[sl]
+            scale = np.maximum.reduce([np.abs(d1), np.abs(d2), np.ones_like(d1)])
+            values.append(float(np.max(np.abs(d2 - d1) / scale)))
+        return max(values, default=0.0)
+
+    @staticmethod
+    def _active_field(snapshot, vector, target):
+        offset = 0
+        for name, shape, _ in snapshot.specification:
+            size = int(np.prod(shape, dtype=int))
+            if name == target:
+                return np.asarray(vector[offset:offset + size], float).reshape(shape)
+            offset += size
+        raise KeyError(target)
+
+    def conservative_population_ledgers(self, start, end_vector, ledgers):
+        """Close expected birth/healing ledgers from population conservation."""
+        result = dict(ledgers)
+        available0 = self._active_field(start, start.vector, "available")
+        available1 = self._active_field(start, end_vector, "available")
+        inactive0 = self._active_field(start, start.vector, "inactive")
+        inactive1 = self._active_field(start, end_vector, "inactive")
+        returned = float(self.patch.cfg.heal_return_fraction)
+        if not (0.0 <= returned < 1.0):
+            raise ValueError("population ledger closure requires heal_return_fraction in [0,1)")
+        healed = (inactive1 - inactive0) / (1.0 - returned)
+        born = -(available1 - available0) + returned * healed
+        scale = np.maximum.reduce([np.ones_like(born), np.abs(available0), np.abs(available1)])
+        tolerance = 128.0 * np.finfo(float).eps * scale
+        for name, value in (("healed_cumulative", healed), ("born_cumulative", born)):
+            clean = np.asarray(value, float).copy()
+            clean[(clean < 0.0) & (clean >= -tolerance)] = 0.0
+            if np.any(clean < 0.0):
+                raise ValueError(f"projected {name} violates population conservation")
+            result[name] = clean
+        return result, {"healed_cumulative", "born_cumulative"}
 
     def protected_signatures(self):
         s = self.pd_state

@@ -46,3 +46,23 @@ The replay initially exposed a sub-ULP event-time stall and loss of controller
 scale across localization. Both are repaired. The corrected trajectory retains
 primary seed 23 with zero reselections, reaches maximum bond damage 0.974, 18
 broken bonds, root connection, and active-front capture.
+
+## Real low-stress high-cycle qualification
+
+The archived shielded K360 690.443200494 MPa trajectory has been preserved and
+continued atomically beyond `N=1.60e7` without a realized embryo, stable site,
+or topology change. Real private-map qualification exposed and repaired three
+numerical-coordinate defects: spatial ledger variation was confused with time
+variation; structural-zero expected populations were extrapolated as an
+exponential source; and the quasistatic FEM displacement warm start was treated
+as constitutive memory. Expected birth/healing ledgers are now closed by the
+validated population conservation identities rather than an inaccurate
+independent extrapolation.
+
+The real engine has accepted and persisted projective segments (38 cycles in
+the first fully conservation-closed qualification, with state error at most
+`3.53e-6` and log-hazard validation error `1.73e-4`). This proves adoption of a
+real projected physical state, but one-cycle training still limits useful
+segment growth. The next numerical task is a multi-cycle exact training burst;
+the direct embedded macro-stepper remains the accepted fallback and no
+accelerated low-stress material result is yet claimed.

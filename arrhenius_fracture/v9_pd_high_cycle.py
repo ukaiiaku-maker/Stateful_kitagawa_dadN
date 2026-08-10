@@ -237,6 +237,41 @@ def _hazard_error(predicted: np.ndarray, exact: np.ndarray) -> float:
     return float(np.max(np.abs(np.where(np.isfinite(p), p, -1000.0)[mask] - np.where(np.isfinite(e), e, -1000.0)[mask])))
 
 
+def _linear_log_prediction(start: np.ndarray, second: np.ndarray, cycles: int) -> np.ndarray:
+    """Predict a log rate from the first two trained exact-cycle samples."""
+    a, b = np.asarray(start, float), np.asarray(second, float)
+    out = a.copy()
+    finite = np.isfinite(a) & np.isfinite(b)
+    out[finite] = a[finite] + int(cycles) * (b[finite] - a[finite])
+    # A rate absent in both samples remains absent.  A newly appearing rate is
+    # deliberately not extrapolated and will fail exact validation if relevant.
+    out[~finite & np.isneginf(a) & np.isneginf(b)] = -math.inf
+    return out
+
+
+def _log_geometric_cycle_sum(log_start: np.ndarray, log_second: np.ndarray, cycles: int) -> np.ndarray:
+    """Log of sum(q_0 ... q_{cycles-1}) for a trained geometric rate."""
+    q0, q1 = np.asarray(log_start, float), np.asarray(log_second, float)
+    out = np.full(np.broadcast_shapes(q0.shape, q1.shape), -math.inf, dtype=float)
+    finite = np.isfinite(q0) & np.isfinite(q1)
+    if not np.any(finite) or cycles <= 0:
+        return out
+    slope = q1[finite] - q0[finite]
+    value = np.empty_like(slope)
+    near = np.abs(slope) < 1e-12
+    value[near] = q0[finite][near] + math.log(cycles)
+    pos = (~near) & (slope > 0.0)
+    value[pos] = (q0[finite][pos] + (cycles - 1) * slope[pos]
+                  + np.log(-np.expm1(-cycles * slope[pos]))
+                  - np.log(-np.expm1(-slope[pos])))
+    neg = (~near) & (slope < 0.0)
+    value[neg] = (q0[finite][neg]
+                  + np.log(-np.expm1(cycles * slope[neg]))
+                  - np.log(-np.expm1(slope[neg])))
+    out[finite] = value
+    return out
+
+
 class DormantPDHighCycleEngine:
     def __init__(self, adapter: DormantPDAdapter, config: HighCycleConfig | None = None):
         self.adapter = adapter
@@ -296,10 +331,19 @@ class DormantPDHighCycleEngine:
         drift = first.state_end.vector - start.vector
         second = self._private_at(start, first.state_end.vector)
         second_drift = second.state_end.vector - first.state_end.vector
-        curvature = relative_distance(drift, second_drift)
+        curvature_metric = getattr(self.adapter, "projective_curvature", None)
+        curvature = (float(curvature_metric(start, first.state_end, second.state_end))
+                     if curvature_metric is not None else relative_distance(drift, second_drift))
         midpoint = max(horizon // 2, 1)
-        xmid = start.vector + midpoint * drift
-        xend = start.vector + horizon * drift
+        projector = getattr(self.adapter, "project_active_state", None)
+        if projector is None:
+            project = lambda h: start.vector + h * drift
+        else:
+            project = lambda h: np.asarray(
+                projector(start, first.state_end, second.state_end, h), float
+            )
+        xmid = project(midpoint)
+        xend = project(horizon)
         if np.any(~np.isfinite(xend)) or np.any(xend < self.config.minimum_positive_coordinate):
             return False, {"reason": "physical_bounds"}
         try:
@@ -307,19 +351,25 @@ class DormantPDHighCycleEngine:
             end = self._private_at(start, xend)
         except ValueError as exc:
             return False, {"reason": "projected_constitutive_domain", "detail": str(exc)}
-        predicted_mid_next = xmid + drift
-        predicted_end_next = xend + drift
+        predicted_mid_next = project(midpoint + 1)
+        predicted_end_next = project(horizon + 1)
         state_error = max(relative_distance(predicted_mid_next, mid.state_end.vector),
                           relative_distance(predicted_end_next, end.state_end.vector))
-        hazard_error = max(_hazard_error(first.log_birth_action, mid.log_birth_action),
-                           _hazard_error(first.log_birth_action, end.log_birth_action))
+        predicted_mid_log = _linear_log_prediction(
+            first.log_birth_action, second.log_birth_action, midpoint
+        )
+        predicted_end_log = _linear_log_prediction(
+            first.log_birth_action, second.log_birth_action, horizon
+        )
+        hazard_error = max(_hazard_error(predicted_mid_log, mid.log_birth_action),
+                           _hazard_error(predicted_end_log, end.log_birth_action))
         signature_ok = first.transition_signature == mid.transition_signature == end.transition_signature
         accepted = (state_error <= self.config.projective_state_tolerance
                     and hazard_error <= self.config.projective_log_hazard_tolerance
                     and curvature <= self.config.projective_curvature_tolerance
                     and signature_ok)
-        log_integrated = math.log(horizon / 6.0) + _log_weighted_sum(
-            (first.log_birth_action, mid.log_birth_action, end.log_birth_action), (1.0, 4.0, 1.0)
+        log_integrated = _log_geometric_cycle_sum(
+            first.log_birth_action, second.log_birth_action, horizon
         )
         log_upper = math.log(horizon) + np.maximum.reduce(
             [first.log_birth_action, mid.log_birth_action, end.log_birth_action]
@@ -328,18 +378,66 @@ class DormantPDHighCycleEngine:
         ledger_names = set(first.ledger_increments) | set(mid.ledger_increments) | set(end.ledger_increments)
         ledgers = {}
         ledger_variation = 0.0
+        ledger_prediction_error = 0.0
+        ledger_prediction_error_by_name = {}
         for name in ledger_names:
             rates = np.stack([np.asarray(first.ledger_increments.get(name, 0.0),float),
                               np.asarray(mid.ledger_increments.get(name, 0.0),float),
                               np.asarray(end.ledger_increments.get(name, 0.0),float)])
             if np.any(rates < 0.0):
                 return False, {"reason": f"negative_monotone_ledger:{name}"}
-            ledgers[name] = horizon * (rates[0] + 4.0*rates[1] + rates[2]) / 6.0
-            ledger_variation = max(ledger_variation, float(np.ptp(rates) / max(np.max(rates), 1e-300)))
-        accepted = bool(accepted and ledger_variation <= self.config.projective_log_hazard_tolerance)
+            r0 = np.asarray(first.ledger_increments.get(name, 0.0), float)
+            r1 = np.asarray(second.ledger_increments.get(name, 0.0), float)
+            positive_pair = (r0 > 0.0) & (r1 > 0.0)
+            log_r0 = np.full_like(r0, -math.inf, dtype=float)
+            log_r1 = np.full_like(r1, -math.inf, dtype=float)
+            np.log(r0, out=log_r0, where=positive_pair)
+            np.log(r1, out=log_r1, where=positive_pair)
+            log_ledger_sum = _log_geometric_cycle_sum(
+                log_r0, log_r1, horizon,
+            )
+            geometric_sum = np.where(np.isfinite(log_ledger_sum), np.exp(np.minimum(log_ledger_sum, 709.0)), 0.0)
+            # Exactly zero rates stay zero. A newly appearing/disappearing rate
+            # uses sampled Simpson integration and must still pass validation.
+            unresolved = (r0 == 0.0) ^ (r1 == 0.0)
+            if np.any(unresolved):
+                geometric_sum = np.asarray(geometric_sum)
+                geometric_sum[unresolved] = horizon * (
+                    rates[0][unresolved] + 4.0*rates[1][unresolved] + rates[2][unresolved]
+                ) / 6.0
+            ledgers[name] = geometric_sum
+            temporal_range = np.ptp(rates, axis=0)
+            ledger_variation = max(
+                ledger_variation,
+                float(np.max(temporal_range) / max(float(np.max(np.abs(rates))), 1e-300)),
+            )
+            ratio = np.ones_like(r0, dtype=float)
+            np.divide(r1, r0, out=ratio, where=r0 > 0.0)
+            predicted_mid_rate = np.where(positive_pair, r0 * np.power(ratio, midpoint), r0 + midpoint * (r1 - r0))
+            predicted_end_rate = np.where(positive_pair, r0 * np.power(ratio, horizon), r0 + horizon * (r1 - r0))
+            scale = max(float(np.max(np.abs(rates))), float(np.max(np.abs(r0))),
+                        float(np.max(np.abs(r1))), 1e-300)
+            name_error = max(
+                float(np.max(np.abs(predicted_mid_rate - rates[1]))) / scale,
+                float(np.max(np.abs(predicted_end_rate - rates[2]))) / scale,
+            )
+            ledger_prediction_error_by_name[name] = name_error
+            ledger_prediction_error = max(ledger_prediction_error, name_error)
+        conservative = getattr(self.adapter, "conservative_population_ledgers", None)
+        if conservative is not None:
+            try:
+                ledgers, constrained_names = conservative(start, xend, ledgers)
+            except ValueError as exc:
+                return False, {"reason": "projected_population_ledger_domain", "detail": str(exc)}
+            for name in constrained_names:
+                ledger_prediction_error_by_name[name] = 0.0
+            ledger_prediction_error = max(ledger_prediction_error_by_name.values(), default=0.0)
+        accepted = bool(accepted and ledger_prediction_error <= self.config.projective_log_hazard_tolerance)
         accepted = bool(accepted and event_safe)
         return accepted, {"start": start, "end_vector": xend, "log_action": log_integrated,
                           "ledgers": ledgers, "ledger_rate_variation": ledger_variation,
+                          "ledger_prediction_error": ledger_prediction_error,
+                          "ledger_prediction_error_by_name": ledger_prediction_error_by_name,
                           "state_error": state_error, "hazard_error": hazard_error,
                           "curvature": curvature,
                           "transition_preserved": signature_ok, "event_safe": bool(event_safe)}

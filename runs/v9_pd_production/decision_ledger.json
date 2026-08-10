@@ -108,6 +108,46 @@
       "evidence": "after node-23 stabilization the controller doubled from one ULP for over 24 updates, triggering artificial primary-seed reselection before damage growth; preserved control retained node 23",
       "resolution": "preserve the accepted pre-event controller proposal across an embryo-transition localization boundary",
       "status": "resolved_pending_pre_event_replay"
+    },
+    {
+      "id": "HC-014",
+      "classification": "numerical-method defect",
+      "issue": "projective ledger validation mixed spatial variation with temporal rate variation",
+      "evidence": "spatially nonuniform born/healed ledger arrays reported variation=1 even for steady temporal rates",
+      "resolution": "take start/mid/end peak-to-peak along the temporal axis and normalize by the ledger global rate scale",
+      "status": "resolved_pending_low_stress_run"
+    },
+    {
+      "id": "HC-015",
+      "classification": "numerical-method defect",
+      "issue": "linear projection of positive decaying expected embryo/completion fields crossed zero",
+      "evidence": "690.443 MPa N=1.002e6 projective trials failed constitutive bounds despite 2.1e-8 state error and 1.0e-8 curvature at the smallest segment",
+      "resolution": "superseded after the detailed reproducer showed an additive source leaving structural zero; use a three-exact-state affine/geometric population recurrence with exact endpoint validation",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-016",
+      "classification": "numerical-method defect",
+      "issue": "constant-rate validation rejected a correctly changing hazard and rapidly varying expected-healing ledger",
+      "evidence": "at 690.443 MPa the two-cycle state error was 5.5e-8 and hazard trend error 6.3e-6, while healed-rate variation alone rejected the proposal",
+      "resolution": "validate trained hazard trends against exact midpoint/end maps; derive born/healed ledgers from the independently validated available/inactive population conservation identities",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-017",
+      "classification": "numerical-method defect",
+      "issue": "projective tangent treated quasistatic FEM displacement warm-start and reconstructed completion as constitutive memory",
+      "evidence": "accepted short segments accumulated fictitious u drift and completion sign crossings while ep_gp/rho_gp and log-hazard validations remained bounded",
+      "resolution": "hold the last exact converged u and completion during proposals, validate them through exact projected-state maps, and exclude them from physical curvature",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-018",
+      "classification": "performance defect",
+      "issue": "one-cycle projective training admits only O(1-10) real cycles per segment on the evolving K360 tail",
+      "evidence": "the conservation-closed real engine persisted 38 accepted projected cycles but a bounded retry remained in advance() for minutes before reaching the next macro block",
+      "resolution": "implement an exact multi-cycle training burst and rate-separated drift fit before further production continuation",
+      "status": "open"
     }
   ]
 }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import math
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -9,6 +10,7 @@ from arrhenius_fracture.v9_pd_high_cycle import (
     ActiveState, CycleEvaluation, DormantPDHighCycleEngine, HighCycleConfig,
     ProtectedSignatures, _digest, private_cycle,
 )
+from arrhenius_fracture.v9_pd_high_cycle_adapter import SpatialPDDormantAdapter
 
 
 class SyntheticDormantPD:
@@ -158,3 +160,47 @@ def test_large_cycle_sub_ulp_event_boundary_is_next_representable_float():
     assert cycles+residual_wait==cycles
     step=np.nextafter(cycles,math.inf)-cycles
     assert step>residual_wait and cycles+step>cycles
+
+
+def test_spatially_nonuniform_but_temporally_constant_ledger_does_not_reject_projection():
+    class SpatialLedger(SyntheticDormantPD):
+        def __init__(self):
+            super().__init__(rate=1e-30,threshold=10.0,contraction=1.0,drift=1e-6)
+            self.spatial_ledger=np.zeros(2)
+        def exact_private_cycle(self):
+            ev=super().exact_private_cycle(); ev.ledger_increments={"spatial":np.array([1.0,10.0])}; return ev
+        def commit_ledger_increments(self,increments):
+            if "spatial" in increments: self.spatial_ledger+=np.asarray(increments["spatial"])
+        def protected_signatures(self):
+            base=super().protected_signatures(); return ProtectedSignatures(_digest(self.spatial_ledger),base.stochastic,base.topology)
+    model=SpatialLedger(); engine=DormantPDHighCycleEngine(model,cfg(periodic_max_iterations=2,
+        projective_state_tolerance=1e-12,projective_log_hazard_tolerance=1e-12))
+    result=engine.advance(16)
+    assert result.accepted_projected_cycles==16
+    np.testing.assert_allclose(model.spatial_ledger,[16.0,160.0])
+
+
+def test_affine_population_projection_handles_zero_to_positive_source_without_overflow():
+    spec = (("embryo", (3,), "float64"),)
+    start = ActiveState(np.array([0.0, 0.2, 0.7]), spec)
+    # Exact affine recurrences: x' = 0.5*x + [0.1, 0.0, 0.0].
+    first = ActiveState(np.array([0.1, 0.1, 0.35]), spec)
+    second = ActiveState(np.array([0.15, 0.05, 0.175]), spec)
+    adapter = SpatialPDDormantAdapter.__new__(SpatialPDDormantAdapter)
+    projected = adapter.project_active_state(start, first, second, 16)
+    expected = np.array([0.2 * (1.0 - 0.5**16), 0.2 * 0.5**16, 0.7 * 0.5**16])
+    np.testing.assert_allclose(projected, expected, rtol=1e-13, atol=1e-15)
+    assert np.all((projected >= 0.0) & (projected <= 1.0))
+
+
+def test_population_ledgers_close_from_validated_available_and_inactive_endpoints():
+    names = ("available", "embryo", "stable", "inactive", "completion")
+    spec = tuple((name, (1,), "float64") for name in names)
+    start = ActiveState(np.array([1.0, 0.0, 0.0, 0.0, 0.0]), spec)
+    end = np.array([0.91, 0.02, 0.03, 0.04, 0.0])
+    adapter = SpatialPDDormantAdapter.__new__(SpatialPDDormantAdapter)
+    adapter.patch = SimpleNamespace(cfg=SimpleNamespace(heal_return_fraction=0.2))
+    ledgers, constrained = adapter.conservative_population_ledgers(start, end, {})
+    np.testing.assert_allclose(ledgers["healed_cumulative"], [0.05])
+    np.testing.assert_allclose(ledgers["born_cumulative"], [0.10])
+    assert constrained == {"healed_cumulative", "born_cumulative"}
