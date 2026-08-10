@@ -1,0 +1,7 @@
+condition_id,N,H_cleave,S_stable,survival_semantics
+Peak_300K_735p921495,100000000,0.05152397046800673,0.949780882997064,exp_minus_canonical_cleavage_hazard
+Peak_300K_770,206847,2.3225858356478564,0.09801979453587456,exp_minus_canonical_cleavage_hazard
+Peak_300K_804p139,2047,3.0032883219513375,0.049623621338564516,exp_minus_canonical_cleavage_hazard
+DBTT_300K_770,40959,2.379228389991975,0.09262201802076062,exp_minus_canonical_cleavage_hazard
+weakT_300K_250,255,3.1451730417356414,0.043045137372323,exp_minus_canonical_cleavage_hazard
+ceramic_300K_zero,1,999.9999999999998,0,invalid_zero_load_result_diagnostic_only

@@ -1,0 +1,17 @@
+{
+  "schema": "V9_CANONICAL_FOUR_CLASS_FEM_SN_CAMPAIGN_1",
+  "model_id": "v9_full_fem_canonical_four_class_stable_birth_v1",
+  "endpoint_model_id": "v9_canonical_four_class_cleavage_stable_birth_v1",
+  "fatigue_endpoint": "canonical_cleavage_stable_crack_birth",
+  "emission_model": "audited_v10221_aggregate_persistent_emission",
+  "emission_stochastic": false,
+  "cleavage_first_passage_stochastic": true,
+  "PD_K2_active": false,
+  "stabilization_healing_active": false,
+  "post_birth_growth_active": false,
+  "stress_selection": "sequential_adaptive_log10_N50_gap",
+  "completed_valid_conditions": 5,
+  "invalid_diagnostic_conditions": 1,
+  "status": "fail_closed_on_canonical_ceramic_zero_load_cleavage_saturation",
+  "blocker": "The exact audited ceramic row gives a 1e-12 eV cleavage barrier and renewal-ceiling cleavage rate at zero stress and 300 K."
+}

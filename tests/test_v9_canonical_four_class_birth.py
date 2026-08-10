@@ -48,6 +48,34 @@ class CanonicalFourClassBirthTests(unittest.TestCase):
         self.assertLess(log_rate, -2000.0)
         self.assertEqual(canonical_effective_cleavage_rate(0.0), 0.0)
 
+    def test_audited_root_tensor_projection_preserves_signed_channels(self):
+        state = self.make()
+        tensor = np.array([[2.0e9, 0.4e9], [0.4e9, 3.0e9]])
+        drive = state.mpz.resolve_root_tensor(tensor)
+        direct = state.mpz.modules["anisotropic_emission_v10174"].resolve_channel_drives(
+            tensor, [tensor, tensor], 0.0,
+        )
+        np.testing.assert_array_equal(drive["tau_signed_Pa"], direct["tau_signed_Pa"])
+        self.assertEqual(drive["opening_stress_Pa"], 3.0e9)
+
+    def test_phase_block_restart_is_exact_and_has_no_post_birth_state(self):
+        tensors = np.array([
+            [[2.0e9, 0.3e9], [0.3e9, 3.0e9]],
+            [[1.0e9, -0.2e9], [-0.2e9, 1.5e9]],
+        ])
+        a = self.make(); b = self.make()
+        a.hazard_threshold_action = b.hazard_threshold_action = 1e100
+        a.advance_fem_phase_block(0.4, 1000.0, 300.0, tensors)
+        capsule = a.capsule()
+        resumed = self.make(); resumed.restore_capsule(capsule)
+        a.advance_fem_phase_block(0.6, 1000.0, 300.0, tensors)
+        resumed.advance_fem_phase_block(0.6, 1000.0, 300.0, tensors)
+        self.assertEqual(a.capsule()["hazard_rng_state"], resumed.capsule()["hazard_rng_state"])
+        self.assertEqual(a.log_cumulative_cleavage_hazard, resumed.log_cumulative_cleavage_hazard)
+        for key in a.mpz._CAPSULE_ARRAYS:
+            np.testing.assert_array_equal(getattr(a.mpz.state, key), getattr(resumed.mpz.state, key))
+        self.assertNotIn("pd", a.diagnostics())
+
     def test_atomic_restart_preserves_signed_and_stochastic_state(self):
         history = [(2e-7, 3.0e9, [1.4e9, -1.1e9]),
                    (3e-7, 3.2e9, [-1.2e9, 1.5e9]),

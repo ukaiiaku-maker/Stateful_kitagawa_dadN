@@ -220,6 +220,83 @@ class CanonicalFourClassBirthState:
             "first_passage_localized": True,
         }
 
+    def _advance_phase_block_exact(self, cycles, frequency_Hz, T_K, root_tensors):
+        tensors = np.asarray(root_tensors, float)
+        if tensors.ndim != 3 or tensors.shape[1:] != (2, 2) or len(tensors) < 1:
+            raise ValueError("root phase history must have shape (n_phase,2,2)")
+        cycles = max(float(cycles), 0.0)
+        frequency = float(frequency_Hz)
+        if frequency <= 0.0:
+            raise ValueError("frequency must be positive")
+        dt = cycles / frequency
+        drives = [self.mpz.resolve_root_tensor(tensor) for tensor in tensors]
+        opening = float(np.mean([drive["opening_stress_Pa"] for drive in drives]))
+        signed = np.mean(np.stack([drive["tau_signed_Pa"] for drive in drives]), axis=0)
+        self.mpz.advance(0.5 * dt, T_K, opening, signed)
+        phase_rates = [
+            self.cleavage_rates(drive["opening_stress_Pa"], T_K)
+            for drive in drives
+        ]
+        logs = np.asarray([rate["cleavage_log_rate_effective_s"] for rate in phase_rates])
+        pivot = float(np.max(logs))
+        log_average = pivot + math.log(float(np.mean(np.exp(logs - pivot))))
+        log_dH = log_average + math.log(dt) if dt > 0.0 else -math.inf
+        self.log_cumulative_cleavage_hazard = float(np.logaddexp(
+            self.log_cumulative_cleavage_hazard, log_dH
+        ))
+        self.cumulative_cleavage_hazard = (
+            math.exp(self.log_cumulative_cleavage_hazard)
+            if self.log_cumulative_cleavage_hazard > math.log(np.finfo(float).tiny)
+            else 0.0
+        )
+        self.mpz.advance(0.5 * dt, T_K, opening, signed)
+        self.time_s += dt
+        return {
+            "phase_count": len(tensors),
+            "phase_average_opening_stress_Pa": opening,
+            "phase_average_signed_shear_Pa": signed,
+            "cleavage_log_rate_cycle_average_s": log_average,
+            "log_hazard_increment": log_dH,
+            "hazard_increment": math.exp(log_dH) if log_dH > -745.0 else 0.0,
+        }
+
+    def advance_fem_phase_block(self, cycles, frequency_Hz, T_K, root_tensors,
+                                *, localization_relative_tolerance=1.0e-12):
+        """Advance one accepted full-FEM cyclic block transactionally."""
+        if self.fired:
+            return self.diagnostics() | {"cycles_consumed": 0.0, "cycles_unused": float(cycles)}
+        requested = max(float(cycles), 0.0)
+        start = self.copy()
+        result = self._advance_phase_block_exact(
+            requested, frequency_Hz, T_K, root_tensors
+        )
+        log_threshold = math.log(self.hazard_threshold_action)
+        if self.log_cumulative_cleavage_hazard < log_threshold:
+            return self.diagnostics() | result | {
+                "cycles_consumed": requested, "cycles_unused": 0.0,
+            }
+        lo, hi = 0.0, requested
+        tolerance = max(requested * float(localization_relative_tolerance), 1.0e-12)
+        while hi - lo > tolerance:
+            mid = 0.5 * (lo + hi)
+            trial = start.copy()
+            trial._advance_phase_block_exact(mid, frequency_Hz, T_K, root_tensors)
+            if trial.log_cumulative_cleavage_hazard >= log_threshold:
+                hi = mid
+            else:
+                lo = mid
+        final = start.copy()
+        result = final._advance_phase_block_exact(hi, frequency_Hz, T_K, root_tensors)
+        final.cumulative_cleavage_hazard = final.hazard_threshold_action
+        final.log_cumulative_cleavage_hazard = log_threshold
+        final.stable_crack_birth_time_s = final.time_s
+        self.__dict__.clear()
+        self.__dict__.update(final.__dict__)
+        return self.diagnostics() | result | {
+            "cycles_consumed": hi, "cycles_unused": requested - hi,
+            "first_passage_localized": True,
+        }
+
     def diagnostics(self):
         return {
             "model_id": MODEL_ID,

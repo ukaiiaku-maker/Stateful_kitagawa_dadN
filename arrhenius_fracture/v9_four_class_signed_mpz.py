@@ -28,6 +28,7 @@ MODULES = (
     "signed_burgers_shared_v1025", "persistent_site_source_v10221",
     "reduced_campaign_v1024", "campaign_calibrated_tip",
     "anisotropic_emission_v10174",
+    "crystal",
 )
 
 
@@ -191,6 +192,21 @@ class SignedMPZPreBirthState:
         self.state._anisotropic_drive_factors = np.abs(signed) / scale
         diag = self.state.evolve(dt_s, T_K, opening_stress_Pa, self.burgers_m)
         return diag | self.summary()
+
+    def resolve_root_tensor(self, stress_tensor_2x2, crystal_theta_deg: float = 0.0):
+        """Use the audited two-channel tensor projection at the fixed root."""
+        tensor = np.asarray(stress_tensor_2x2, float).reshape(2, 2)
+        resolved = self.modules["anisotropic_emission_v10174"].resolve_channel_drives(
+            tensor, [tensor, tensor], float(crystal_theta_deg),
+        )
+        return {
+            "opening_stress_Pa": max(float(tensor[1, 1]), 0.0),
+            "tau_signed_Pa": np.asarray(resolved["tau_signed_Pa"], float),
+            "drive_factors": np.asarray(resolved["drive_factors"], float),
+            "channel_names": tuple(resolved["channel_names"]),
+            "crystal_theta_deg": float(crystal_theta_deg),
+            "projection_source": "audited_anisotropic_emission_v10174.resolve_channel_drives",
+        }
 
     def summary(self):
         s = self.state

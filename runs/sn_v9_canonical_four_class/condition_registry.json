@@ -1,0 +1,14 @@
+{
+  "schema": "V9_CANONICAL_FOUR_CLASS_CONDITION_REGISTRY_1",
+  "mechanics_source": "persisted K360_FAILURE full-FEM request",
+  "mechanics_run_args": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa/run_args.json",
+  "policy": "one_condition_at_a_time_adaptive_stress_bracketing",
+  "conditions": [
+    "Peak_300K_735p921495",
+    "Peak_300K_770",
+    "Peak_300K_804p139",
+    "DBTT_300K_770",
+    "weakT_300K_250",
+    "ceramic_300K_zero"
+  ]
+}
