@@ -15,6 +15,9 @@ from arrhenius_fracture.sn_geometry import (
     make_blunt_edge_notch_mesh,
 )
 from arrhenius_fracture.stateful_peridynamics_v8_3 import StatefulPDConfig, StatefulPDPatch
+from arrhenius_fracture.stateful_peridynamics_v8_7_local_front_spacing import (
+    StatefulPDPatch as StatefulPDPatchV87,
+)
 from arrhenius_fracture.sn_pd2d_stateful_v8_3 import (
     MODEL_ID,
     SOURCE_SHA256,
@@ -566,6 +569,29 @@ class StatefulPDV83CoreTests(unittest.TestCase):
         self.assertEqual(state.primary_seed_reselections, 1)
         self.assertEqual(state.primary_seed_node, n1)
         self.assertEqual(state.cycles_primary_seed_reselected, 10.0)
+
+    def test_primary_seed_slow_monotone_damage_is_not_partition_stall(self):
+        _, patch = self.make_patch(); state = patch.initial_state()
+        node = int(np.where(state.candidate_sites > 0)[0][0])
+        state.stable_sites[node] = 1
+        state.crack_orientation_weight[node] = 1.0
+        state.primary_seed_node = node
+        state.primary_seed_last_progress = 0.0
+        patch.cfg.primary_seed_reselection_patience_updates = 2
+        patch.cfg.primary_seed_progress_damage_increment = 0.02
+        radius = max(patch.cfg.seed_influence_horizons * patch.cfg.horizon_m,
+                     2.0 * patch.point_spacing_m)
+        local = np.where(np.linalg.norm(patch.bond_midpoints - patch.xy[node], axis=1) <= radius)[0]
+        self.assertGreater(len(local), 0)
+        for update in range(8):
+            state.bond_damage[int(local[0])] += 1.0e-3
+            StatefulPDPatchV87._update_primary_seed_selection(
+                patch,
+                state, np.zeros(len(patch.xy)), float(update + 1)
+            )
+        self.assertEqual(state.primary_seed_node, node)
+        self.assertEqual(state.primary_seed_reselections, 0)
+        self.assertEqual(state.primary_seed_stall_updates, 0)
 
     def test_primary_seed_reselection_exhaustion_is_explicit(self):
         _, patch = self.make_patch(); state = patch.initial_state()

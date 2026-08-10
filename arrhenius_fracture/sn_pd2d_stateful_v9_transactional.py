@@ -159,7 +159,10 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
                         "max_delivery_memory": diagnostics.max_delivery_memory,
                         "max_completion": diagnostics.max_completion,
                         "fem_embedded_error": proposal.normalized_error,
-                        "private_window_cycles": dN},
+                        "private_window_cycles": dN,
+                        "emission_drive_equivalent_stress_Pa": np.max(
+                            0.5 * (pre[0]["seq_node"] + post[0]["seq_node"]), axis=0
+                        )[patch.global_nodes]},
         "transition_signature": "dormant_fixed_topology",
     }
 
@@ -176,6 +179,7 @@ def _active_source_sha256() -> dict[str, str]:
     driver_file = Path(__file__)
     modules = {
         "pd_module": StatefulPDPatch.__module__,
+        "pd_base_module": StatefulPDPatch.__mro__[1].__module__,
         "fem_transaction": EmbeddedFEMTransaction.__module__,
         "physical_integrator": plastic_chain_log_rates.__module__,
         "cached_fem": CachedIntactFEM.__module__,
@@ -193,6 +197,32 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Peak 12 GPa accepted boundary immediately before repairing the
+        # controller-partition-dependent primary-seed stall counter. The
+        # newly fingerprinted base PD module was already the executable base.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "c4ac205a5d2492b24e1a8fdda3f59ca280e96ddb115a2f3d390745f8823fa243",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_high_cycle_adapter": "bf2a05c31244e50bc52ebab5b3e78b9b31bccd3bb3310b05c058afac94775837",
+        "pd_high_cycle_engine": "8c4537283a9302e4806f4742507b0a8bf45a4c4ac209f17ba38552749eea6fae",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Hash-verified terminal 690.443 MPa generation at
+        # N=168634947.0289538, accepted for the explicit 690->840 MPa
+        # state-preserving stress-step protocol.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "858610e76be701fc0a2db5c79b3d5f9e72181f26ac5ee272115da8c7d439ea5e",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_high_cycle_adapter": "c314f55d18bfa929c8345ec0c893a0c3554230f6e672188d125b416f93cc3a6e",
+        "pd_high_cycle_engine": "d5d92d616a9ba8dc3726bb544070c3f1fdd7a2bdef59e49edacfe5eb2f8085cc",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # Completed 690.443 MPa N=1e8 boundary before making the diagnostic
         # high-cycle mode history append-only across atomic restarts.
@@ -525,6 +555,8 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "cycles_max",
     "pd_high_cycle", "pd_high_cycle_max_segment", "pd_high_cycle_checkpoint_decades",
     "pd_high_cycle_start_cycles",
+    "stress_step_source_checkpoint", "stress_step_source_generation",
+    "stress_step_source_sigma_a_MPa", "protocol_label",
 }
 
 
@@ -668,11 +700,12 @@ def _load_case_checkpoint(
     sigma_a_MPa,
     mesh,
     patch,
+    generation=None,
 ):
     """Restore the newest hash-verified atomic v9 array generation."""
     path = Path(path)
     store = AtomicArrayGenerationStore(path.parent / "v9_generations")
-    data, encoded_metadata, summary, _ = store.load()
+    data, encoded_metadata, summary, _ = store.load(generation=generation)
     metadata = _restore_nonfinite_tags(encoded_metadata)
     if metadata.get("checkpoint_version") != _CHECKPOINT_VERSION:
         raise RuntimeError("unsupported STATEFUL_PD_V9 checkpoint version")
@@ -976,6 +1009,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     outdir = Path(args.out) / case_name / (f"sigmaA_{sigma_a_MPa:g}MPa".replace(".", "p"))
     outdir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = Path(args.checkpoint_path) if args.checkpoint_path else outdir / "checkpoint_latest.npz"
+    stress_step_source = str(getattr(args, "stress_step_source_checkpoint", "") or "")
 
     pd_state = patch.initial_state()
     u = np.zeros(mesh.ndof)
@@ -995,7 +1029,42 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_audit = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
-    if args.resume and checkpoint_path.exists():
+    if stress_step_source:
+        source_sigma = getattr(args, "stress_step_source_sigma_a_MPa", None)
+        source_generation = str(getattr(args, "stress_step_source_generation", "") or "") or None
+        if source_sigma is None:
+            raise RuntimeError("stress-step restart requires stress_step_source_sigma_a_MPa")
+        restored = _load_case_checkpoint(
+            Path(stress_step_source),
+            args=args,
+            case_name=case_name,
+            sigma_a_MPa=float(source_sigma),
+            mesh=mesh,
+            patch=patch,
+            generation=source_generation,
+        )
+        start_block = restored["next_block"]
+        cycles = restored["cycles"]
+        Wp_total = restored["Wp_total"]
+        root_xy = restored["root_xy"]
+        ep_gp = restored["ep_gp"]
+        rho_gp = restored["rho_gp"]
+        epsp_acc_gp = restored["epsp_acc_gp"]
+        u = restored["u"]
+        last_residual = restored["last_residual"]
+        pd_state = restored["pd_state"]
+        rows = restored["rows"]
+        controller_next_block_cycles = restored["controller_next_block_cycles"]
+        resumed = True
+        geometry_audit = _geometry_resolution_audit(
+            mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
+        )
+        print(
+            f"STATEFUL_PD_V9 stress-step restored {case_name} "
+            f"from sigma_a={float(source_sigma):g} MPa at N={cycles:.9e}; "
+            f"continuing at sigma_a={sigma_a_MPa:g} MPa"
+        )
+    elif args.resume and checkpoint_path.exists():
         restored = _load_case_checkpoint(
             checkpoint_path,
             args=args,
@@ -1045,6 +1114,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 "checkpoint_path": str(checkpoint_path),
                 "source_sha256": SOURCE_SHA256,
                 "resumed": resumed,
+                "protocol_label": str(getattr(args, "protocol_label", "") or ""),
+                "stress_step_source_checkpoint": stress_step_source,
+                "stress_step_source_generation": str(getattr(args, "stress_step_source_generation", "") or ""),
+                "stress_step_source_sigma_a_MPa": getattr(args, "stress_step_source_sigma_a_MPa", None),
             },
             f,
             indent=2,
@@ -2413,6 +2486,11 @@ def build_parser():
     p.add_argument("--checkpoint-every-blocks", type=int, default=25, dest="checkpoint_every_blocks")
     p.add_argument("--checkpoint-path", default="", dest="checkpoint_path")
     p.add_argument("--resume", action="store_true", dest="resume")
+    p.add_argument("--stress-step-source-checkpoint", default="", dest="stress_step_source_checkpoint")
+    p.add_argument("--stress-step-source-generation", default="", dest="stress_step_source_generation")
+    p.add_argument("--stress-step-source-sigma-a-MPa", type=float, default=None,
+                   dest="stress_step_source_sigma_a_MPa")
+    p.add_argument("--protocol-label", default="", dest="protocol_label")
     p.add_argument("--snapshot-every", type=int, default=25, dest="snapshot_every")
     p.add_argument("--pd-image-policy", choices=("none", "event_only", "selected"),
                    default="selected", dest="pd_image_policy")

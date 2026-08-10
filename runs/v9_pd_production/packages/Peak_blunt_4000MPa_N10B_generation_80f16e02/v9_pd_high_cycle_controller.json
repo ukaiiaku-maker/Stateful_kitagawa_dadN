@@ -1,0 +1,1570 @@
+{
+  "accepted_projected_cycles": 2688.0,
+  "exact_map_evaluations": 130,
+  "mode_history": [
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.259666752659541e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 4.396794771851448e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.860718417919211e-46,
+          "embryo": 0.0,
+          "ep_gp": 4.3750225803557315e-27,
+          "epsp_acc_gp": 5.434936092610683e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.4423019723323795e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 4.396794771851448e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.259666752659541e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.4084538264040015e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.606581926415982e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.0213372669964752e-27,
+          "epsp_acc_gp": 3.5820595984275704e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.5491807387145737e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.4084538264040015e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.259666752659541e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.6899149316489536e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 7.021987675030845e-47,
+          "embryo": 0.0,
+          "ep_gp": 2.0952145642670074e-27,
+          "epsp_acc_gp": 2.4284294106323627e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.4611112091934497e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.6899149316489536e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.622113465302391e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.0060756428411664e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.960327465251015e-46,
+          "embryo": 0.0,
+          "ep_gp": 2.404448039113644e-27,
+          "epsp_acc_gp": 2.938349099767225e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.1059999373033692e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.0060756428411664e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.622113465302391e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 8.093815176501051e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.057678026402791e-46,
+          "embryo": 0.0,
+          "ep_gp": 6.656408318254898e-27,
+          "epsp_acc_gp": 8.183958575124865e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.0262034869417573e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 8.093815176501051e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.622113465302391e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 9.95983022499694e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.7230111341844844e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.8490899618380517e-27,
+          "epsp_acc_gp": 2.0649223055065205e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.6668769594275975e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 9.95983022499694e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.622113465302391e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 3.09146292794412e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.1244220906681239e-46,
+          "embryo": 0.0,
+          "ep_gp": 2.0952145642670074e-27,
+          "epsp_acc_gp": 2.3728936029048035e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.1108109103044485e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 3.09146292794412e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.401670542440115e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.3073302239262772e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.6349535598546094e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.265884147614989e-27,
+          "epsp_acc_gp": 3.9001283154126824e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 7.647867809161714e-30,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.3073302239262772e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.401670258223021e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.153976566370161e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 4.459808604818714e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.3552630351696983e-27,
+          "epsp_acc_gp": 1.6105384240992177e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.6661239208193421e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.153976566370161e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.29144595462094e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 3.3556760317447647e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.186135991783154e-47,
+          "embryo": 0.0,
+          "ep_gp": 1.602965359409096e-27,
+          "epsp_acc_gp": 1.878120043150185e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.186547389485901e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 3.3556760317447647e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.8122221945304773e-08,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 5.6489480600119265e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.29826694178174e-46,
+          "embryo": 0.0,
+          "ep_gp": 2.8351660933643164e-27,
+          "epsp_acc_gp": 3.483609757455988e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.7406689652467945e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 5.6489480600119265e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392241140143597e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.2010048248729025e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 4.273657224672568e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.8475122400276096e-27,
+          "epsp_acc_gp": 2.208810534618833e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.3646407732549086e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.2010048248729025e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392278088365856e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.8767919458475657e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.453295529336307e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.8617117363215879e-28,
+          "epsp_acc_gp": 2.1709452111682245e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.7334968021338964e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.8767919458475657e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.2596710159159556e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.4073690391195322e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.4972141829774526e-46,
+          "embryo": 0.0,
+          "ep_gp": 2.7121037921498386e-27,
+          "epsp_acc_gp": 3.155443620884047e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.43865294011195e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.4073690391195322e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.2596710159159556e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.632599794592138e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.5340916540649497e-46,
+          "embryo": 0.0,
+          "ep_gp": 6.768426566796281e-28,
+          "epsp_acc_gp": 7.143924357681483e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 4.0358054577628966e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.632599794592138e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.2596710159159556e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 9.914741965497455e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.4756467602654517e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.6918690364343352e-28,
+          "epsp_acc_gp": 4.493351716138883e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 8.00743892977881e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 9.914741965497455e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.2596710159159556e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 6.977376058554749e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.5017396257477267e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.9106211124452906e-27,
+          "epsp_acc_gp": 2.3653205382146818e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.4828755384707854e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 6.977376058554749e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221168759075226e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 7.587600983983721e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.714982817186545e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.726027660623574e-27,
+          "epsp_acc_gp": 2.1406529524077376e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.4645695743493847e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 7.587600983983721e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221168759075226e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.4552038082475547e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 7.072422745110285e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.0197595451860332e-27,
+          "epsp_acc_gp": 3.60982750229135e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.642566550763782e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.4552038082475547e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221168759075226e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.1959951003095018e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.5541489647157485e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.32899302003267e-27,
+          "epsp_acc_gp": 4.0288704151447515e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.4970015187312903e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.1959951003095018e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.4016696897888323e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 8.15463901134267e-13,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 5.380021448768131e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.8617117363215879e-28,
+          "epsp_acc_gp": 2.2466758580694416e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.554109909323836e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 8.15463901134267e-13
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.401671963525587e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.9504021710184985e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 7.566396436917749e-47,
+          "embryo": 0.0,
+          "ep_gp": 1.8459345182171676e-28,
+          "epsp_acc_gp": 1.539856486991415e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.3616324706817757e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.9504021710184985e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.401671963525587e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.4067784192883804e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 4.090018243353908e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.4183719075873792e-27,
+          "epsp_acc_gp": 1.613062778995925e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.9081574628604304e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.4067784192883804e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.2914466651636758e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 6.875318427288183e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 6.50771433525023e-47,
+          "embryo": 0.0,
+          "ep_gp": 2.2182768654814852e-27,
+          "epsp_acc_gp": 2.635426512162356e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.425053948774632e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 6.875318427288183e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.8122193523595342e-08,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.2496314645859874e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.2970140833238843e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.144399568210953e-27,
+          "epsp_acc_gp": 3.824397668511465e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 8.576435672548575e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.2496314645859874e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392266719682084e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.409524383827894e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 4.212176954428672e-47,
+          "embryo": 0.0,
+          "ep_gp": 2.1567457148742463e-27,
+          "epsp_acc_gp": 2.7439737727207675e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 4.164130169957418e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.409524383827894e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392302246818872e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.013587831098015e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 9.593488012169422e-47,
+          "embryo": 0.0,
+          "ep_gp": 2.8966972439715553e-27,
+          "epsp_acc_gp": 3.6148762120847645e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.643974405553129e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.013587831098015e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.25967527917237e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 6.9951409505478155e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 5.49567197777382e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.265884147614989e-27,
+          "epsp_acc_gp": 4.011199930867801e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.0529084315506307e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 6.9951409505478155e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.25967527917237e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 5.130641739123163e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 7.267848618800451e-47,
+          "embryo": 0.0,
+          "ep_gp": 1.9106211124452906e-27,
+          "epsp_acc_gp": 2.229005373792491e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 2.7081463913001117e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 5.130641739123163e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.25967527917237e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 7.682731656387285e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.4939618804413584e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.8490899618380517e-27,
+          "epsp_acc_gp": 2.145701662201152e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.474950336749632e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 7.682731656387285e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.25967527917237e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.082197694533609e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 9.791673515422759e-47,
+          "embryo": 0.0,
+          "ep_gp": 8.63013830311787e-28,
+          "epsp_acc_gp": 1.029936797856553e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.6522533733598653e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.082197694533609e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221202865126543e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 4.003298229758557e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.927200099126867e-46,
+          "embryo": 0.0,
+          "ep_gp": 4.4365537309629704e-27,
+          "epsp_acc_gp": 5.394546414263367e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.4665513562621592e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 4.003298229758557e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221202865126543e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 9.267300763878677e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 4.623649081547365e-47,
+          "embryo": 0.0,
+          "ep_gp": 4.005835676712298e-27,
+          "epsp_acc_gp": 4.872004950644969e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 7.776250299254567e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 9.267300763878677e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.6221202865126543e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 8.65201973009911e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 7.458516971306653e-47,
+          "embryo": 0.0,
+          "ep_gp": 5.2380364106675184e-27,
+          "epsp_acc_gp": 6.520408698194795e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.4016301837668099e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 8.65201973009911e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.401671110874304e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 5.412241765815358e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 9.475552269336604e-47,
+          "embryo": 0.0,
+          "ep_gp": 9.860761315262648e-28,
+          "epsp_acc_gp": 1.2091659955227669e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 9.361502495779144e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 5.412241765815358e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.4016735267196054e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 5.842764898620892e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.1638119605831076e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.0476072821335037e-27,
+          "epsp_acc_gp": 1.315188901184471e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.0143757461290908e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 5.842764898620892e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.4016735267196054e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 5.734231555030175e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.712712519640411e-46,
+          "embryo": 0.0,
+          "ep_gp": 1.2322007339552204e-27,
+          "epsp_acc_gp": 1.337908095254836e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.013432040456341e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 5.734231555030175e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.2914472335978644e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 2.8277255234316994e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.090785110750615e-46,
+          "embryo": 0.0,
+          "ep_gp": 9.245449809190258e-28,
+          "epsp_acc_gp": 9.23913892194849e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.0418060504454228e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 2.8277255234316994e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 1.812213668017648e-08,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.751625793904497e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.20492886865099e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.390524170639909e-27,
+          "epsp_acc_gp": 4.064211383698653e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.0822852460165537e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.751625793904497e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392289457049628e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 7.136984494130514e-12,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.218743721246279e-47,
+          "embryo": 0.0,
+          "ep_gp": 2.342916888506405e-27,
+          "epsp_acc_gp": 2.938349099767225e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 3.200702974577147e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 7.136984494130514e-12
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 2.0392326405271888e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.385199093167907e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 2.232039173221543e-46,
+          "embryo": 0.0,
+          "ep_gp": 3.7076462545387555e-28,
+          "epsp_acc_gp": 4.745787205809607e-27,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.1745052654252231e-28,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.385199093167907e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 64,
+      "detail": {
+        "event_safe": true,
+        "ledger_error": 0.0,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "log_hazard_error": 4.259679826645879e-07,
+        "partition_cycles": [
+          32,
+          32
+        ],
+        "projected_cycles_per_exact_map": 21.333333333333332,
+        "reason": "accepted",
+        "state_error": 1.1994751567454847e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 1.9876850005572517e-46,
+          "embryo": 0.0,
+          "ep_gp": 2.6505726415425997e-27,
+          "epsp_acc_gp": 3.067091199499294e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.0238050991368107e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.1994751567454847e-11
+        },
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    },
+    {
+      "accepted": true,
+      "cycles": 0.0,
+      "detail": {
+        "distance": 1.1994751567454847e-11,
+        "field_distance": {
+          "available": 0.0,
+          "completion": 2.157275262368489e-46,
+          "embryo": 0.0,
+          "ep_gp": 4.521063864544505e-19,
+          "epsp_acc_gp": 5.547556768249772e-18,
+          "inactive": 0.0,
+          "log_delivery_memory": 6.491924656540495e-30,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 1.1994751567454847e-11
+        },
+        "iterations": 1,
+        "residual": 1.1994751567454847e-11,
+        "stationary_verified": true,
+        "verification_field_residual": {
+          "available": 0.0,
+          "completion": 2.423462581758346e-47,
+          "embryo": 0.0,
+          "ep_gp": 4.521063864307847e-19,
+          "epsp_acc_gp": 5.5475567679468494e-18,
+          "inactive": 0.0,
+          "log_delivery_memory": 1.0757089111380467e-29,
+          "rho_gp": 0.0,
+          "stable": 0.0,
+          "u": 4.862984217334556e-12
+        },
+        "verification_ledger_error": 0.0,
+        "verification_log_hazard_error": 0.0,
+        "verification_residual": 4.862984217334556e-12
+      },
+      "exact_map_evaluations": 1,
+      "mode": "periodic_search"
+    },
+    {
+      "accepted": true,
+      "cycles": 8999997312.0,
+      "detail": {
+        "admission_distance": 1.1994751567454847e-11,
+        "maximum_log_action_per_cycle": -68.01396052847682
+      },
+      "exact_map_evaluations": 0,
+      "mode": "stationary"
+    }
+  ],
+  "model_id": "v9_stateful_pd_dormant_high_cycle_event_engine_v1",
+  "physical_cycles": 10000000000.0,
+  "topology_signature": "02ddd5d7801bc6c4e9953b1d095203e3060c40ff83a9306a60c6df9261b95368"
+}

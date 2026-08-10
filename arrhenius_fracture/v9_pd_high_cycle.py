@@ -119,6 +119,11 @@ class HighCycleConfig:
     minimum_positive_coordinate: float = -math.inf
     max_exact_map_evaluations: int = 128
     minimum_projected_cycles_per_exact_map: float = 0.0
+    private_window_training: bool = True
+    private_window_initial_cycles: int = 64
+    private_window_max_cycles: int = 10**8
+    private_window_state_tolerance: float = 2e-7
+    private_window_log_hazard_tolerance: float = 2e-4
 
 
 @dataclass
@@ -327,6 +332,98 @@ class DormantPDHighCycleEngine:
             self.adapter.set_physical_cycles(cycles)
             _assert_private(self.adapter, protected)
 
+    def _private_window_at(self, template: ActiveState, vector: np.ndarray,
+                           cycles: float, *, start_cycles: float) -> CycleEvaluation:
+        method = getattr(self.adapter, "exact_private_window", None)
+        if method is None:
+            raise RuntimeError("adapter has no exact private-window evaluator")
+        base = self.adapter.active_state()
+        protected = self.adapter.protected_signatures()
+        physical_cycles = self.adapter.physical_cycles()
+        try:
+            self.adapter.restore_active_state(template, vector)
+            self.adapter.set_physical_cycles(float(start_cycles))
+            evaluation = method(float(cycles))
+            self.exact_map_evaluations += 1
+            return evaluation
+        finally:
+            self.adapter.restore_active_state(base, base.vector)
+            self.adapter.set_physical_cycles(physical_cycles)
+            _assert_private(self.adapter, protected)
+
+    def _private_window_trial(self, horizon: int) -> tuple[bool, dict[str, Any]]:
+        """Qualify one exact macro-window against an independently partitioned map."""
+        if horizon < 2:
+            return False, {"reason": "window_too_short"}
+        start = self.adapter.active_state()
+        start_cycles = self.adapter.physical_cycles()
+        left_cycles = horizon // 2
+        right_cycles = horizon - left_cycles
+        full = self._private_window_at(
+            start, start.vector, horizon, start_cycles=start_cycles
+        )
+        left = self._private_window_at(
+            start, start.vector, left_cycles, start_cycles=start_cycles
+        )
+        right = self._private_window_at(
+            start, left.state_end.vector, right_cycles,
+            start_cycles=start_cycles + left_cycles,
+        )
+        state_error, state_error_by_field = active_distance(
+            self.adapter, full.state_end, right.state_end
+        )
+        partition_log_action = np.logaddexp(left.log_birth_action, right.log_birth_action)
+        hazard_error = _hazard_error(full.log_birth_action, partition_log_action)
+        names = set(full.ledger_increments) | set(left.ledger_increments) | set(right.ledger_increments)
+        ledgers = dict(full.ledger_increments)
+        ledger_error = 0.0
+        ledger_error_by_name = {}
+        for name in names:
+            whole = np.asarray(full.ledger_increments.get(name, 0.0), float)
+            split = (np.asarray(left.ledger_increments.get(name, 0.0), float)
+                     + np.asarray(right.ledger_increments.get(name, 0.0), float))
+            # These are cumulative population/work increments.  In a dormant
+            # tail their values can be far below one, where a relative error
+            # divided by the tiny increment is meaningless.  Normalize by one
+            # physical ledger unit while retaining relative control above it.
+            scale = max(float(np.max(np.abs(whole))), float(np.max(np.abs(split))), 1.0)
+            error = float(np.max(np.abs(whole - split))) / scale
+            ledger_error_by_name[name] = error
+            ledger_error = max(ledger_error, error)
+        transition_ok = (full.transition_signature == left.transition_signature
+                         == right.transition_signature)
+        remaining_log = _log_remaining_action(self.adapter.remaining_birth_actions())
+        phase_rates = [np.asarray(ev.phase_log_birth_rate, float).ravel()
+                       for ev in (full, left, right) if np.asarray(ev.phase_log_birth_rate).size]
+        max_log_rate = max((float(np.max(rate)) for rate in phase_rates), default=-math.inf)
+        guard_log = (-math.inf if not np.isfinite(max_log_rate) else
+                     max_log_rate + math.log(max(self.config.event_guard_cycles, 1e-300)))
+        guarded_action = np.logaddexp(full.log_birth_action, guard_log)
+        event_safe = bool(np.all(guarded_action < remaining_log))
+        efficiency = horizon / 3.0
+        accepted = bool(
+            state_error <= self.config.private_window_state_tolerance
+            and hazard_error <= self.config.private_window_log_hazard_tolerance
+            and ledger_error <= self.config.private_window_log_hazard_tolerance
+            and transition_ok and event_safe
+            and efficiency >= self.config.minimum_projected_cycles_per_exact_map
+        )
+        reason = "accepted" if accepted else (
+            "event_guard" if not event_safe else
+            "insufficient_window_efficiency" if efficiency < self.config.minimum_projected_cycles_per_exact_map else
+            "partition_mismatch"
+        )
+        return accepted, {
+            "reason": reason, "start": start, "end_vector": full.state_end.vector,
+            "log_action": full.log_birth_action, "ledgers": ledgers,
+            "state_error": state_error, "state_error_by_field": state_error_by_field,
+            "log_hazard_error": hazard_error, "ledger_error": ledger_error,
+            "ledger_error_by_name": ledger_error_by_name,
+            "transition_preserved": transition_ok, "event_safe": event_safe,
+            "projected_cycles_per_exact_map": efficiency,
+            "partition_cycles": [left_cycles, right_cycles],
+        }
+
     def _projective_trial(self, horizon: int) -> tuple[bool, dict[str, Any]]:
         start = self.adapter.active_state()
         first = private_cycle(self.adapter); self.exact_map_evaluations += 1
@@ -460,8 +557,34 @@ class DormantPDHighCycleEngine:
                      "accepted_projected_cycles": self.accepted_projected_cycles},
                 ))
                 break
-            ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
             remaining = requested - consumed
+            window_method = getattr(self.adapter, "exact_private_window", None)
+            if self.config.private_window_training and window_method is not None and remaining >= 2:
+                proposal = min(int(remaining), int(self.config.private_window_max_cycles))
+                proposal = max(min(proposal, max(self.config.private_window_initial_cycles, 2)), 2)
+                accepted_window = False
+                while proposal >= 2 and self.exact_map_evaluations + 3 <= self.config.max_exact_map_evaluations:
+                    accepted_window, window = self._private_window_trial(proposal)
+                    public_detail = {k: v for k, v in window.items()
+                                     if k not in {"start", "end_vector", "log_action", "ledgers"}}
+                    self.mode_history.append(ModeRecord(
+                        "exact_private_window" if accepted_window else "exact_private_window_reject",
+                        proposal if accepted_window else 0.0, 3, accepted_window, public_detail,
+                    ))
+                    if accepted_window:
+                        self.adapter.restore_active_state(window["start"], window["end_vector"])
+                        _commit_log_action(self.adapter, window["log_action"], proposal)
+                        self.adapter.commit_ledger_increments(window["ledgers"])
+                        self.adapter.set_physical_cycles(self.adapter.physical_cycles() + proposal)
+                        consumed += proposal
+                        self.accepted_projected_cycles += proposal
+                        break
+                    proposal //= 2
+                if consumed >= requested:
+                    break
+                if accepted_window:
+                    continue
+            ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
             current_residual, current_fields = active_distance(self.adapter, ev.state_start, ev.state_end)
             if current_residual <= self.config.periodic_admission_distance:
                 periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)

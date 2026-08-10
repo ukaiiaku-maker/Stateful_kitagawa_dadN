@@ -1,0 +1,66 @@
+{
+  "available_site_rows": 4349,
+  "cycles": 180000000.0,
+  "files": {
+    "ACTIVE.json": {
+      "bytes": 61,
+      "sha256": "6b7587f4a2c2d6ababd7f950cd4200334108bade9aae8bea8bb3b915f19ad6c5"
+    },
+    "available_persistent_site_clock_table.csv": {
+      "bytes": 315626,
+      "sha256": "193dcbbc91360007f6829ba527f660c05e330199bfb0a827df68729956ae5b64"
+    },
+    "checkpoint_latest.npz": {
+      "bytes": 1859512,
+      "sha256": "4cdafaba4e83d2fe5e6215995a446e878ce6367922aa4027a370a8910de15ee5"
+    },
+    "crack_handoff_audit_final.json": {
+      "bytes": 954,
+      "sha256": "b65a73848abb2fa42f962bd4b109bf0971f061572197ab77fd21fa84e9030f17"
+    },
+    "pd_state_final.npz": {
+      "bytes": 307675,
+      "sha256": "b68ce25012e680e7a1d58e4455040b49ad8d252a06c6d5449de1c629b73ad54e"
+    },
+    "run_args.json": {
+      "bytes": 9304,
+      "sha256": "29bdfec0bf8fd2818ba7e9a4e7501c62361d874a9308d7ce8d6f014326ec4763"
+    },
+    "sn_stateful_pd_history.csv": {
+      "bytes": 1198658,
+      "sha256": "aac1e8b5c8521fb0068b36761694850bdab8ba9bc526c7516275c138d796b310"
+    },
+    "summary.json": {
+      "bytes": 19264,
+      "sha256": "e2a27c1b685eaf8c76a8b1da73589044e968cb2c2b276cefec2dc055666848ce"
+    },
+    "v9_generations/generation_31aa6c2877c64d59819be52a1f8b1ce1/manifest.json": {
+      "bytes": 3071,
+      "sha256": "24ea410a8322b63514cc65476fe19bc4ecad0d83108ff30187643a0696d57207"
+    },
+    "v9_generations/generation_31aa6c2877c64d59819be52a1f8b1ce1/state_arrays.npz": {
+      "bytes": 839107,
+      "sha256": "219d7d2468cf26be74e6f10f83617cead9419a5eb3883fed60bfdd6c1e5b51c0"
+    },
+    "v9_generations/generation_31aa6c2877c64d59819be52a1f8b1ce1/state_metadata.json": {
+      "bytes": 4250835,
+      "sha256": "85d8bb64bfd0e4e3de08c804ae9ef546ed127b5642375d1efec690a0a3d2d2ee"
+    },
+    "v9_generations/generation_31aa6c2877c64d59819be52a1f8b1ce1/summary.json": {
+      "bytes": 149,
+      "sha256": "5bcdd7607b53454b0dc107ed24c8636e82278491b0dd85fb08102d4b67216dd5"
+    },
+    "v9_pd_high_cycle_controller.json": {
+      "bytes": 3965,
+      "sha256": "a7018063c1062936c37a24e2f231a7feace68292bc6d2adbea76c8a2016146ab"
+    },
+    "v9_pd_high_cycle_mode_history.json": {
+      "bytes": 7251,
+      "sha256": "d6a5b4bdb34ce04bd47fa898c3c95115711ea58dfb2356b0d60232e2cc9b361e"
+    }
+  },
+  "generation": "generation_31aa6c2877c64d59819be52a1f8b1ce1",
+  "schema": "V9_PD_ATOMIC_TAIL_PACKAGE_1",
+  "sigma_a_MPa": 840.4432004940379,
+  "source_case_dir": "/Volumes/Data/Data/Nanopillar_calculation/Stateful_kitagawa_dadN/runs/v9_pd_production/stress_step_comparison/aged_690MPa_then_840MPa/shielded/sigmaA_840p443MPa"
+}

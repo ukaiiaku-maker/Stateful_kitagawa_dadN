@@ -1,0 +1,289 @@
+{
+  "arrays": {
+    "ep_gp": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "epsp_acc_gp": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "last_residual": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "mesh_nodes": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__active_front_bonds": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__active_front_contact_xy": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__active_front_path_xy": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__active_front_tip_xy": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__available": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__available_sites": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__birth_cumulative_hazard": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__bond_damage": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__born_cumulative": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__born_sites_cumulative": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__candidate_sites": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__completion": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__crack_normal_c2": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__crack_normal_s2": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__crack_orientation_weight": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__delivery_memory": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__embryo": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__embryo_sites": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__front_backbone_bonds": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__front_process_bonds": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__front_wake_bonds": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__growth": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__healed_cumulative": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__healed_sites_cumulative": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__inactive": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__inactive_sites": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__primary_seed_rejected": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__site_birth_cycle": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__site_birth_threshold": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__site_node_index": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__site_stable_cycle": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__site_status": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd__stable": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd__stable_sites": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd_v9__log_birth_cumulative_hazard": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd_v9__log_delivery_memory": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "pd_v9__site_transition_cumulative_hazard": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd_v9__site_transition_outcome_uniform": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "pd_v9__site_transition_threshold": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "rho_gp": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    },
+    "root_xy": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": true
+    },
+    "u": {
+      "exact": true,
+      "max_abs": 0.0,
+      "max_relative": 0.0,
+      "required_exact": false
+    }
+  },
+  "exact_protected_state": true,
+  "left": "runs/v9_pd_production/hc020_current_head_overlap/accelerated_192cycles_qualified/shielded/sigmaA_690p443MPa/v9_generations",
+  "left_cycles": 168635139.0289538,
+  "maximum_absolute_difference": 0.0,
+  "maximum_relative_difference": 0.0,
+  "right": "runs/v9_pd_production/hc020_current_head_overlap/accelerated_restart_split/shielded/sigmaA_690p443MPa/v9_generations",
+  "right_cycles": 168635139.0289538,
+  "schema": "V9_PD_ATOMIC_PARTITION_RESTART_COMPARISON_1",
+  "summary_cycles_equal": true
+}

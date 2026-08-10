@@ -25,6 +25,8 @@ def main() -> None:
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument("--generation", required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--expected-cycles", type=float, required=True)
+    parser.add_argument("--sigma-a-MPa", type=float, required=True)
     args = parser.parse_args()
 
     case = args.case_dir.resolve()
@@ -32,8 +34,8 @@ def main() -> None:
     if not source_generation.is_dir():
         raise SystemExit(f"missing generation: {source_generation}")
     summary = json.loads((source_generation / "summary.json").read_text())
-    if abs(float(summary["cycles"]) - 168634947.0289538) > 1e-9:
-        raise SystemExit("refusing to package a generation other than the accepted N=168634947.0289538 boundary")
+    if abs(float(summary["cycles"]) - args.expected_cycles) > max(1e-9, 1e-12 * abs(args.expected_cycles)):
+        raise SystemExit("generation cycle does not match --expected-cycles")
 
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -44,20 +46,30 @@ def main() -> None:
     shutil.copytree(source_generation, target_generation)
 
     context_names = (
-        "run_args.json", "v9_pd_high_cycle_controller.json",
-        "v9_pd_high_cycle_mode_history.json", "checkpoint_latest.npz",
+        "run_args.json", "checkpoint_latest.npz",
+        "summary.json", "sn_stateful_pd_history.csv",
+        "crack_handoff_audit_final.json", "pd_state_final.npz",
     )
     for name in context_names:
         source = case / name
         if not source.is_file():
             raise SystemExit(f"missing required context file: {source}")
         shutil.copy2(source, out / name)
+    optional_context_names = (
+        "v9_pd_high_cycle_controller.json", "v9_pd_high_cycle_mode_history.json",
+    )
+    missing_optional_context = []
+    for name in optional_context_names:
+        source = case / name
+        if source.is_file():
+            shutil.copy2(source, out / name)
+        else:
+            missing_optional_context.append(name)
     (out / "ACTIVE.json").write_text(
         json.dumps({"generation": args.generation}, separators=(",", ":")) + "\n"
     )
 
     arrays = np.load(source_generation / "state_arrays.npz", allow_pickle=False)
-    nodes = arrays["mesh_nodes"]
     site_node = arrays["pd__site_node_index"].astype(int)
     threshold = arrays["pd__site_birth_threshold"]
     status = arrays["pd__site_status"].astype(int)
@@ -65,11 +77,10 @@ def main() -> None:
     available = np.flatnonzero(status == 0)
     rows = []
     for site_id in available:
-        node_id = int(site_node[site_id])
-        cumulative = float(action[node_id])
+        pd_node_id = int(site_node[site_id])
+        cumulative = float(action[pd_node_id])
         rows.append({
-            "site_id": int(site_id), "node_id": node_id,
-            "x_m": float(nodes[node_id, 0]), "y_m": float(nodes[node_id, 1]),
+            "site_id": int(site_id), "pd_node_id": pd_node_id,
             "site_threshold": float(threshold[site_id]),
             "node_cumulative_action": cumulative,
             "remaining_threshold_action": float(threshold[site_id] - cumulative),
@@ -87,8 +98,9 @@ def main() -> None:
         "source_case_dir": str(case),
         "generation": args.generation,
         "cycles": float(summary["cycles"]),
-        "sigma_a_MPa": 690.4432004940379,
+        "sigma_a_MPa": args.sigma_a_MPa,
         "available_site_rows": len(rows),
+        "missing_optional_context": missing_optional_context,
         "files": {str(path.relative_to(out)): {"bytes": path.stat().st_size, "sha256": sha256(path)}
                   for path in files},
     }

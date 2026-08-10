@@ -4,12 +4,12 @@
 
 - Synthetic milestone `f7c8fb1`: protected-state dormant engine, periodic and
   projective modes, event guard, atomic mode diagnostics.
-- Production repair in progress: monotone ledgers now advance in stationary
-  and projective segments; event calculations remain in log space below
-  Float64 linear representability; spatial active coordinates now use declared
-  field-specific transforms and constitutive bounds.
-- Focused kernel qualification: 8 tests passing, including a formal `1e300`
-  skip with `log(q)=-1000`.
+- Historical finite-life/front qualification is complete. The production
+  repair now includes monotone-ledger closure, log-domain event calculations,
+  field-specific active coordinates, and an adaptive exact private-window
+  training operator.
+- Focused kernel qualification includes formal `1e300` log-domain skipping,
+  exact-window partition guarding, and persisted restart equivalence.
 - A real cached-FEM/spatial-PD exact-cycle callback now executes through the
   production phase ordering. A 10-cycle direct/callback comparison agrees in
   FEM state to roundoff, PD memory/population state to about `1e-12` relative,
@@ -22,10 +22,12 @@
 
 ## Real production status
 
-The historical finite-life/front control and long-horizon production
-qualification remain in progress. No synthetic result is classified as a
-material calculation. Existing v3 and historical PD trajectories remain
-unchanged.
+The historical K360 finite-life/front control, 690 MPa terminal generation,
+virgin 840 MPa finite-life condition, aged-state stress-step comparison, and
+HC-020 current-head overlap are complete development qualifications. They are
+not the final blunt-notch four-class campaign. The production target is now the
+300 K `a=150 um`, `b=300 um`, `rho=600 um` half-elliptical notch, beginning
+with Peak. Existing v3 and historical PD trajectories remain unchanged.
 
 ## Historical K360 real replay
 
@@ -95,12 +97,15 @@ the nearest remaining threshold changed from `9.647106699392403e-6` to
 `2.00129794714e10`-cycle next wait. This strong rate decay is scientifically
 important but is not by itself a proof of endurance.
 
-The current single-cycle projective fit is not production-efficient on this
-tail: exact state curvature is below `1e-9`, but two-cycle log-hazard prediction
-error remains about `9.4e-4`, above the `2e-4` admission tolerance. A longer
-exact training window/rate-separated fit is therefore required before a
-credible 1e10--1e12 continuation; brute-force continuation was stopped at the
-hash-verified atomic boundary.
+The former single-cycle projective limitation is superseded by HC-020. The
+adaptive operator evaluates an exact macro-window and an independent two-part
+exact partition before adoption. On the current 690 MPa head it accepted three
+64-cycle windows: 192 physical cycles with nine exact maps, or 21.33 accepted
+cycles per map. Maximum state partition error was `7.80e-12`; maximum
+log-action error was `5.14e-5`. Direct and accelerated terminal maximum action
+agree within `8e-17`, and a persisted 64+128-cycle restart is array-identical to
+the continuous accelerated result. Acceleration is reported only for this
+accepted result; the earlier zero-accepted-cycle trial remains a rejection.
 
 ## Current-head A/B and requested stress increase
 
@@ -124,3 +129,52 @@ site: first embryo `36019.35198636835`, stable site `36021.57494691292`, first
 softening `45746.295542562904`, and root/front capture
 `867148.3411936606` cycles. The terminal calculation contains two realized
 births/stable sites, 33 broken bonds, and maximum damage `0.956203983658257`.
+
+The virgin condition is packaged independently as protocol `virgin_840MPa`.
+The exact 690 MPa terminal generation was also restored and continued with only
+the applied stress changed, protocol `aged_690MPa_then_840MPa`. The aged state
+has reached `N=180000000`, or 11,365,052.971 additional cycles at 840 MPa,
+without an embryo, stable site, damage, or front capture. Thus the aged
+additional event times are right-censored beyond 11.365 million cycles, versus
+36,019.352 cycles to embryo, 36,021.575 to stabilization, and 867,148.341 to
+front capture in virgin material. Stress was not raised above 840 MPa.
+
+Matched persistent-site tables at `N=1e8` and `N=168634947.0289538` retain all
+site IDs and separately identify the minimum-action (site 683), maximum-rate
+(786 then 614), minimum-wait (site 1189), and maximum-cumulative-action (site
+13) clocks. The table reports the exact one-cycle log/linear birth action,
+remaining action, wait, delivery rate/memory, K=2 completion, raw cleavage
+rate, effective opening stress, equivalent-stress emission drive, backstress,
+and state shift.
+
+## Blunt-notch Peak production start
+
+The final production geometry is active at 300 K with `a=150 um`, `b=300 um`,
+`rho=600 um`, the audited Peak row, and no PD images. A 12,000 MPa finite
+stable-birth condition records first embryo at `81050.8859089888` cycles,
+stabilization at `81053.2753569623`, first softening at
+`92053.27535696232`, and root connection at `1528000`. At the preserved
+`N=3e6` checkpoint the original seed (node 297) has zero reselections and three
+broken bonds. Six-bond front capture remains right-censored above `3e6`; this
+checkpoint is not represented as a completed front-capture endpoint.
+
+This run exposed an update-partition defect in primary-seed stall detection:
+small, monotone damage increments could be rejected before accumulating the
+coarse diagnostic increment. Numerically resolved positive progress now resets
+the consecutive stall counter, while the original coarse milestone remains the
+reported progress reference. A regression exercises the slowly advancing seed
+under small controller blocks.
+
+The independent lower-stress Peak condition at 4,000 MPa was continued
+logarithmically from `N=1e6` through `1e8` to `1e10`. It has no embryo, stable
+site, bond damage, root connection, or front capture. On the final continuation
+the HC-020 operator accepted 2,688 exact-window cycles with 130 exact-map
+evaluations, qualified the periodic state, and advanced the remaining
+`8,999,997,312` cycles by the stationary map. This is a preserved finite
+runout, not an endurance classification.
+
+Both Peak checkpoints have hash-verified packages under
+`runs/v9_pd_production/packages/`. The direct post-event 12,000 MPa package
+explicitly records the absence of high-cycle controller/mode files rather than
+inventing a controller history. The complete regression suite passes: 178
+tests and 7 subtests.

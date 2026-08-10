@@ -1,0 +1,119 @@
+{
+  "accepted_projected_cycles": 0.0,
+  "exact_map_evaluations": 17,
+  "mode_history": [
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "current_residual": 1.4420362802442741e-08,
+        "field_residual": {
+          "available": 3.4634517476206383e-12,
+          "completion": 3.085647751994923e-13,
+          "embryo": 2.1007173497841548e-12,
+          "ep_gp": 1.4420362802442741e-08,
+          "epsp_acc_gp": 2.5569090464395927e-09,
+          "inactive": 3.119101715321343e-20,
+          "log_delivery_memory": 3.767983392710179e-09,
+          "rho_gp": 6.798924095573213e-09,
+          "stable": 1.3627800060297957e-12,
+          "u": 1.7332677460973923e-09
+        }
+      },
+      "exact_map_evaluations": 1,
+      "mode": "periodic_precheck"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 2.381647102864731e-09,
+        "event_safe": true,
+        "hazard_error": 0.00020924005904987553,
+        "ledger_prediction_error": 1.4803181487922839e-08,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 1.4803181487922839e-08
+        },
+        "ledger_rate_variation": 0.9070327105183529,
+        "state_error": 3.8106354713657946e-08,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 2.381647701212193e-09,
+        "event_safe": true,
+        "hazard_error": 0.00010155163488434482,
+        "ledger_prediction_error": 1.4803181487922839e-08,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 1.4803181487922839e-08
+        },
+        "ledger_rate_variation": 0.8298809274769052,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 2.0,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 1.9053178362972824e-08,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 2.381647701212193e-09,
+        "event_safe": true,
+        "hazard_error": 5.001061731491063e-05,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.7092277554180832,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 1.0,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 9.526589518788484e-09,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 2.381647701212193e-09,
+        "event_safe": true,
+        "hazard_error": 2.7028376791804476e-05,
+        "ledger_prediction_error": 0.0,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 0.0
+        },
+        "ledger_rate_variation": 0.5494600335756904,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 0.5,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 4.763294776922742e-09,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    }
+  ],
+  "model_id": "v9_stateful_pd_dormant_high_cycle_event_engine_v1",
+  "physical_cycles": 172000000.0,
+  "topology_signature": "712dc8f19f524832a8955c9014a2fe39914c28e1e1683669044b45390ebe3fe5"
+}

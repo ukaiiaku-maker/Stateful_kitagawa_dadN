@@ -1,0 +1,122 @@
+{
+  "accepted_projected_cycles": 0.0,
+  "exact_map_evaluations": 17,
+  "mode_history": [
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "current_residual": 5.41768248226715e-05,
+        "field_residual": {
+          "available": 8.073002790598416e-06,
+          "completion": 5.339399652908107e-12,
+          "embryo": 4.896523708467342e-06,
+          "ep_gp": 3.734956076817397e-05,
+          "epsp_acc_gp": 5.41768248226715e-05,
+          "inactive": 6.49863953309912e-20,
+          "log_delivery_memory": 9.916199547320187e-09,
+          "rho_gp": 2.340475347134552e-05,
+          "stable": 3.176479082170336e-06,
+          "u": 2.08556053208297e-08
+        }
+      },
+      "exact_map_evaluations": 1,
+      "mode": "periodic_precheck"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 1.9273886500161738e-06,
+        "event_safe": true,
+        "hazard_error": 1.159816324758367e-06,
+        "ledger_prediction_error": 1.1173222201310709e-11,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 1.1173222201310709e-11
+        },
+        "ledger_rate_variation": 0.9066176885561128,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 4.0,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 4.885117275726936e-06,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 1.9273886503338873e-06,
+        "event_safe": true,
+        "hazard_error": 2.7021245685432405e-07,
+        "ledger_prediction_error": 7.718514564520474e-11,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 7.718514564520474e-11
+        },
+        "ledger_rate_variation": 0.8291862774175954,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 2.0,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 4.801210315791282e-06,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 1.9273886503338873e-06,
+        "event_safe": true,
+        "hazard_error": 5.787148715796775e-08,
+        "ledger_prediction_error": 4.2095758084040034e-11,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 4.2095758084040034e-11
+        },
+        "ledger_rate_variation": 0.708213611601156,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 1.0,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 4.2309006392238224e-06,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    },
+    {
+      "accepted": false,
+      "cycles": 0.0,
+      "detail": {
+        "curvature": 1.9273886503338873e-06,
+        "event_safe": true,
+        "hazard_error": 9.635520825668209e-09,
+        "ledger_prediction_error": 3.9581948280115635e-11,
+        "ledger_prediction_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 3.9581948280115635e-11
+        },
+        "ledger_rate_variation": 0.5482435615347648,
+        "minimum_projected_cycles_per_exact_map": 16.0,
+        "projected_cycles_per_exact_map": 0.5,
+        "reason": "insufficient_projective_efficiency",
+        "state_error": 3.0939138401381294e-06,
+        "transition_preserved": true
+      },
+      "exact_map_evaluations": 4,
+      "mode": "projective_reject"
+    }
+  ],
+  "model_id": "v9_stateful_pd_dormant_high_cycle_event_engine_v1",
+  "physical_cycles": 10371.875810673682,
+  "topology_signature": "712dc8f19f524832a8955c9014a2fe39914c28e1e1683669044b45390ebe3fe5"
+}

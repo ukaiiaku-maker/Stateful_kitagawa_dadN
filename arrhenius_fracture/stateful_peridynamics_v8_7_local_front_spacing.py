@@ -884,8 +884,19 @@ class StatefulPDPatch:
 
         progress = self._primary_seed_progress_metric(state, node)
         threshold = max(float(cfg.primary_seed_progress_damage_increment), 0.0)
+        numerical_progress = 64.0 * np.finfo(float).eps * max(
+            1.0, abs(progress), abs(float(state.primary_seed_last_progress))
+        )
         if progress >= float(state.primary_seed_last_progress) + threshold:
             state.primary_seed_last_progress = progress
+            state.primary_seed_stall_updates = 0
+            return
+        if progress > float(state.primary_seed_last_progress) + numerical_progress:
+            # The seed is physically advancing, even if it has not yet crossed
+            # the coarser diagnostic progress increment.  An update-count stall
+            # must not reject such a seed merely because the controller chose
+            # smaller blocks. Keep the last milestone until ``threshold`` is
+            # crossed, but reset the consecutive no-progress counter.
             state.primary_seed_stall_updates = 0
             return
 
@@ -2158,6 +2169,9 @@ class StatefulPDPatch:
             "mu_grow": mu_grow,
             "mu_link": mu_link,
             "smax": smax,
+            "effective_opening_stress_Pa": np.max(sig_open, axis=0),
+            "backstress_Pa": back,
+            "state_shift_eV": shift,
             "tn": tn,
             "tn_raw": tn_raw,
             "bond_state_shift_eV": bond_shift_eV,
@@ -2922,4 +2936,3 @@ class StatefulPDPatch:
         cb2.set_label("realized stable defects / point")
         fig.savefig(out_png, dpi=220)
         plt.close(fig)
-

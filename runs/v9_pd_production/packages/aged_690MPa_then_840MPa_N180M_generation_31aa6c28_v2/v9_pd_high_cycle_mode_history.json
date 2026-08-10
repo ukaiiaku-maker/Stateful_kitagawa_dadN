@@ -1,0 +1,233 @@
+[
+  {
+    "cycles_total": 168634947.0289538,
+    "requested_segment": 3365052.9710462093,
+    "mode": "periodic_precheck",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 1,
+    "accepted": false,
+    "detail": {
+      "current_residual": 0.17208475379232996,
+      "field_residual": {
+        "ep_gp": 1.473884417142011e-08,
+        "rho_gp": 7.04560081162947e-09,
+        "epsp_acc_gp": 2.6233294223208734e-09,
+        "u": 0.17208475379232996,
+        "log_delivery_memory": 6.6324625884079716e-06,
+        "available": 1.5834000777203983e-12,
+        "embryo": 9.604032681674682e-13,
+        "stable": 6.230340137032553e-13,
+        "inactive": 2.1837395303576604e-20,
+        "completion": 3.92580719215244e-11
+      }
+    }
+  },
+  {
+    "cycles_total": 168634947.0289538,
+    "requested_segment": 3365052.9710462093,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.9840755683601231,
+      "ledger_prediction_error": 1.4756966413365798e-08,
+      "ledger_prediction_error_by_name": {
+        "born_cumulative": 0.0,
+        "healed_cumulative": 0.0,
+        "plastic_work": 1.4756966413365798e-08
+      },
+      "state_error": 6.707920861226616e-05,
+      "hazard_error": 10.700886993669545,
+      "curvature": 4.192527259889771e-06,
+      "transition_preserved": true,
+      "event_safe": true
+    }
+  },
+  {
+    "cycles_total": 168634947.0289538,
+    "requested_segment": 3365052.9710462093,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.940823267308983,
+      "ledger_prediction_error": 0.0,
+      "ledger_prediction_error_by_name": {
+        "born_cumulative": 0.0,
+        "healed_cumulative": 0.0,
+        "plastic_work": 0.0
+      },
+      "state_error": 3.3539931654909814e-05,
+      "hazard_error": 4.09410243522305,
+      "curvature": 4.192527260019465e-06,
+      "transition_preserved": true,
+      "event_safe": true
+    }
+  },
+  {
+    "cycles_total": 168634947.0289538,
+    "requested_segment": 3365052.9710462093,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.8426456939527193,
+      "ledger_prediction_error": 0.0,
+      "ledger_prediction_error_by_name": {
+        "born_cumulative": 0.0,
+        "healed_cumulative": 0.0,
+        "plastic_work": 0.0
+      },
+      "state_error": 1.6770047664063235e-05,
+      "hazard_error": 1.3007079821279959,
+      "curvature": 4.192527260019465e-06,
+      "transition_preserved": true,
+      "event_safe": true
+    }
+  },
+  {
+    "cycles_total": 168634947.0289538,
+    "requested_segment": 3365052.9710462093,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.6710019550928977,
+      "ledger_prediction_error": 0.0,
+      "ledger_prediction_error_by_name": {
+        "born_cumulative": 0.0,
+        "healed_cumulative": 0.0,
+        "plastic_work": 0.0
+      },
+      "state_error": 8.385044290919741e-06,
+      "hazard_error": 0.28375377909065236,
+      "curvature": 4.192527260019465e-06,
+      "transition_preserved": true,
+      "event_safe": true
+    }
+  },
+  {
+    "cycles_total": 172000000.0,
+    "requested_segment": 8000000.0,
+    "mode": "periodic_precheck",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 1,
+    "accepted": false,
+    "detail": {
+      "current_residual": 1.4420362802442741e-08,
+      "field_residual": {
+        "ep_gp": 1.4420362802442741e-08,
+        "rho_gp": 6.798924095573213e-09,
+        "epsp_acc_gp": 2.5569090464395927e-09,
+        "u": 1.7332677460973923e-09,
+        "log_delivery_memory": 3.767983392710179e-09,
+        "available": 3.4634517476206383e-12,
+        "embryo": 2.1007173497841548e-12,
+        "stable": 1.3627800060297957e-12,
+        "inactive": 3.119101715321343e-20,
+        "completion": 3.085647751994923e-13
+      }
+    }
+  },
+  {
+    "cycles_total": 172000000.0,
+    "requested_segment": 8000000.0,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.9070327105183529,
+      "ledger_prediction_error": 1.4803181487922839e-08,
+      "ledger_prediction_error_by_name": {
+        "healed_cumulative": 0.0,
+        "born_cumulative": 0.0,
+        "plastic_work": 1.4803181487922839e-08
+      },
+      "state_error": 3.8106354713657946e-08,
+      "hazard_error": 0.00020924005904987553,
+      "curvature": 2.381647102864731e-09,
+      "transition_preserved": true,
+      "event_safe": true
+    }
+  },
+  {
+    "cycles_total": 172000000.0,
+    "requested_segment": 8000000.0,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.8298809274769052,
+      "ledger_prediction_error": 1.4803181487922839e-08,
+      "ledger_prediction_error_by_name": {
+        "healed_cumulative": 0.0,
+        "born_cumulative": 0.0,
+        "plastic_work": 1.4803181487922839e-08
+      },
+      "state_error": 1.9053178362972824e-08,
+      "hazard_error": 0.00010155163488434482,
+      "curvature": 2.381647701212193e-09,
+      "transition_preserved": true,
+      "event_safe": true,
+      "reason": "insufficient_projective_efficiency",
+      "projected_cycles_per_exact_map": 2.0,
+      "minimum_projected_cycles_per_exact_map": 16.0
+    }
+  },
+  {
+    "cycles_total": 172000000.0,
+    "requested_segment": 8000000.0,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.7092277554180832,
+      "ledger_prediction_error": 0.0,
+      "ledger_prediction_error_by_name": {
+        "healed_cumulative": 0.0,
+        "born_cumulative": 0.0,
+        "plastic_work": 0.0
+      },
+      "state_error": 9.526589518788484e-09,
+      "hazard_error": 5.001061731491063e-05,
+      "curvature": 2.381647701212193e-09,
+      "transition_preserved": true,
+      "event_safe": true,
+      "reason": "insufficient_projective_efficiency",
+      "projected_cycles_per_exact_map": 1.0,
+      "minimum_projected_cycles_per_exact_map": 16.0
+    }
+  },
+  {
+    "cycles_total": 172000000.0,
+    "requested_segment": 8000000.0,
+    "mode": "projective_reject",
+    "accepted_cycles": 0.0,
+    "exact_map_evaluations": 4,
+    "accepted": false,
+    "detail": {
+      "ledger_rate_variation": 0.5494600335756904,
+      "ledger_prediction_error": 0.0,
+      "ledger_prediction_error_by_name": {
+        "healed_cumulative": 0.0,
+        "born_cumulative": 0.0,
+        "plastic_work": 0.0
+      },
+      "state_error": 4.763294776922742e-09,
+      "hazard_error": 2.7028376791804476e-05,
+      "curvature": 2.381647701212193e-09,
+      "transition_preserved": true,
+      "event_safe": true,
+      "reason": "insufficient_projective_efficiency",
+      "projected_cycles_per_exact_map": 0.5,
+      "minimum_projected_cycles_per_exact_map": 16.0
+    }
+  }
+]

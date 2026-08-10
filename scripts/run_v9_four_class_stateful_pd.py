@@ -135,6 +135,9 @@ def build_parser():
     parser.add_argument("--checkpoint-every-blocks", type=int, default=25)
     parser.add_argument("--pd-image-policy", choices=("none", "event_only", "selected"), default="none")
     parser.add_argument("--resolution-profile", choices=("h15", "h10", "custom"), default="h15")
+    parser.add_argument("--pd-high-cycle", action="store_true")
+    parser.add_argument("--pd-high-cycle-start-cycles", type=float, default=1.0e4)
+    parser.add_argument("--pd-high-cycle-max-segment", type=float, default=1.0e8)
     return parser
 
 
@@ -145,6 +148,7 @@ def main(argv=None):
         "cycles_max", "block_cycles", "min_block_cycles", "max_blocks", "seed",
         "pd_seed", "resume", "checkpoint_every_blocks", "pd_image_policy",
         "resolution_profile",
+        "pd_high_cycle", "pd_high_cycle_start_cycles", "pd_high_cycle_max_segment",
     ):
         setattr(args, name, getattr(cli, name))
     args.sigma_a_MPa = [float(cli.sigma_a_MPa)]

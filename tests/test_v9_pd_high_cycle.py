@@ -144,6 +144,52 @@ def test_restart_equivalence_periodic_and_projective(tmp_path):
         assert (tmp_path / "mode.json").is_file()
 
 
+def test_exact_private_window_training_partition_guard_and_restart():
+    class Windowed(SyntheticDormantPD):
+        def exact_private_window(self, dN):
+            n = float(dN)
+            start = self.active_state()
+            # Include an exactly integrable cycle-coordinate-dependent term so
+            # the split right window must begin at N + dN_left.  Evaluating it
+            # at the original N would fail the partition guard.
+            n0 = self.physical_cycles()
+            coordinate_increment = 1e-14 * ((n0 + n) ** 2 - n0 ** 2)
+            end = ActiveState(
+                start.vector + n * self.drift + coordinate_increment,
+                start.specification,
+            )
+            return CycleEvaluation(
+                start, end, np.array([self.log_rate + math.log(n)]),
+                {"ledger": n}, np.array([0.0, 1.0]),
+                np.array([[self.log_rate], [self.log_rate]]), {}, "dormant",
+                self.protected_signatures().topology,
+            )
+
+    config = cfg(
+        periodic_admission_distance=0.0, private_window_initial_cycles=96,
+        private_window_state_tolerance=1e-13,
+        private_window_log_hazard_tolerance=1e-13,
+        minimum_projected_cycles_per_exact_map=16.0,
+    )
+    continuous = Windowed(rate=1e-8, threshold=10.0, contraction=1.0, drift=2e-6)
+    restarted = deepcopy(continuous)
+    result = DormantPDHighCycleEngine(continuous, config).advance(192)
+    assert result.cycles_consumed == 192
+    assert result.accepted_projected_cycles == 192
+    assert all(row.detail["projected_cycles_per_exact_map"] >= 16.0
+               for row in result.modes if row.mode == "exact_private_window")
+    DormantPDHighCycleEngine(restarted, config).advance(96)
+    DormantPDHighCycleEngine(restarted, config).advance(96)
+    np.testing.assert_allclose(continuous.x, restarted.x, rtol=0.0, atol=1e-18)
+    np.testing.assert_allclose(continuous.action, restarted.action, rtol=2e-15)
+    assert continuous.ledger == restarted.ledger == 192.0
+
+    guarded = Windowed(rate=1e-2, threshold=0.5, contraction=1.0, drift=0.0)
+    guarded_result = DormantPDHighCycleEngine(guarded, config).advance(96)
+    assert not any(row.mode == "exact_private_window" for row in guarded_result.modes)
+    assert guarded.action[0] < guarded.threshold[0]
+
+
 def test_log_action_below_float_range_survives_large_formal_skip():
     model = SyntheticDormantPD(rate=1.0, threshold=1.0)
     model.rate = 0.0
