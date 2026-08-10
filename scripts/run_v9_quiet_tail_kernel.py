@@ -13,6 +13,9 @@ import tempfile
 import numpy as np
 
 from arrhenius_fracture.v9_canonical_four_class_fem import CanonicalFourClassFEMCondition
+from arrhenius_fracture.v9_canonical_four_class_elastic_fem import (
+    CanonicalElasticFourClassFEMCondition,
+)
 from arrhenius_fracture.v9_quiet_tail_kernel import (
     energy_gate_envelope, kernel_convergence, phase_resolved_cycle,
     restore_condition_checkpoint, save_condition_checkpoint, stationary_marked_renewal,
@@ -69,9 +72,13 @@ def main():
     parser.add_argument("--targets", default="1e6,1e7,1e8")
     parser.add_argument("--hazard-seed", type=int, default=1720)
     parser.add_argument("--resume-checkpoint", type=Path)
+    parser.add_argument("--canonical-elastic-v3", action="store_true",
+                        help="use elastic FEM bulk plus signed tip MPZ canonical v3")
     args = parser.parse_args()
     option, stress = CLASSES[args.material_class]
-    condition = CanonicalFourClassFEMCondition.from_run_args(
+    condition_type = (CanonicalElasticFourClassFEMCondition
+                      if args.canonical_elastic_v3 else CanonicalFourClassFEMCondition)
+    condition = condition_type.from_run_args(
         args.run_args, option, args.source_root, stress, args.hazard_seed)
     condition.birth.hazard_threshold_action = 1.0e100
     targets = [float(x) for x in args.targets.split(",")]

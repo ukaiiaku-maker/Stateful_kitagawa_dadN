@@ -1,0 +1,16 @@
+{
+  "schema": "V9_CANONICAL_ELASTIC_FEM_300K_ENDURANCE_DIAGNOSTICS_1",
+  "model_id": "v9_canonical_four_class_elastic_fem_signed_mpz_energy_gated_birth_v3",
+  "cleavage_attempt_asymptotic_classification": {
+    "Peak": "no_endurance", "DBTT": "no_endurance",
+    "weak-T": "no_endurance", "ceramic": "no_endurance"
+  },
+  "cleavage_attempt_basis": "strict_positive_intrinsic_canonical_renewal_floor",
+  "energy_admissible_stable_crack_birth_asymptotic_classification": {
+    "Peak": "undetermined", "DBTT": "undetermined",
+    "weak-T": "undetermined", "ceramic": "undetermined"
+  },
+  "stable_birth_basis": "all sampled phase-Xi gates admit through 1e14, but stationary signed-MPZ asymptote is not yet proven",
+  "finite_runout_used_as_endurance_proof": false,
+  "exp_minus_H_semantics": "no_cleavage_attempt_survival; equals tabulated stable-birth survival only where evaluated admission probability is one"
+}

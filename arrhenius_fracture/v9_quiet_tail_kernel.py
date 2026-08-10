@@ -19,11 +19,15 @@ CHECKPOINT_SCHEMA = "V9_CANONICAL_QUIET_TAIL_CHECKPOINT_1"
 
 def phase_resolved_cycle(condition):
     """Return the accepted FEM/root/MPZ cycle map at one pre-birth boundary."""
-    Umax, Umin, u_zero, _F0, _ = condition.cached_fem.affine(
-        condition.fem.ep_gp, condition.sigma_max_Pa,
-        condition.sigma_min_Pa, condition.fem.u)
-    history = condition.cached_fem.stress_histories(
-        condition.fem.ep_gp, Umax, Umin, condition.args.hazard_n_phase, u_zero)
+    if hasattr(condition, "_elastic_history"):
+        history = condition._elastic_history
+    else:
+        Umax, Umin, u_zero, _F0, _ = condition.cached_fem.affine(
+            condition.fem.ep_gp, condition.sigma_max_Pa,
+            condition.sigma_min_Pa, condition.fem.u)
+        history = condition.cached_fem.stress_histories(
+            condition.fem.ep_gp, Umax, Umin,
+            condition.args.hazard_n_phase, u_zero)
     tensors = _tensor_history(history["sigma_node"], condition.root_node)
     drives = [condition.birth.mpz.resolve_root_tensor(t) for t in tensors]
     rates = [condition.birth.cleavage_rates(d["opening_stress_Pa"], condition.args.T)
@@ -87,12 +91,14 @@ def kernel_convergence(previous, current):
 
 def save_condition_checkpoint(condition, root: Path, kernel, summary):
     capsule = condition.capsule()
-    arrays = {
-        "fem_ep_gp": capsule["fem"].pop("ep_gp"),
-        "fem_rho_gp": capsule["fem"].pop("rho_gp"),
-        "fem_epsp_acc_gp": capsule["fem"].pop("epsp_acc_gp"),
-        "fem_u": capsule["fem"].pop("u"),
-    }
+    arrays = {}
+    if "fem" in capsule:
+        arrays.update({
+            "fem_ep_gp": capsule["fem"].pop("ep_gp"),
+            "fem_rho_gp": capsule["fem"].pop("rho_gp"),
+            "fem_epsp_acc_gp": capsule["fem"].pop("epsp_acc_gp"),
+            "fem_u": capsule["fem"].pop("u"),
+        })
     mpz_arrays = capsule["birth"]["mpz"].pop("arrays")
     arrays.update({f"mpz_{key}": value for key, value in mpz_arrays.items()})
     for key, value in kernel.items():
@@ -109,10 +115,11 @@ def restore_condition_checkpoint(condition, root: Path, generation: str | None =
     if metadata.get("checkpoint_schema") != CHECKPOINT_SCHEMA:
         raise RuntimeError("quiet-tail checkpoint schema mismatch")
     capsule = copy.deepcopy(metadata["condition_capsule"])
-    capsule["fem"].update({
-        "ep_gp": arrays["fem_ep_gp"], "rho_gp": arrays["fem_rho_gp"],
-        "epsp_acc_gp": arrays["fem_epsp_acc_gp"], "u": arrays["fem_u"],
-    })
+    if "fem" in capsule:
+        capsule["fem"].update({
+            "ep_gp": arrays["fem_ep_gp"], "rho_gp": arrays["fem_rho_gp"],
+            "epsp_acc_gp": arrays["fem_epsp_acc_gp"], "u": arrays["fem_u"],
+        })
     capsule["birth"]["mpz"]["arrays"] = {
         key[len("mpz_"):]: value for key, value in arrays.items() if key.startswith("mpz_")}
     condition.restore_capsule(capsule)

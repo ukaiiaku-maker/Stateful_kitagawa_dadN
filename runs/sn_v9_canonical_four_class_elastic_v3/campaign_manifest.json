@@ -1,0 +1,36 @@
+{
+  "schema": "V9_CANONICAL_FOUR_CLASS_ELASTIC_FEM_SN_CAMPAIGN_1",
+  "model_id": "v9_canonical_four_class_elastic_fem_signed_mpz_energy_gated_birth_v3",
+  "temperature_K": 300,
+  "continuum_bulk_role": "elastic_fem_only",
+  "bulk_state_evolves_in_fem": false,
+  "bulk_hardening_law": "none_bulk_elastic",
+  "moving_crack_tip_mpz_active": true,
+  "tip_mpz_pt_model_active": true,
+  "bulk_pt_model_active": false,
+  "bulk_scalar_rho_used_for_signed_shielding": false,
+  "elastic_phase_response_cached": true,
+  "emission_model": "audited_v10221_aggregate_persistent_emission",
+  "stable_birth_endpoint": "first_energy_admissible_canonical_cleavage_attempt",
+  "post_birth_growth": false,
+  "canonical_options": {
+    "Peak": "v913_paper_peak01_0242980_persistent_sites",
+    "DBTT": "v913_paper_dbtt01_0202500_persistent_sites",
+    "weak-T": "v913_paper_weakT01_0129902_persistent_sites",
+    "ceramic": "v913_paper_ceramic01_0077080_persistent_sites"
+  },
+  "class_execution_order": ["Peak", "DBTT", "weak-T", "ceramic"],
+  "completed_horizons_cycles": [100000000, 10000000000, 1000000000000, 100000000000000],
+  "partition_qualification": "pass_11_way_fixed_5e-4_tolerance",
+  "atomic_restart_qualification": "pass",
+  "cleavage_attempt_asymptotic_classification": {
+    "Peak": "no_endurance", "DBTT": "no_endurance",
+    "weak-T": "no_endurance", "ceramic": "no_endurance"
+  },
+  "energy_admissible_stable_crack_birth_asymptotic_classification": {
+    "Peak": "undetermined", "DBTT": "undetermined",
+    "weak-T": "undetermined", "ceramic": "undetermined"
+  },
+  "prior_bulk_plasticity_results_role": "noncanonical_bulk_plasticity_controls",
+  "temperature_work_resumed": false
+}

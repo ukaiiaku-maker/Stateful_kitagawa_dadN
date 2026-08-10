@@ -5,6 +5,8 @@
   "policy": "one_condition_at_a_time_adaptive_stress_bracketing",
   "legacy_tail_result_semantics": "cleavage_attempt_tail",
   "stable_birth_endpoint_model": "v9_canonical_four_class_energy_gated_stable_birth_v2",
+  "collection_role": "noncanonical_bulk_plasticity_controls",
+  "excluded_from_canonical_v3_curves": true,
   "conditions": [
     "Peak_300K_735p921495",
     "Peak_300K_770",

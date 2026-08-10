@@ -1,0 +1,14 @@
+{
+  "model_id": "v9_canonical_four_class_elastic_fem_signed_mpz_energy_gated_birth_v3",
+  "material_class": "Peak",
+  "option_id": "v913_paper_peak01_0242980_persistent_sites",
+  "temperature_K": 300,
+  "sigma_a_MPa": 804.139,
+  "hazard_seed": 1720,
+  "N_stable_crack_birth": 255.065512355417,
+  "cleavage_attempt_count": 1,
+  "nonpropagating_attempt_count": 0,
+  "threshold_action": 0.3753690264272723,
+  "admitted_length_m": 2.2973400956248734e-6,
+  "post_birth_growth_executed": false
+}

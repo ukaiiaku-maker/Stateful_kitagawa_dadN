@@ -24,7 +24,10 @@
   "historical_control_conditions": 2,
   "active_scope": "300K_low_stress_endurance_only",
   "additional_temperature_work_allowed": false,
-  "status": "quiet_tail_accelerator_qualified_peak_blocked_at_fem_rho_cap_before_1e10",
+  "status": "preserved_noncanonical_bulk_plasticity_control_collection",
+  "production_role": "noncanonical_bulk_plasticity_controls",
+  "excluded_from_canonical_v3_curves": true,
+  "superseded_canonical_model": "v9_canonical_four_class_elastic_fem_signed_mpz_energy_gated_birth_v3",
   "parameter_provenance_correction_applied": true,
   "zero_load_source_parity": "pass",
   "cleavage_attempt_asymptotic_classification": {
@@ -42,7 +45,7 @@
     "direct_overlap_qualification": "pass_at_1e6_and_1e7_cycles",
     "frozen_periodic_kernel_qualification": "fail",
     "affine_dmd_qualification": "fail",
-    "production_horizon_status": "blocked_fail_closed",
+    "production_horizon_status": "historical_control_blocked_fail_closed",
     "blocker": "Peak FEM rho reaches explicit 1e17 m^-2 integration boundary before 1e10",
     "frozen_physics_modified": false
   }
