@@ -188,6 +188,26 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Historical K360 accepted boundary immediately before sub-ULP event
+        # localization repair; physical arrays and stochastic state unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "8ca9eef649b781e501d9edf439ef47f5e00683926d6ef24e0f6e77651a83d2fb",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Isolated historical K360 N=1e5 accepted boundary before recording
+        # rejected high-cycle qualifications in the mode history.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "2b9cb4687aa5d2635cee3ba742391ef5d40b3486c2032b738a29694c48ae4c37",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Accepted f7c8fb1 synthetic high-cycle milestone immediately before
         # extracting the side-effect-free real one-cycle callback. The frozen
         # physical modules are identical; only driver orchestration changed.
@@ -475,6 +495,7 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "checkpoint_path", "snapshot_every", "print_every", "max_blocks",
     "cycles_max",
     "pd_high_cycle", "pd_high_cycle_max_segment", "pd_high_cycle_checkpoint_decades",
+    "pd_high_cycle_start_cycles",
 }
 
 
@@ -1007,6 +1028,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     stable_endpoint = args.fatigue_endpoint == "stable_crack_birth"
     spatial_birth_endpoint = args.fatigue_endpoint == "stable_spatial_crack_birth"
     high_cycle_mode_rows = []
+    high_cycle_retry_after = float(args.pd_high_cycle_start_cycles)
 
     def build_high_cycle_adapter():
         def evaluator(adapter):
@@ -1045,7 +1067,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         ):
             break
 
-        if args.pd_high_cycle:
+        if args.pd_high_cycle and cycles >= high_cycle_retry_after:
             adapter = build_high_cycle_adapter()
             eligible, _ = adapter.dormant_eligibility()
             if eligible:
@@ -1054,8 +1076,20 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 segment = min(args.cycles_max - cycles, args.pd_high_cycle_max_segment,
                               max(decade - cycles, 1.0))
                 engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
-                    projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2)))
+                    projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2),
+                    exact_retry_cycles=0))
                 hc = engine.advance(segment)
+                high_cycle_mode_rows.extend({
+                    "cycles_total": adapter.cycles, "requested_segment": segment,
+                    "mode": mode.mode, "accepted_cycles": mode.cycles,
+                    "exact_map_evaluations": mode.exact_map_evaluations,
+                    "accepted": mode.accepted, "detail": mode.detail,
+                } for mode in hc.modes)
+                mode_path = outdir / "v9_pd_high_cycle_mode_history.json"
+                tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
+                tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
+                os.replace(tmp_mode, mode_path)
+                engine.write_atomic_mode_checkpoint(outdir / "v9_pd_high_cycle_controller.json")
                 if hc.cycles_consumed > 0.0:
                     ep_gp = adapter.ep_gp.copy(); rho_gp = adapter.rho_gp.copy()
                     epsp_acc_gp = adapter.epsp_acc_gp.copy(); u = adapter.u.copy()
@@ -1063,19 +1097,16 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     _, _, u_zero_hc, _, _ = cached_fem.affine(ep_gp, sigma_max, sigma_min, u)
                     _, _, s1_res_hc, _ = stress_state_intact(mesh, u_zero_hc, ep_gp, Dmat, mat)
                     last_residual = project_gp_to_nodes(mesh, s1_res_hc)
-                    high_cycle_mode_rows.extend({
-                        "cycles_total": cycles, "requested_segment": segment,
-                        "mode": mode.mode, "accepted_cycles": mode.cycles,
-                        "exact_map_evaluations": mode.exact_map_evaluations,
-                        "accepted": mode.accepted, "detail": mode.detail,
-                    } for mode in hc.modes)
-                    mode_path = outdir / "v9_pd_high_cycle_mode_history.json"
-                    tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
-                    tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
-                    os.replace(tmp_mode, mode_path)
-                    engine.write_atomic_mode_checkpoint(outdir / "v9_pd_high_cycle_controller.json")
                     if not hc.event_guard_reached:
                         continue
+                else:
+                    # The authoritative embedded macro-stepper is the efficient
+                    # exact transient path. Avoid repeating expensive private
+                    # qualifications on every accepted macro block.
+                    high_cycle_retry_after = max(
+                        cycles + 8.0 * max(controller_next_block_cycles, 1.0),
+                        10.0 ** math.ceil(math.log10(max(cycles + 1.0, 10.0))),
+                    )
 
         geometry_audit = _geometry_resolution_audit(
             mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
@@ -1209,6 +1240,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         # Reuse the accepted embedded controller's next proposal.  Starting
         # every macro-step from the broad physical bound caused 5--8 discarded
         # FEM solves per accepted interval in quiet long-life trajectories.
+        controller_before_event_localization = float(controller_next_block_cycles)
         if controller_next_block_cycles > 0.0:
             dN = min(dN, controller_next_block_cycles)
 
@@ -1216,6 +1248,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             # Exact first-passage boundaries take precedence over the normal
             # macro-step floor, including when the residual wait is sub-floor.
             dN = min(dN, remaining)
+            representable_step = float(np.nextafter(float(cycles), math.inf) - float(cycles))
+            if 0.0 < dN < representable_step:
+                # A positive sub-ULP wait cannot advance the absolute cycle
+                # coordinate and otherwise repeats forever. The next
+                # representable boundary is the tightest localizable event.
+                dN = min(representable_step, remaining)
         elif block_limited_by_birth_clock:
             dN = max(min(dN, remaining), min(args.min_block_cycles, 1e-6))
         else:
@@ -1248,6 +1286,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         controller_next_block_cycles = max(
             args.min_block_cycles, dN * controller_factor
         )
+        if block_limited_by_embryo_transition and controller_before_event_localization > 0.0:
+            controller_next_block_cycles = max(
+                controller_next_block_cycles, controller_before_event_localization
+            )
         dep_tensor_block = fem_proposal.state.ep_gp - ep_gp
         dep_eq_block = fem_proposal.state.epsp_acc_gp - epsp_acc_gp
         ep_gp = np.asarray(fem_proposal.state.ep_gp).copy()
@@ -2087,6 +2129,9 @@ def build_parser():
     p.add_argument("--pd-high-cycle", action="store_true", dest="pd_high_cycle",
                    help="enable the versioned dormant fixed-topology event-to-event engine")
     p.add_argument("--pd-high-cycle-max-segment", type=float, default=1e9, dest="pd_high_cycle_max_segment")
+    p.add_argument("--pd-high-cycle-start-cycles", type=float, default=1e4,
+                   dest="pd_high_cycle_start_cycles",
+                   help="use the efficient transactional macro-stepper through the initial transient")
     p.add_argument("--pd-high-cycle-checkpoint-decades", action="store_true", default=True,
                    dest="pd_high_cycle_checkpoint_decades")
     p.add_argument("--target-dep-eq-block", type=float, default=2e-4, dest="target_dep_eq_block")

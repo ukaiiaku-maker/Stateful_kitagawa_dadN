@@ -7,7 +7,7 @@ commit/protection rules, so an evaluator cannot accidentally advance clocks.
 """
 from __future__ import annotations
 
-from copy import deepcopy
+from copy import copy, deepcopy
 from dataclasses import fields
 import math
 from typing import Any, Callable
@@ -151,7 +151,14 @@ class SpatialPDDormantAdapter:
         return ProtectedSignatures(_digest(ledgers), _digest(stochastic), _digest(topology))
 
     def exact_private_cycle(self):
-        clone = deepcopy(self)
+        # Geometry, patch operators, and the FEM cache are immutable in the
+        # eligible regime and may be shared. Deep-copying them dominated real
+        # 48x96 private-map wall time without adding isolation.
+        clone = copy(self)
+        clone.pd_state = deepcopy(self.pd_state)
+        clone.ep_gp = self.ep_gp.copy(); clone.rho_gp = self.rho_gp.copy()
+        clone.epsp_acc_gp = self.epsp_acc_gp.copy(); clone.u = self.u.copy()
+        clone.external_ledgers = deepcopy(self.external_ledgers)
         before = clone.protected_signatures()
         start = clone.active_state()
         payload = clone.cycle_evaluator(clone)

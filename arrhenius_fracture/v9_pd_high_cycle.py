@@ -302,8 +302,11 @@ class DormantPDHighCycleEngine:
         xend = start.vector + horizon * drift
         if np.any(~np.isfinite(xend)) or np.any(xend < self.config.minimum_positive_coordinate):
             return False, {"reason": "physical_bounds"}
-        mid = self._private_at(start, xmid)
-        end = self._private_at(start, xend)
+        try:
+            mid = self._private_at(start, xmid)
+            end = self._private_at(start, xend)
+        except ValueError as exc:
+            return False, {"reason": "projected_constitutive_domain", "detail": str(exc)}
         predicted_mid_next = xmid + drift
         predicted_end_next = xend + drift
         state_error = max(relative_distance(predicted_mid_next, mid.state_end.vector),
@@ -351,36 +354,40 @@ class DormantPDHighCycleEngine:
                                  self.accepted_projected_cycles, self.mode_history, True)
         while consumed < requested:
             ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
-            periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)
-            self.exact_map_evaluations += maps
-            distance, field_distance = active_distance(self.adapter, self.adapter.active_state(), periodic)
-            verified = self._private_at(periodic, periodic.vector)
-            verified2 = self._private_at(periodic, verified.state_end.vector)
-            verify_residual, verify_fields = active_distance(self.adapter, periodic, verified.state_end)
-            verify_hazard = _hazard_error(verified.log_birth_action, verified2.log_birth_action)
-            ledger_names = set(verified.ledger_increments) | set(verified2.ledger_increments)
-            verify_ledger = 0.0
-            for n in ledger_names:
-                a=np.asarray(verified.ledger_increments.get(n,0.0),float); b=np.asarray(verified2.ledger_increments.get(n,0.0),float)
-                verify_ledger=max(verify_ledger,float(np.max(np.abs(a-b)/np.maximum.reduce([np.abs(a),np.abs(b),np.full_like(a,1e-300)]))))
-            stationary_verified = (verify_residual <= self.config.periodic_relative_tolerance
-                                   and verify_hazard <= self.config.projective_log_hazard_tolerance
-                                   and verify_ledger <= self.config.projective_log_hazard_tolerance
-                                   and verified.transition_signature == verified2.transition_signature)
-            self.mode_history.append(ModeRecord("periodic_search", 0.0, maps,
-                residual <= self.config.periodic_relative_tolerance,
-                {"residual": residual, "iterations": iterations, "distance": distance,
-                 "field_distance": field_distance}))
             remaining = requested - consumed
-            self.mode_history[-1].detail.update({"verification_residual":verify_residual,
-                "verification_field_residual":verify_fields,"verification_log_hazard_error":verify_hazard,
-                "verification_ledger_error":verify_ledger,"stationary_verified":stationary_verified})
-            if residual <= self.config.periodic_relative_tolerance and stationary_verified and distance <= self.config.periodic_admission_distance:
-                advanced = self._stationary(remaining, verified, distance)
-                consumed += advanced
-                if advanced >= remaining: break
-                self.mode_history.append(ModeRecord("event_guard", 0.0, 0, True))
-                break
+            current_residual, current_fields = active_distance(self.adapter, ev.state_start, ev.state_end)
+            if current_residual <= self.config.periodic_admission_distance:
+                periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)
+                self.exact_map_evaluations += maps
+                distance, field_distance = active_distance(self.adapter, self.adapter.active_state(), periodic)
+                verified = self._private_at(periodic, periodic.vector)
+                verified2 = self._private_at(periodic, verified.state_end.vector)
+                verify_residual, verify_fields = active_distance(self.adapter, periodic, verified.state_end)
+                verify_hazard = _hazard_error(verified.log_birth_action, verified2.log_birth_action)
+                ledger_names = set(verified.ledger_increments) | set(verified2.ledger_increments)
+                verify_ledger = 0.0
+                for n in ledger_names:
+                    a=np.asarray(verified.ledger_increments.get(n,0.0),float); b=np.asarray(verified2.ledger_increments.get(n,0.0),float)
+                    verify_ledger=max(verify_ledger,float(np.max(np.abs(a-b)/np.maximum.reduce([np.abs(a),np.abs(b),np.full_like(a,1e-300)]))))
+                stationary_verified = (verify_residual <= self.config.periodic_relative_tolerance
+                                       and verify_hazard <= self.config.projective_log_hazard_tolerance
+                                       and verify_ledger <= self.config.projective_log_hazard_tolerance
+                                       and verified.transition_signature == verified2.transition_signature)
+                self.mode_history.append(ModeRecord("periodic_search", 0.0, maps,
+                    residual <= self.config.periodic_relative_tolerance,
+                    {"residual": residual, "iterations": iterations, "distance": distance,
+                     "field_distance": field_distance,"verification_residual":verify_residual,
+                     "verification_field_residual":verify_fields,"verification_log_hazard_error":verify_hazard,
+                     "verification_ledger_error":verify_ledger,"stationary_verified":stationary_verified}))
+                if residual <= self.config.periodic_relative_tolerance and stationary_verified and distance <= self.config.periodic_admission_distance:
+                    advanced = self._stationary(remaining, verified, distance)
+                    consumed += advanced
+                    if advanced >= remaining: break
+                    self.mode_history.append(ModeRecord("event_guard", 0.0, 0, True))
+                    break
+            else:
+                self.mode_history.append(ModeRecord("periodic_precheck",0.0,1,False,
+                    {"current_residual":current_residual,"field_residual":current_fields}))
 
             proposal = min(int(remaining), next_projective, int(self.config.projective_max_cycles))
             accepted = False

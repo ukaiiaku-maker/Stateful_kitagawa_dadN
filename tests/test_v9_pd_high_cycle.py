@@ -150,3 +150,11 @@ def test_log_action_below_float_range_survives_large_formal_skip():
     assert result.cycles_consumed == 1e300
     assert abs(model.log_action[0] - (-1000.0 + math.log(1e300))) < 1e-12
     assert model.ledger == 1e300
+
+
+def test_large_cycle_sub_ulp_event_boundary_is_next_representable_float():
+    cycles=1.8058541488375247e6
+    residual_wait=5.56e-11
+    assert cycles+residual_wait==cycles
+    step=np.nextafter(cycles,math.inf)-cycles
+    assert step>residual_wait and cycles+step>cycles

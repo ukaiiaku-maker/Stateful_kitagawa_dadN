@@ -59,6 +59,55 @@
       "evidence": "direct comparison showed correct log action at site nodes but a nodal cumulative-action discrepancy",
       "resolution": "callback returns nodal log action and event guard uses minimum available-site residual per node",
       "status": "resolved"
+    },
+    {
+      "id": "HC-008",
+      "classification": "performance defect",
+      "issue": "real private maps deep-copied immutable mesh, sparse FEM cache, patch geometry, and topology",
+      "evidence": "historical 48x96 K360 1e4 prefix spent over 90 seconds inside adapter deepcopy before completing periodic qualification",
+      "resolution": "share immutable geometry/operators and copy only mutable FEM arrays, PD state, ledgers, and cycle state",
+      "status": "resolved_pending_historical_rerun"
+    },
+    {
+      "id": "HC-009",
+      "classification": "provenance/input-recovery problem",
+      "issue": "historical replay launcher omitted archived derived fatigue-model namespace fields",
+      "evidence": "K360 replay stopped before first block on missing fatigue_model_preset_applied",
+      "resolution": "restore required derived fields from the exact archived run_args record",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-010",
+      "classification": "implementation_defect",
+      "issue": "out-of-domain projective trial escaped as an exception instead of a rejected proposal",
+      "evidence": "historical K360 projection produced a negative smooth embryo coordinate and stopped orchestration",
+      "resolution": "convert inverse-transform constitutive-domain failures into side-effect-free projective rejection and halving",
+      "status": "resolved_pending_historical_rerun"
+    },
+    {
+      "id": "HC-011",
+      "classification": "implementation_defect",
+      "issue": "historical replay inherited the source campaign checkpoint_path",
+      "evidence": "replay appended generations to the preserved K360 source store and changed its ACTIVE pointer",
+      "resolution": "force replay checkpoints under the new output root; restored source ACTIVE pointer to final generation_67408bbd7c0542dbb1f9fcb7330832fe at N=3474029.481029375",
+      "status": "resolved",
+      "recovery": "append-only final generations remained intact; no source state arrays were deleted"
+    },
+    {
+      "id": "HC-012",
+      "classification": "numerical-method defect",
+      "issue": "sub-ULP embryo-transition wait could not advance the absolute cycle coordinate",
+      "evidence": "at N=1805854.1488375247 a 5.56e-11-cycle wait rounded back to the same N for over 100 accepted blocks",
+      "resolution": "localize a positive sub-ULP wait at np.nextafter(N,+infinity), the tightest representable boundary",
+      "status": "resolved_pending_historical_resume"
+    },
+    {
+      "id": "HC-013",
+      "classification": "numerical-method defect",
+      "issue": "exact sub-cycle event localization reset the macro-step controller scale",
+      "evidence": "after node-23 stabilization the controller doubled from one ULP for over 24 updates, triggering artificial primary-seed reselection before damage growth; preserved control retained node 23",
+      "resolution": "preserve the accepted pre-event controller proposal across an embryo-transition localization boundary",
+      "status": "resolved_pending_pre_event_replay"
     }
   ]
 }
