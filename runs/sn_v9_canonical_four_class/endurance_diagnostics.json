@@ -1,23 +1,16 @@
 {
-  "Peak_300K_735p921495": {
-    "H_at_1e8": 0.05152397046800673,
-    "S_at_1e8": 0.949780882997064,
-    "empirical_tail": "hazard numerically plateaued by approximately 7e7 cycles",
-    "physics_asymptotic_classification": "undetermined",
-    "note": "Finite runout and an empirical plateau are not proof that H(infinity) is finite."
+  "schema": "V9_CANONICAL_300K_ENDURANCE_DIAGNOSTICS_1",
+  "physics_asymptotic_result": {
+    "classification_all_final_classes": "no_endurance",
+    "proof": "The audited canonical zero-stress cleavage barrier gives a finite raw rate for every final row. The m=3 renewal transform is strictly positive for every positive raw rate. Effective opening stress is nonnegative and the barrier rate is monotone nondecreasing with stress, so this zero-drive renewal rate is a strict positive lower bound on hazard. Therefore H_cleave(N) diverges as N approaches infinity.",
+    "finite_horizon_runout_used_as_proof": false,
+    "underflow_used_as_extinction": false
   },
-  "ceramic_300K_zero": {
-    "G_cleave_zero_stress_300K_eV": 1e-12,
-    "raw_rate_zero_stress_s-1": 999999999961.3182,
-    "effective_rate_s-1": 1000000.0,
-    "classification": "historical_rejected_transfer_control",
-    "production_eligible": false,
-    "note": "Preserved unchanged: rejected 0189364 transfer candidate saturates the cleavage renewal ceiling at zero applied load."
+  "classes": {
+    "Peak": {"stress_MPa":735.9214951373579,"finite_horizon_observation":{"N":100000000,"H":0.051523913898147686,"S":0.9497809367260361},"empirical_tail_evidence":"empirically_integrable through 1e8; p_eff=13.51 over final decade","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-247.5587209602039},
+    "DBTT": {"stress_MPa":700,"finite_horizon_observation":{"N":100000000,"H":3.692124914851011e-05,"S":0.9999630794324325},"empirical_tail_evidence":"empirically_integrable through 1e8; p_eff=12.05 over final decade","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-109.0226531676691},
+    "weak-T": {"stress_MPa":350,"finite_horizon_observation":{"N":100000000,"H":0.00023463196310551638,"S":0.9997653955608208},"empirical_tail_evidence":"ambiguous late crossover; p_eff changed from 0.15 to 1.31","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-138.16654058791096},
+    "ceramic": {"stress_MPa":400,"finite_horizon_observation":{"N":100000000,"H":0.06248605838109062,"S":0.9394261598436927},"empirical_tail_evidence":"ambiguous because decade-resolved instantaneous rates were not retained for the completed trajectory","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-191.90447864793788}
   },
-  "ceramic_final_300K_400": {
-    "H_at_1e8": 0.06248605838109062,
-    "S_at_1e8": 0.9394261598436927,
-    "physics_asymptotic_classification": "undetermined",
-    "note": "Finite runout is not proof that H(infinity) is finite."
-  }
+  "historical_controls": {"weakT_0257068":"preserved_nonproduction","ceramic_0189364":"preserved_nonproduction_zero_load_saturation"}
 }

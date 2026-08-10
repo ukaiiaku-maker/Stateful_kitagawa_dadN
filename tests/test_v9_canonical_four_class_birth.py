@@ -34,6 +34,13 @@ class CanonicalFourClassBirthTests(unittest.TestCase):
                 self.assertEqual(rates["cleavage_rate_effective_s"], expected)
                 self.assertEqual(canonical_effective_cleavage_rate(raw), expected)
 
+    def test_all_final_rows_have_strictly_positive_intrinsic_hazard_floor(self):
+        for option in EXPECTED:
+            state = self.make(option)
+            log_floor = state.intrinsic_zero_drive_log_hazard_per_cycle(300.0, 1000.0)
+            self.assertTrue(np.isfinite(log_floor))
+            self.assertGreater(np.exp(log_floor), 0.0)
+
     def test_threshold_is_exact_authoritative_seedsequence_draw(self):
         state = self.make(seed=2420)
         rng = np.random.default_rng(np.random.SeedSequence([2420, 0]))

@@ -161,6 +161,16 @@ class CanonicalFourClassBirthState:
                 "cleavage_rate_raw_s": raw, "cleavage_rate_effective_s": effective,
                 "cleavage_log_rate_effective_s": log_effective}
 
+    def intrinsic_zero_drive_log_hazard_per_cycle(self, T_K, frequency_Hz):
+        """Strict positive lower bound from the canonical zero-stress clock."""
+        frequency = float(frequency_Hz)
+        if frequency <= 0.0:
+            raise ValueError("frequency must be positive")
+        log_raw = self.mpz.cleavage_log_rate_s(0.0, T_K)
+        return canonical_effective_cleavage_log_rate(
+            log_raw, self.m_hits, self.tau_c_s
+        ) - math.log(frequency)
+
     def _advance_exact_interval(self, dt_s, T_K, nominal_root_stress_Pa,
                                 signed_shear_Pa):
         """Canonical Strang ordering without a post-first-passage reward."""
