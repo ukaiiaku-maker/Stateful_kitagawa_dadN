@@ -17,10 +17,12 @@ from .sn_feature_geometry_v8_7 import (
 from .sn_intact_fem import plane_strain_D
 from .v9_cached_fem import CachedIntactFEM
 from .v9_fem_transaction import EmbeddedFEMTransaction, FEMPhysicalState
-from .v9_canonical_four_class_birth import CanonicalFourClassBirthState, MODEL_ID
+from .config import EV_TO_J
+from .v9_energy_gated_stable_birth import EnergyGatedStableBirthState, MODEL_ID
+from .v9_stable_birth_energy_gate import evaluate_stable_birth_energy_gate
 
 
-FEM_MODEL_ID = "v9_full_fem_canonical_four_class_stable_birth_v1"
+FEM_MODEL_ID = "v9_full_fem_canonical_four_class_energy_gated_stable_birth_v2"
 
 
 def _tensor_history(sigma_node_phase, root_node):
@@ -89,7 +91,7 @@ class CanonicalFourClassFEMCondition:
             np.zeros(mesh.ne), np.zeros(mesh.ndof), 0.0,
         )
         shear_modulus = mat.E / (2.0 * (1.0 + mat.nu))
-        self.birth = CanonicalFourClassBirthState(
+        self.birth = EnergyGatedStableBirthState(
             option_id, source_root, shear_modulus_Pa=shear_modulus,
             poisson=mat.nu, burgers_m=mat.b,
             initial_tip_radius_m=self.root_radius_initial_m,
@@ -106,6 +108,7 @@ class CanonicalFourClassFEMCondition:
             "root_node": root_node, "root_xy_m": self.root_xy.tolist(),
             "root_radius_initial_m": self.root_radius_initial_m,
             "post_birth_PD_active": False, "post_birth_growth_active": False,
+            "crack_geometry_committed": False,
         } | copy.deepcopy(self.birth.audit)
 
     @classmethod
@@ -135,51 +138,89 @@ class CanonicalFourClassFEMCondition:
         )
         return _tensor_history(history["sigma_node"], self.root_node)
 
+    def _event_gate(self):
+        Umax, Umin, u_zero, _F0, _ = self.cached_fem.affine(
+            self.fem.ep_gp, self.sigma_max_Pa, self.sigma_min_Pa, self.fem.u
+        )
+        history = self.cached_fem.stress_histories(
+            self.fem.ep_gp, Umax, Umin, self.args.hazard_n_phase, u_zero
+        )
+        tensors = _tensor_history(history["sigma_node"], self.root_node)
+        drives = [self.birth.mpz.resolve_root_tensor(tensor) for tensor in tensors]
+        peak = max(drives, key=lambda row: row["opening_stress_Pa"])
+        sigma_eff = self.birth.effective_opening_stress_Pa(peak["opening_stress_Pa"])
+        tip_radius = self.birth.mpz.summary()["tip_radius_m"]
+        event_K = sigma_eff * np.sqrt(2.0 * np.pi * tip_radius)
+        barrier_eV = float(np.asarray(
+            self.birth.mpz.state.manifest.cleavage.values_eV(sigma_eff, self.args.T)
+        ))
+        return evaluate_stable_birth_energy_gate(
+            mesh=self.mesh, boundaries=self.boundaries,
+            displacement=np.asarray(history["u_max"], float),
+            ep_gp=self.fem.ep_gp, Dmat=self.cached_fem.Dmat,
+            root_xy=self.root_xy, event_direction=np.array([1.0, 0.0]),
+            event_K_Pa_sqrt_m=event_K, cleavage_barrier_J=barrier_eV * EV_TO_J,
+            cooperative_hits=self.birth.m_hits, burgers_m=self.birth.mpz.burgers_m,
+            threshold_action=self.birth.pending_attempt["threshold_action"],
+            plane_strain_modulus_Pa=self.cached_fem.material.Eprime,
+        )
+
     def advance(self, requested_cycles):
         if self.birth.fired:
             return self.summary() | {"cycles_consumed": 0.0, "cycles_unused": float(requested_cycles)}
         requested = max(float(requested_cycles), 0.0)
-        proposal_cycles = requested
-        while True:
-            proposal = self.fem_transaction.propose(self.fem, proposal_cycles)
-            if proposal.normalized_error <= 1.0:
-                pre = self._root_history(self.fem)
-                post = self._root_history(proposal.state)
-                root_history = 0.5 * (pre + post)
-                birth_start = self.birth.copy()
-                try:
-                    endpoint = self.birth.advance_fem_phase_block(
-                        proposal_cycles, self.args.frequency_Hz, self.args.T,
-                        root_history,
-                    )
+        remaining = requested
+        total_consumed = 0.0
+        last_error = 0.0
+        while remaining > 0.0 and not self.birth.fired:
+            proposal_cycles = remaining
+            while True:
+                proposal = self.fem_transaction.propose(self.fem, proposal_cycles)
+                if proposal.normalized_error <= 1.0:
+                    pre = self._root_history(self.fem)
+                    post = self._root_history(proposal.state)
+                    root_history = 0.5 * (pre + post)
+                    birth_start = self.birth.copy()
+                    try:
+                        endpoint = self.birth.advance_fem_phase_block(
+                            proposal_cycles, self.args.frequency_Hz, self.args.T,
+                            root_history,
+                        )
+                        break
+                    except RuntimeError as exc:
+                        self.birth = birth_start
+                        if "failed to bracket persistent-site backstress root" not in str(exc):
+                            raise
+                proposal_cycles *= 0.5
+                self.rejected_blocks += 1
+                if proposal_cycles < self.args.min_block_cycles:
+                    raise RuntimeError("canonical FEM/MPZ transaction failed below minimum block")
+            consumed = float(endpoint["cycles_consumed"])
+            if consumed < proposal_cycles:
+                localized = self.fem_transaction.propose(self.fem, consumed)
+                if localized.normalized_error > 1.0:
+                    raise RuntimeError("localized canonical FEM proposal violates error gate")
+                self.fem = localized.state
+            else:
+                self.fem = proposal.state
+            self.cycles += consumed; total_consumed += consumed; remaining -= consumed
+            self.accepted_blocks += 1; last_error = proposal.normalized_error
+            if self.birth.pending_attempt is not None:
+                gate = self._event_gate()
+                self.birth.resolve_pending_attempt(gate)
+                if self.birth.fired:
                     break
-                except RuntimeError as exc:
-                    self.birth = birth_start
-                    if "failed to bracket persistent-site backstress root" not in str(exc):
-                        raise
-            proposal_cycles *= 0.5
-            self.rejected_blocks += 1
-            if proposal_cycles < self.args.min_block_cycles:
-                raise RuntimeError("canonical FEM/MPZ transaction failed below minimum block")
-        consumed = float(endpoint["cycles_consumed"])
-        if consumed < proposal_cycles:
-            localized = self.fem_transaction.propose(self.fem, consumed)
-            if localized.normalized_error > 1.0:
-                raise RuntimeError("localized canonical FEM proposal violates error gate")
-            self.fem = localized.state
-        else:
-            self.fem = proposal.state
-        self.cycles += consumed
-        self.accepted_blocks += 1
-        return self.summary() | endpoint | {
-            "cycles_consumed": consumed,
-            "cycles_unused": requested - consumed,
-            "fem_normalized_error": proposal.normalized_error,
+            if consumed <= 0.0 and remaining > 0.0:
+                raise RuntimeError("energy-gated endpoint made no progress")
+        return self.summary() | {
+            "cycles_consumed": total_consumed,
+            "cycles_unused": requested - total_consumed,
+            "fem_normalized_error": last_error,
         }
 
     def capsule(self):
         return {
-            "schema": "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_1",
+            "schema": "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_2",
             "audit": copy.deepcopy(self.audit), "cycles": self.cycles,
             "accepted_blocks": self.accepted_blocks,
             "rejected_blocks": self.rejected_blocks,
@@ -192,7 +233,7 @@ class CanonicalFourClassFEMCondition:
         }
 
     def restore_capsule(self, capsule):
-        if capsule.get("schema") != "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_1" or capsule.get("audit") != self.audit:
+        if capsule.get("schema") != "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_2" or capsule.get("audit") != self.audit:
             raise RuntimeError("canonical FEM capsule provenance/request mismatch")
         fem = capsule["fem"]
         self.fem = FEMPhysicalState(

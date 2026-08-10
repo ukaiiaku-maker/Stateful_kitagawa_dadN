@@ -1,0 +1,5 @@
+material_class,option_id,sigma_a_MPa,cleavage_attempt_tail_N,cleavage_attempt_tail_H,nonpropagating_attempt_count,stable_birth_survival,stable_birth_endurance_classification,classification_basis
+Peak,v913_paper_peak01_0242980_persistent_sites,735.9214951373579,100000000,0.051523913898147686,,,undetermined,energy-gated threshold-renewal analysis pending
+DBTT,v913_paper_dbtt01_0202500_persistent_sites,700,100000000,3.692124914851011e-05,,,undetermined,energy-gated threshold-renewal analysis pending
+weak-T,v913_paper_weakT01_0129902_persistent_sites,350,100000000,0.00023463196310551638,,,undetermined,energy-gated threshold-renewal analysis pending
+ceramic,v913_paper_ceramic01_0077080_persistent_sites,400,100000000,0.06248605838109062,,,undetermined,energy-gated threshold-renewal analysis pending

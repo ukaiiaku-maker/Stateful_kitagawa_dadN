@@ -1,8 +1,8 @@
 {
   "schema": "V9_CANONICAL_FOUR_CLASS_FEM_SN_CAMPAIGN_1",
-  "model_id": "v9_full_fem_canonical_four_class_stable_birth_v1",
-  "endpoint_model_id": "v9_canonical_four_class_cleavage_stable_birth_v1",
-  "fatigue_endpoint": "canonical_cleavage_stable_crack_birth",
+  "model_id": "v9_full_fem_canonical_four_class_energy_gated_stable_birth_v2",
+  "endpoint_model_id": "v9_canonical_four_class_energy_gated_stable_birth_v2",
+  "fatigue_endpoint": "energy_admissible_stable_crack_birth",
   "emission_model": "audited_v10221_aggregate_persistent_emission",
   "emission_stochastic": false,
   "cleavage_first_passage_stochastic": true,
@@ -24,14 +24,16 @@
   "historical_control_conditions": 2,
   "active_scope": "300K_low_stress_endurance_only",
   "additional_temperature_work_allowed": false,
-  "status": "300K_all_classes_no_endurance_proved_by_positive_intrinsic_hazard_floor",
+  "status": "300K_attempt_tails_reclassified_stable_birth_renewal_analysis_in_progress",
   "parameter_provenance_correction_applied": true,
   "zero_load_source_parity": "pass",
-  "physics_asymptotic_classification": {
-    "Peak": "no_endurance",
-    "DBTT": "no_endurance",
-    "weak-T": "no_endurance",
-    "ceramic": "no_endurance"
+  "cleavage_attempt_asymptotic_classification": {
+    "Peak": "no_endurance", "DBTT": "no_endurance", "weak-T": "no_endurance", "ceramic": "no_endurance"
   },
-  "classification_basis": "strict_positive_zero_drive_canonical_cleavage_renewal_floor"
+  "stable_crack_birth_asymptotic_classification": {
+    "Peak": "undetermined", "DBTT": "undetermined", "weak-T": "undetermined", "ceramic": "undetermined"
+  },
+  "attempt_classification_basis": "strict_positive_zero_drive_canonical_cleavage_renewal_floor",
+  "stable_birth_requires_post_first_passage_energy_admission": true,
+  "exp_minus_H_cleave_semantics": "no_cleavage_attempt_survival_only"
 }

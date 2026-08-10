@@ -3,6 +3,8 @@
   "mechanics_source": "persisted K360_FAILURE full-FEM request",
   "mechanics_run_args": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa/run_args.json",
   "policy": "one_condition_at_a_time_adaptive_stress_bracketing",
+  "legacy_tail_result_semantics": "cleavage_attempt_tail",
+  "stable_birth_endpoint_model": "v9_canonical_four_class_energy_gated_stable_birth_v2",
   "conditions": [
     "Peak_300K_735p921495",
     "Peak_300K_770",

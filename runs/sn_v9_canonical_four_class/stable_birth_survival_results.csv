@@ -1,0 +1,5 @@
+material_class,option_id,sigma_a_MPa,N,S_no_attempt,S_stable_birth,stable_birth_estimator,status
+Peak,v913_paper_peak01_0242980_persistent_sites,735.9214951373579,100000000,0.9497809367260361,,,pending_energy_gated_renewal_analysis
+DBTT,v913_paper_dbtt01_0202500_persistent_sites,700,100000000,0.9999630794324325,,,pending_energy_gated_renewal_analysis
+weak-T,v913_paper_weakT01_0129902_persistent_sites,350,100000000,0.9997653955608208,,,pending_energy_gated_renewal_analysis
+ceramic,v913_paper_ceramic01_0077080_persistent_sites,400,100000000,0.9394261598436927,,,pending_energy_gated_renewal_analysis

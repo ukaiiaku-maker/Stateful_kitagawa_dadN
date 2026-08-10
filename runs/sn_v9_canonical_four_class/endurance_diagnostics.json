@@ -1,16 +1,27 @@
 {
-  "schema": "V9_CANONICAL_300K_ENDURANCE_DIAGNOSTICS_1",
-  "physics_asymptotic_result": {
+  "schema": "V9_CANONICAL_300K_ENERGY_GATED_ENDURANCE_DIAGNOSTICS_2",
+  "endpoint_correction": {
+    "cleavage_attempt": "first canonical cleavage first-passage attempt",
+    "energy_admissible_stable_crack_birth": "first attempt with nonzero mesh-resolved v10.2.30 fixed-opening admitted length",
+    "exp_minus_H_cleave_semantics": "no_cleavage_attempt_survival_only",
+    "hazard_gated_before_first_passage": false,
+    "rejected_attempt_consumes_threshold": true,
+    "post_birth_growth": false
+  },
+  "cleavage_attempt_asymptotic_result": {
     "classification_all_final_classes": "no_endurance",
-    "proof": "The audited canonical zero-stress cleavage barrier gives a finite raw rate for every final row. The m=3 renewal transform is strictly positive for every positive raw rate. Effective opening stress is nonnegative and the barrier rate is monotone nondecreasing with stress, so this zero-drive renewal rate is a strict positive lower bound on hazard. Therefore H_cleave(N) diverges as N approaches infinity.",
-    "finite_horizon_runout_used_as_proof": false,
-    "underflow_used_as_extinction": false
+    "basis": "strict_positive_zero_drive_canonical_cleavage_renewal_floor",
+    "finite_horizon_runout_used_as_proof": false
   },
-  "classes": {
-    "Peak": {"stress_MPa":735.9214951373579,"finite_horizon_observation":{"N":100000000,"H":0.051523913898147686,"S":0.9497809367260361},"empirical_tail_evidence":"empirically_integrable through 1e8; p_eff=13.51 over final decade","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-247.5587209602039},
-    "DBTT": {"stress_MPa":700,"finite_horizon_observation":{"N":100000000,"H":3.692124914851011e-05,"S":0.9999630794324325},"empirical_tail_evidence":"empirically_integrable through 1e8; p_eff=12.05 over final decade","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-109.0226531676691},
-    "weak-T": {"stress_MPa":350,"finite_horizon_observation":{"N":100000000,"H":0.00023463196310551638,"S":0.9997653955608208},"empirical_tail_evidence":"ambiguous late crossover; p_eff changed from 0.15 to 1.31","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-138.16654058791096},
-    "ceramic": {"stress_MPa":400,"finite_horizon_observation":{"N":100000000,"H":0.06248605838109062,"S":0.9394261598436927},"empirical_tail_evidence":"ambiguous because decade-resolved instantaneous rates were not retained for the completed trajectory","physics_asymptotic_classification":"no_endurance","intrinsic_log_hazard_floor_per_cycle":-191.90447864793788}
+  "stable_crack_birth_asymptotic_result": {
+    "classification_all_final_classes": "undetermined",
+    "basis": "positive attempt floor alone is insufficient; energy-admission marked-renewal analysis is pending"
   },
-  "historical_controls": {"weakT_0257068":"preserved_nonproduction","ceramic_0189364":"preserved_nonproduction_zero_load_saturation"}
+  "attempt_tail_at_1e8": {
+    "Peak": {"stress_MPa": 735.9214951373579, "H_cleave": 0.051523913898147686, "S_no_attempt": 0.9497809367260361},
+    "DBTT": {"stress_MPa": 700, "H_cleave": 3.692124914851011e-05, "S_no_attempt": 0.9999630794324325},
+    "weak-T": {"stress_MPa": 350, "H_cleave": 0.00023463196310551638, "S_no_attempt": 0.9997653955608208},
+    "ceramic": {"stress_MPa": 400, "H_cleave": 0.06248605838109062, "S_no_attempt": 0.9394261598436927}
+  },
+  "historical_controls": {"weakT_0257068": "preserved_nonproduction", "ceramic_0189364": "preserved_nonproduction_zero_load_saturation"}
 }

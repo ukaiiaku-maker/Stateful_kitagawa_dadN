@@ -1,4 +1,4 @@
-condition_id,material_class,option_id,production_role,T_K,sigma_a_MPa,R,frequency_Hz,observation_cycles,H_cleave,S_stable,status
+condition_id,material_class,option_id,production_role,T_K,sigma_a_MPa,R,frequency_Hz,observation_cycles,H_cleave,S_no_attempt,cleavage_attempt_status
 Peak_300K_735p921495,Peak,v913_paper_peak01_0242980_persistent_sites,canonical_production,300,735.9214951373579,0.1,1000,100000000,0.05152397046800673,0.949780882997064,right_censored_no_quantile_crossing
 Peak_300K_770,Peak,v913_paper_peak01_0242980_persistent_sites,canonical_production,300,770,0.1,1000,206847,2.3225858356478564,0.09801979453587456,finite_quantile_trajectory
 Peak_300K_804p139,Peak,v913_paper_peak01_0242980_persistent_sites,canonical_production,300,804.139,0.1,1000,2047,3.0032883219513375,0.049623621338564516,finite_quantile_trajectory
