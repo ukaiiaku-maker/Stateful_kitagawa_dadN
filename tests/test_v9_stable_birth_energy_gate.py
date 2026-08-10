@@ -1,4 +1,5 @@
 import copy
+import pickle
 import unittest
 from pathlib import Path
 
@@ -57,6 +58,24 @@ class StableBirthEnergyGateTests(unittest.TestCase):
         self.assertGreater(admitted["committed_event_length_m"], 0.0)
         np.testing.assert_array_equal(self.u, before)
         self.assertFalse(rejected["hazard_gated_before_first_passage"])
+
+    def test_phase_cache_preserves_exact_energy_gate_result(self):
+        kwargs = dict(
+            mesh=self.mesh, boundaries=self.bnd, displacement=self.u,
+            ep_gp=self.ep, Dmat=self.D, root_xy=self.root,
+            event_direction=np.array([1.0, 0.0]), event_K_Pa_sqrt_m=20e6,
+            cleavage_barrier_J=0.0, cooperative_hits=3.0,
+            burgers_m=self.mat.b, threshold_action=1.0,
+            plane_strain_modulus_Pa=self.mat.Eprime,
+            config=StableBirthEnergyGateConfig(base_checkpoint_m=2.0e-4),
+        )
+        uncached = evaluate_stable_birth_energy_gate(**kwargs)
+        cache = {}
+        first = evaluate_stable_birth_energy_gate(**kwargs, evaluation_cache=cache)
+        second = evaluate_stable_birth_energy_gate(**kwargs, evaluation_cache=cache)
+        self.assertEqual(pickle.dumps(first), pickle.dumps(uncached))
+        self.assertEqual(pickle.dumps(second), pickle.dumps(uncached))
+        self.assertTrue(cache)
 
     def test_rejected_attempt_consumes_xi_and_restart_preserves_next_draw(self):
         option = next(iter(EXPECTED))

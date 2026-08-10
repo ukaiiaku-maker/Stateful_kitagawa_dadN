@@ -24,4 +24,20 @@
     "ceramic": {"stress_MPa": 400, "H_cleave": 0.06248605838109062, "S_no_attempt": 0.9394261598436927}
   },
   "historical_controls": {"weakT_0257068": "preserved_nonproduction", "ceramic_0189364": "preserved_nonproduction_zero_load_saturation"}
+  ,
+  "quiet_tail_kernel_result": {
+    "Peak": {
+      "stress_MPa": 735.9214951373579,
+      "direct_checkpoint_N": 100000000.0,
+      "direct_H_cleave": 0.051523348061315706,
+      "diagnostic_S_stable_birth": 0.9497814741472245,
+      "stationary_periodic_orbit_at_1e8": false,
+      "DOP853_direct_overlap_qualification": "pass",
+      "rho_cap_m2": 1e17,
+      "rho_cap_boundary_estimate_N": 4060002200.0,
+      "requested_1e10_1e12_1e14_results": "not_reportable_before_constitutive_boundary_decision",
+      "stable_crack_birth_asymptotic_classification": "undetermined"
+    },
+    "remaining_class_sequence": "not_started_due_to_governing_Peak_fail_closed_blocker"
+  }
 }

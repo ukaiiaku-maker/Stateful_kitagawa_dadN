@@ -22,5 +22,15 @@
     ,"Peak_300K_endurance_735p921495"
     ,"DBTT_300K_endurance_700"
     ,"weakT_300K_endurance_350"
-  ]
+    ,"Peak_300K_quiet_tail_1e6"
+    ,"Peak_300K_quiet_tail_1e7"
+    ,"Peak_300K_quiet_tail_1e8"
+  ],
+  "quiet_tail_checkpoint_lineage": {
+    "Peak_1e8_path": "runs/sn_v9_canonical_four_class/quiet_tail_checkpoints/Peak/N_100000000",
+    "Peak_1e8_source_generation": "generation_9dff58c4beb5493c8bb3cd3d69d6f284",
+    "Peak_1e8_unique_copy_generation": "generation_c51813ccddfc4db3b43d36eb9b7879cb",
+    "checkpoint_label_collision_repaired": true,
+    "Peak_1e10_status": "blocked_at_explicit_FEM_rho_cap_before_horizon"
+  }
 }

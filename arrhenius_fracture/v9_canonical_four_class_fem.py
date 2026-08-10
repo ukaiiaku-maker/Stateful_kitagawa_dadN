@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -100,6 +101,7 @@ class CanonicalFourClassFEMCondition:
         self.cycles = 0.0
         self.accepted_blocks = 0
         self.rejected_blocks = 0
+        self.next_block_cycles = max(float(args.min_block_cycles), 1.0)
         self.audit = {
             "model_id": FEM_MODEL_ID, "endpoint_model_id": MODEL_ID,
             "option_id": option_id, "sigma_a_MPa": self.sigma_a_MPa,
@@ -127,6 +129,7 @@ class CanonicalFourClassFEMCondition:
         )
         clone.birth = self.birth.copy()
         clone.audit = copy.deepcopy(self.audit)
+        clone.next_block_cycles = float(self.next_block_cycles)
         return clone
 
     def _root_history(self, fem_state):
@@ -173,7 +176,7 @@ class CanonicalFourClassFEMCondition:
         total_consumed = 0.0
         last_error = 0.0
         while remaining > 0.0 and not self.birth.fired:
-            proposal_cycles = remaining
+            proposal_cycles = min(remaining, self.next_block_cycles)
             while True:
                 proposal = self.fem_transaction.propose(self.fem, proposal_cycles)
                 if proposal.normalized_error <= 1.0:
@@ -192,6 +195,7 @@ class CanonicalFourClassFEMCondition:
                         if "failed to bracket persistent-site backstress root" not in str(exc):
                             raise
                 proposal_cycles *= 0.5
+                self.next_block_cycles = proposal_cycles
                 self.rejected_blocks += 1
                 if proposal_cycles < self.args.min_block_cycles:
                     raise RuntimeError("canonical FEM/MPZ transaction failed below minimum block")
@@ -205,6 +209,13 @@ class CanonicalFourClassFEMCondition:
                 self.fem = proposal.state
             self.cycles += consumed; total_consumed += consumed; remaining -= consumed
             self.accepted_blocks += 1; last_error = proposal.normalized_error
+            if proposal.normalized_error <= 1e-16:
+                factor = 2.0
+            else:
+                factor = min(2.0, max(1.05, 0.9 / math.sqrt(proposal.normalized_error)))
+            self.next_block_cycles = max(
+                float(self.args.min_block_cycles), proposal_cycles * factor
+            )
             if self.birth.pending_attempt is not None:
                 gate = self._event_gate()
                 self.birth.resolve_pending_attempt(gate)
@@ -220,10 +231,11 @@ class CanonicalFourClassFEMCondition:
 
     def capsule(self):
         return {
-            "schema": "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_2",
+            "schema": "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_3",
             "audit": copy.deepcopy(self.audit), "cycles": self.cycles,
             "accepted_blocks": self.accepted_blocks,
             "rejected_blocks": self.rejected_blocks,
+            "next_block_cycles": self.next_block_cycles,
             "fem": {
                 "ep_gp": self.fem.ep_gp.copy(), "rho_gp": self.fem.rho_gp.copy(),
                 "epsp_acc_gp": self.fem.epsp_acc_gp.copy(), "u": self.fem.u.copy(),
@@ -233,7 +245,7 @@ class CanonicalFourClassFEMCondition:
         }
 
     def restore_capsule(self, capsule):
-        if capsule.get("schema") != "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_2" or capsule.get("audit") != self.audit:
+        if capsule.get("schema") != "V9_CANONICAL_FOUR_CLASS_FEM_CAPSULE_3" or capsule.get("audit") != self.audit:
             raise RuntimeError("canonical FEM capsule provenance/request mismatch")
         fem = capsule["fem"]
         self.fem = FEMPhysicalState(
@@ -245,6 +257,7 @@ class CanonicalFourClassFEMCondition:
         self.cycles = float(capsule["cycles"])
         self.accepted_blocks = int(capsule["accepted_blocks"])
         self.rejected_blocks = int(capsule["rejected_blocks"])
+        self.next_block_cycles = float(capsule["next_block_cycles"])
 
     def summary(self):
         return {
@@ -252,5 +265,6 @@ class CanonicalFourClassFEMCondition:
             "sigma_a_MPa": self.sigma_a_MPa, "T_K": float(self.args.T),
             "cycles": self.cycles, "accepted_blocks": self.accepted_blocks,
             "rejected_blocks": self.rejected_blocks,
+            "next_block_cycles": self.next_block_cycles,
             "post_birth_growth_executed": False, "pd_state_present": False,
         } | self.birth.diagnostics() | self.birth.mpz.summary()

@@ -119,7 +119,7 @@ def evaluate_stable_birth_energy_gate(*, mesh, boundaries, displacement, ep_gp, 
                                       root_xy, event_direction, event_K_Pa_sqrt_m,
                                       cleavage_barrier_J, cooperative_hits, burgers_m,
                                       threshold_action, plane_strain_modulus_Pa,
-                                      config=StableBirthEnergyGateConfig()):
+                                      config=StableBirthEnergyGateConfig(), evaluation_cache=None):
     """Exact v10.2.30 mesh-consistent search, without committing geometry."""
     cfg = config.validate()
     proposal, factor = threshold_scaled_event_length(threshold_action, cfg)
@@ -129,9 +129,12 @@ def evaluate_stable_birth_energy_gate(*, mesh, boundaries, displacement, ep_gp, 
     resistance = hazard_resistance_J_per_m2(
         cleavage_barrier_J, cooperative_hits, burgers_m, cfg.gamma_relative)
     Eprime = max(float(plane_strain_modulus_Pa), 1e-300)
+    cache = {} if evaluation_cache is None else evaluation_cache
     zero_damage = np.zeros(mesh.nn)
-    u_pre, energy_pre = _fixed_opening(
-        mesh, boundaries, displacement, ep_gp, Dmat, zero_damage, cfg.residual_stiffness)
+    if "pre" not in cache:
+        cache["pre"] = _fixed_opening(
+            mesh, boundaries, displacement, ep_gp, Dmat, zero_damage, cfg.residual_stiffness)
+    u_pre, energy_pre = cache["pre"]
     ntrial = max(int(math.ceil(1.0 / cfg.trial_fraction)), 1)
     candidates = [proposal * i / ntrial for i in range(1, ntrial + 1)]
     rows = []; accepted = 0.0; accepted_u = u_pre; first_failed = None
@@ -140,8 +143,11 @@ def evaluate_stable_birth_energy_gate(*, mesh, boundaries, displacement, ep_gp, 
         damage = _damage_for_segment(mesh, p0, p0 + length * direction)
         changed = bool(np.count_nonzero(damage) > 0)
         if changed:
-            utrial, energy_post = _fixed_opening(
-                mesh, boundaries, u_pre, ep_gp, Dmat, damage, cfg.residual_stiffness)
+            topology_key = np.packbits(damage > 0.0).tobytes()
+            if topology_key not in cache:
+                cache[topology_key] = _fixed_opening(
+                    mesh, boundaries, u_pre, ep_gp, Dmat, damage, cfg.residual_stiffness)
+            utrial, energy_post = cache[topology_key]
             released = max(energy_pre - energy_post, 0.0)
             source = "fixed_opening_re_equilibrated_energy_drop"
         else:
