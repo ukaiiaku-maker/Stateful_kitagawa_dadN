@@ -16,8 +16,10 @@ class SyntheticDormantPD:
     def __init__(self, *, rate=1e-14, threshold=2.0, contraction=0.0, drift=0.0):
         self.x = np.array([0.0])
         self.rate = float(rate)
+        self.log_rate = math.log(rate) if rate > 0.0 else -math.inf
         self.threshold = np.array([float(threshold)])
         self.action = np.zeros(1)
+        self.log_action = np.full(1, -math.inf)
         self.cycles = 0.0
         self.ledger = 0.0
         self.rng = np.random.default_rng(19)
@@ -30,18 +32,25 @@ class SyntheticDormantPD:
         return (not np.any(self.status), "dormant" if not np.any(self.status) else "event")
     def active_state(self): return ActiveState(self.x, (("x", (1,), "float64"),))
     def restore_active_state(self, snapshot, vector): self.x = np.asarray(vector, float).copy()
+    def active_residual(self, a, b):
+        value=float(np.max(np.abs(a.vector-b.vector)))
+        return value,{"x":value}
     def protected_signatures(self):
         return ProtectedSignatures(_digest(self.ledger), _digest((self.threshold, self.action, self.rng.bit_generator.state)), _digest((self.status, self.topology)))
     def exact_private_cycle(self):
         start = self.active_state()
         end = ActiveState(self.contraction * self.x + self.drift, start.specification)
-        return CycleEvaluation(start, end, np.array([math.log(self.rate)]) if self.rate else np.array([-math.inf]),
+        return CycleEvaluation(start, end, np.array([self.log_rate]),
                                {"ledger": 1.0}, np.array([0.0, 1.0]),
-                               np.array([[math.log(self.rate)]]) if self.rate else np.array([[-math.inf]]),
+                               np.array([[self.log_rate]]),
                                {}, "dormant", self.protected_signatures().topology)
-    def commit_private_cycle(self, ev): self.x = ev.state_end.vector.copy(); self.ledger += 1.0
+    def commit_private_cycle(self, ev): self.x = ev.state_end.vector.copy(); self.commit_ledger_increments(ev.ledger_increments)
+    def commit_ledger_increments(self, increments): self.ledger += float(increments.get("ledger", 0.0))
     def remaining_birth_actions(self): return self.threshold - self.action
     def commit_birth_action(self, increment, cycles): self.action += np.asarray(increment)
+    def commit_log_birth_action(self, increment, cycles):
+        self.log_action = np.logaddexp(self.log_action, np.asarray(increment, float))
+        self.action = np.where(self.log_action >= math.log(np.nextafter(0.0, 1.0)), np.exp(self.log_action), 0.0)
     def physical_cycles(self): return self.cycles
     def set_physical_cycles(self, cycles): self.cycles = float(cycles)
 
@@ -71,6 +80,7 @@ def test_stationary_synthetic_1e12_and_1e14_right_censors():
         assert result.cycles_consumed == horizon
         assert result.event_guard_reached is False
         assert abs(model.action[0] - horizon * 1e-20) <= 1e-15
+        assert model.ledger == horizon
         assert any(row.mode == "stationary" for row in result.modes)
 
 
@@ -130,3 +140,13 @@ def test_restart_equivalence_periodic_and_projective(tmp_path):
         assert np.allclose(continuous.action, restarted.action, rtol=2e-15)
         assert np.allclose(continuous.x, restarted.x, rtol=2e-15, atol=1e-18)
         assert (tmp_path / "mode.json").is_file()
+
+
+def test_log_action_below_float_range_survives_large_formal_skip():
+    model = SyntheticDormantPD(rate=1.0, threshold=1.0)
+    model.rate = 0.0
+    model.log_rate = -1000.0  # deliberately below linear representability
+    result = DormantPDHighCycleEngine(model, cfg()).advance(1e300)
+    assert result.cycles_consumed == 1e300
+    assert abs(model.log_action[0] - (-1000.0 + math.log(1e300))) < 1e-12
+    assert model.ledger == 1e300

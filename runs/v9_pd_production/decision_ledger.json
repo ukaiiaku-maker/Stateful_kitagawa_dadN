@@ -1,0 +1,64 @@
+{
+  "schema_version": "V9_PD_PRODUCTION_DECISIONS_1",
+  "issues": [
+    {
+      "id": "HC-001",
+      "classification": "implementation_defect",
+      "issue": "stationary and projective skips omitted monotone ledger increments",
+      "evidence": "CycleEvaluation ledgers were committed only by commit_private_cycle",
+      "resolution": "propagate periodic rates linearly and start/mid/end projective rates by Simpson quadrature",
+      "regression": "stationary 1e12/1e14 tests assert ledger equals skipped cycles",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-002",
+      "classification": "numerical-method defect",
+      "issue": "birth action was converted to linear space before event guarding",
+      "evidence": "CycleEvaluation.birth_action underflowed finite log actions to zero",
+      "resolution": "log-domain remaining-action comparison, accumulation, upper guard, and commit",
+      "regression": "log(q)=-1000 over 1e300 cycles matches analytical log action",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-003",
+      "classification": "numerical-method defect",
+      "issue": "one mixed-unit residual norm covered strain, density, displacement, and log memory",
+      "evidence": "raw ActiveState vector used a universal unit floor",
+      "resolution": "declared scaled-linear/log/log1p transforms, inverse maps, bounds, and per-field residuals",
+      "status": "resolved_pending_real_array_tests"
+    },
+    {
+      "id": "HC-004",
+      "classification": "implementation_defect",
+      "issue": "real authoritative FEM/PD exact-cycle callback not yet extracted",
+      "evidence": "transactional driver still owns the coupled block operation",
+      "resolution": "shared cached-FEM and midpoint PD operation extracted and integrated behind an opt-in production path",
+      "next_action": "extend parity horizons and reproduce historical finite-life/front control",
+      "status": "resolved_pending_historical_qualification"
+    },
+    {
+      "id": "HC-005",
+      "classification": "numerical-method defect",
+      "issue": "exact-zero log delivery memory failed inverse coordinate validation",
+      "evidence": "first real 10-cycle orchestration smoke raised a constitutive-domain error while restoring coordinate zero",
+      "resolution": "validate the native log-memory field on its own [-infinity,709] domain and evaluate log only on positive reconstructed linear memory",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-006",
+      "classification": "implementation_defect",
+      "issue": "first callback adapter omitted smooth linear PD memory and expected-state fields",
+      "evidence": "10-cycle direct comparison showed delivery-memory and expected-population drift while FEM arrays matched",
+      "resolution": "expanded active inventory with reversible coordinates for available/embryo/stable/inactive/completion and synchronized linear/log delivery memory",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-007",
+      "classification": "implementation_defect",
+      "issue": "per-site action commit omitted nodal action at nodes without realized sites",
+      "evidence": "direct comparison showed correct log action at site nodes but a nodal cumulative-action discrepancy",
+      "resolution": "callback returns nodal log action and event guard uses minimum available-site residual per node",
+      "status": "resolved"
+    }
+  ]
+}

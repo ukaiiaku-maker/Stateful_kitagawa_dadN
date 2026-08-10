@@ -71,7 +71,7 @@ class CycleEvaluation:
     state_start: ActiveState
     state_end: ActiveState
     log_birth_action: np.ndarray
-    ledger_increments: dict[str, float]
+    ledger_increments: dict[str, Any]
     phase: np.ndarray
     phase_log_birth_rate: np.ndarray
     diagnostics: dict[str, Any]
@@ -94,10 +94,13 @@ class DormantPDAdapter(Protocol):
     def protected_signatures(self) -> ProtectedSignatures: ...
     def exact_private_cycle(self) -> CycleEvaluation: ...
     def commit_private_cycle(self, evaluation: CycleEvaluation) -> None: ...
+    def commit_ledger_increments(self, increments: dict[str, Any]) -> None: ...
     def remaining_birth_actions(self) -> np.ndarray: ...
     def commit_birth_action(self, increment: np.ndarray, cycles: float) -> None: ...
+    def commit_log_birth_action(self, log_increment: np.ndarray, cycles: float) -> None: ...
     def physical_cycles(self) -> float: ...
     def set_physical_cycles(self, cycles: float) -> None: ...
+    def active_residual(self, a: ActiveState, b: ActiveState) -> tuple[float, dict[str, float]]: ...
 
 
 @dataclass(frozen=True)
@@ -109,6 +112,8 @@ class HighCycleConfig:
     projective_log_hazard_tolerance: float = 2e-4
     projective_initial_cycles: int = 16
     projective_max_cycles: int = 10**9
+    projective_growth_factor: float = 4.0
+    projective_curvature_tolerance: float = 2e-5
     exact_retry_cycles: int = 8
     event_guard_cycles: float = 2.0
     minimum_positive_coordinate: float = -math.inf
@@ -137,6 +142,14 @@ def relative_distance(a: np.ndarray, b: np.ndarray) -> float:
     aa, bb = np.asarray(a, float), np.asarray(b, float)
     scale = np.maximum.reduce([np.abs(aa), np.abs(bb), np.ones_like(aa)])
     return float(np.max(np.abs(aa - bb) / scale)) if aa.size else 0.0
+
+
+def active_distance(adapter: DormantPDAdapter, a: ActiveState, b: ActiveState) -> tuple[float, dict[str, float]]:
+    method = getattr(adapter, "active_residual", None)
+    if method is not None:
+        return method(a, b)
+    value = relative_distance(a.vector, b.vector)
+    return value, {"active_vector": value}
 
 
 def _assert_private(adapter: DormantPDAdapter, before: ProtectedSignatures) -> None:
@@ -173,7 +186,7 @@ def solve_periodic_state(adapter: DormantPDAdapter, cfg: HighCycleConfig) -> tup
             adapter.restore_active_state(initial, x)
             ev = private_cycle(adapter); maps += 1
             y = ev.state_end.vector
-            residual = relative_distance(x, y)
+            residual, _ = active_distance(adapter, ActiveState(x, initial.specification), ev.state_end)
             if residual <= cfg.periodic_relative_tolerance:
                 return ev.state_end, residual, iteration, maps
             x = y
@@ -184,12 +197,37 @@ def solve_periodic_state(adapter: DormantPDAdapter, cfg: HighCycleConfig) -> tup
         _assert_private(adapter, protected)
 
 
-def _cycles_before_guard(remaining_action: np.ndarray, per_cycle: np.ndarray, guard: float) -> float:
-    valid = (per_cycle > 0.0) & np.isfinite(remaining_action)
+def _log_remaining_action(remaining_action: np.ndarray) -> np.ndarray:
+    remaining = np.asarray(remaining_action, float)
+    return np.where(remaining > 0.0, np.log(remaining), -math.inf)
+
+
+def _cycles_before_guard_log(remaining_action: np.ndarray, log_per_cycle: np.ndarray, guard: float) -> float:
+    log_q = np.asarray(log_per_cycle, float)
+    log_r = _log_remaining_action(remaining_action)
+    valid = np.isfinite(log_q) & np.isfinite(log_r)
     if not np.any(valid):
         return math.inf
-    waits = np.maximum(remaining_action[valid], 0.0) / per_cycle[valid]
-    return max(float(np.min(waits)) - guard, 0.0)
+    log_wait = float(np.min(log_r[valid] - log_q[valid]))
+    wait = math.inf if log_wait > math.log(np.finfo(float).max) else math.exp(log_wait)
+    return max(wait - guard, 0.0)
+
+
+def _log_weighted_sum(log_values: tuple[np.ndarray, ...], weights: tuple[float, ...]) -> np.ndarray:
+    terms = [np.asarray(value, float) + math.log(weight) for value, weight in zip(log_values, weights)]
+    out = terms[0]
+    for term in terms[1:]: out = np.logaddexp(out, term)
+    return out
+
+
+def _commit_log_action(adapter: DormantPDAdapter, log_increment: np.ndarray, cycles: float) -> None:
+    method = getattr(adapter, "commit_log_birth_action", None)
+    if method is not None:
+        method(np.asarray(log_increment, float), cycles)
+        return
+    linear = np.where(np.asarray(log_increment) >= math.log(np.nextafter(0.0, 1.0)),
+                      np.exp(np.asarray(log_increment)), 0.0)
+    adapter.commit_birth_action(linear, cycles)
 
 
 def _hazard_error(predicted: np.ndarray, exact: np.ndarray) -> float:
@@ -218,17 +256,23 @@ class DormantPDHighCycleEngine:
         return changed
 
     def _stationary(self, requested: float, cycle: CycleEvaluation, distance: float) -> float:
-        q = cycle.birth_action
-        allowed = min(requested, _cycles_before_guard(
-            self.adapter.remaining_birth_actions(), q, self.config.event_guard_cycles
+        log_q = np.asarray(cycle.log_birth_action, float)
+        allowed = min(requested, _cycles_before_guard_log(
+            self.adapter.remaining_birth_actions(), log_q, self.config.event_guard_cycles
         ))
         whole = float(max(math.floor(allowed), 0))
         if whole:
-            self.adapter.commit_birth_action(q * whole, whole)
+            _commit_log_action(self.adapter, log_q + math.log(whole), whole)
+            for name, rate in cycle.ledger_increments.items():
+                if np.any(np.asarray(rate, float) < 0.0):
+                    raise RuntimeError(f"monotone ledger {name} has negative stationary rate")
+            self.adapter.commit_ledger_increments(
+                {name: np.asarray(rate) * whole for name, rate in cycle.ledger_increments.items()}
+            )
             self.adapter.set_physical_cycles(self.adapter.physical_cycles() + whole)
         self.mode_history.append(ModeRecord("stationary", whole, 0, True, {
             "admission_distance": distance,
-            "maximum_action_per_cycle": float(np.max(q)) if q.size else 0.0,
+            "maximum_log_action_per_cycle": float(np.max(log_q)) if log_q.size else -math.inf,
         }))
         return whole
 
@@ -250,6 +294,9 @@ class DormantPDHighCycleEngine:
         start = self.adapter.active_state()
         first = private_cycle(self.adapter); self.exact_map_evaluations += 1
         drift = first.state_end.vector - start.vector
+        second = self._private_at(start, first.state_end.vector)
+        second_drift = second.state_end.vector - first.state_end.vector
+        curvature = relative_distance(drift, second_drift)
         midpoint = max(horizon // 2, 1)
         xmid = start.vector + midpoint * drift
         xend = start.vector + horizon * drift
@@ -264,19 +311,40 @@ class DormantPDHighCycleEngine:
         hazard_error = max(_hazard_error(first.log_birth_action, mid.log_birth_action),
                            _hazard_error(first.log_birth_action, end.log_birth_action))
         signature_ok = first.transition_signature == mid.transition_signature == end.transition_signature
-        accepted = state_error <= self.config.projective_state_tolerance and hazard_error <= self.config.projective_log_hazard_tolerance and signature_ok
-        q0, qm, q1 = first.birth_action, mid.birth_action, end.birth_action
-        integrated = horizon * (q0 + 4.0 * qm + q1) / 6.0
-        upper = horizon * np.maximum.reduce([q0, qm, q1])
-        event_safe = np.all(upper < self.adapter.remaining_birth_actions())
+        accepted = (state_error <= self.config.projective_state_tolerance
+                    and hazard_error <= self.config.projective_log_hazard_tolerance
+                    and curvature <= self.config.projective_curvature_tolerance
+                    and signature_ok)
+        log_integrated = math.log(horizon / 6.0) + _log_weighted_sum(
+            (first.log_birth_action, mid.log_birth_action, end.log_birth_action), (1.0, 4.0, 1.0)
+        )
+        log_upper = math.log(horizon) + np.maximum.reduce(
+            [first.log_birth_action, mid.log_birth_action, end.log_birth_action]
+        )
+        event_safe = np.all(log_upper < _log_remaining_action(self.adapter.remaining_birth_actions()))
+        ledger_names = set(first.ledger_increments) | set(mid.ledger_increments) | set(end.ledger_increments)
+        ledgers = {}
+        ledger_variation = 0.0
+        for name in ledger_names:
+            rates = np.stack([np.asarray(first.ledger_increments.get(name, 0.0),float),
+                              np.asarray(mid.ledger_increments.get(name, 0.0),float),
+                              np.asarray(end.ledger_increments.get(name, 0.0),float)])
+            if np.any(rates < 0.0):
+                return False, {"reason": f"negative_monotone_ledger:{name}"}
+            ledgers[name] = horizon * (rates[0] + 4.0*rates[1] + rates[2]) / 6.0
+            ledger_variation = max(ledger_variation, float(np.ptp(rates) / max(np.max(rates), 1e-300)))
+        accepted = bool(accepted and ledger_variation <= self.config.projective_log_hazard_tolerance)
         accepted = bool(accepted and event_safe)
-        return accepted, {"start": start, "end_vector": xend, "action": integrated,
+        return accepted, {"start": start, "end_vector": xend, "log_action": log_integrated,
+                          "ledgers": ledgers, "ledger_rate_variation": ledger_variation,
                           "state_error": state_error, "hazard_error": hazard_error,
+                          "curvature": curvature,
                           "transition_preserved": signature_ok, "event_safe": bool(event_safe)}
 
     def advance(self, cycles_requested: float) -> AdvanceResult:
         requested = max(float(cycles_requested), 0.0)
         consumed = 0.0
+        next_projective = max(int(self.config.projective_initial_cycles), 2)
         invalid = self.invalidate_if_needed()
         if invalid:
             return AdvanceResult(0.0, False, self.exact_map_evaluations,
@@ -285,48 +353,69 @@ class DormantPDHighCycleEngine:
             ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
             periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)
             self.exact_map_evaluations += maps
-            distance = relative_distance(self.adapter.active_state().vector, periodic.vector)
+            distance, field_distance = active_distance(self.adapter, self.adapter.active_state(), periodic)
+            verified = self._private_at(periodic, periodic.vector)
+            verified2 = self._private_at(periodic, verified.state_end.vector)
+            verify_residual, verify_fields = active_distance(self.adapter, periodic, verified.state_end)
+            verify_hazard = _hazard_error(verified.log_birth_action, verified2.log_birth_action)
+            ledger_names = set(verified.ledger_increments) | set(verified2.ledger_increments)
+            verify_ledger = 0.0
+            for n in ledger_names:
+                a=np.asarray(verified.ledger_increments.get(n,0.0),float); b=np.asarray(verified2.ledger_increments.get(n,0.0),float)
+                verify_ledger=max(verify_ledger,float(np.max(np.abs(a-b)/np.maximum.reduce([np.abs(a),np.abs(b),np.full_like(a,1e-300)]))))
+            stationary_verified = (verify_residual <= self.config.periodic_relative_tolerance
+                                   and verify_hazard <= self.config.projective_log_hazard_tolerance
+                                   and verify_ledger <= self.config.projective_log_hazard_tolerance
+                                   and verified.transition_signature == verified2.transition_signature)
             self.mode_history.append(ModeRecord("periodic_search", 0.0, maps,
                 residual <= self.config.periodic_relative_tolerance,
-                {"residual": residual, "iterations": iterations, "distance": distance}))
+                {"residual": residual, "iterations": iterations, "distance": distance,
+                 "field_distance": field_distance}))
             remaining = requested - consumed
-            if residual <= self.config.periodic_relative_tolerance and distance <= self.config.periodic_admission_distance:
-                advanced = self._stationary(remaining, ev, distance)
+            self.mode_history[-1].detail.update({"verification_residual":verify_residual,
+                "verification_field_residual":verify_fields,"verification_log_hazard_error":verify_hazard,
+                "verification_ledger_error":verify_ledger,"stationary_verified":stationary_verified})
+            if residual <= self.config.periodic_relative_tolerance and stationary_verified and distance <= self.config.periodic_admission_distance:
+                advanced = self._stationary(remaining, verified, distance)
                 consumed += advanced
                 if advanced >= remaining: break
                 self.mode_history.append(ModeRecord("event_guard", 0.0, 0, True))
                 break
 
-            proposal = min(int(remaining), self.config.projective_initial_cycles)
+            proposal = min(int(remaining), next_projective, int(self.config.projective_max_cycles))
             accepted = False
             while proposal >= 2:
                 accepted, trial = self._projective_trial(proposal)
                 if accepted:
                     self.adapter.restore_active_state(trial["start"], trial["end_vector"])
-                    self.adapter.commit_birth_action(trial["action"], proposal)
+                    _commit_log_action(self.adapter, trial["log_action"], proposal)
+                    self.adapter.commit_ledger_increments(trial["ledgers"])
                     self.adapter.set_physical_cycles(self.adapter.physical_cycles() + proposal)
                     consumed += proposal
                     self.accepted_projected_cycles += proposal
+                    next_projective = min(int(max(proposal + 1, proposal * self.config.projective_growth_factor)),
+                                          int(self.config.projective_max_cycles))
                     self.mode_history.append(ModeRecord("projective", proposal, 3, True,
-                        {k: v for k, v in trial.items() if k not in {"start", "end_vector", "action"}}))
+                        {k: v for k, v in trial.items() if k not in {"start", "end_vector", "log_action", "ledgers"}}))
                     accepted = True
                     break
                 self.mode_history.append(ModeRecord("projective_reject", 0.0, 3, False,
-                    {k: v for k, v in trial.items() if k not in {"start", "end_vector", "action"}}))
+                    {k: v for k, v in trial.items() if k not in {"start", "end_vector", "log_action", "ledgers"}}))
                 proposal //= 2
+                next_projective = max(proposal, 2)
             if accepted: continue
 
             burst = min(self.config.exact_retry_cycles, int(math.floor(remaining)))
             if burst <= 0: break
             for _ in range(burst):
                 cycle = private_cycle(self.adapter); self.exact_map_evaluations += 1
-                if _cycles_before_guard(self.adapter.remaining_birth_actions(), cycle.birth_action,
+                if _cycles_before_guard_log(self.adapter.remaining_birth_actions(), cycle.log_birth_action,
                                         self.config.event_guard_cycles) <= 0.0:
                     self.mode_history.append(ModeRecord("event_guard", 0.0, 1, True))
                     return AdvanceResult(consumed, True, self.exact_map_evaluations,
                                          self.accepted_projected_cycles, self.mode_history)
                 self.adapter.commit_private_cycle(cycle)
-                self.adapter.commit_birth_action(cycle.birth_action, 1.0)
+                _commit_log_action(self.adapter, cycle.log_birth_action, 1.0)
                 self.adapter.set_physical_cycles(self.adapter.physical_cycles() + 1.0)
                 consumed += 1.0
             self.mode_history.append(ModeRecord("exact_burst", burst, burst, True))

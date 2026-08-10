@@ -12,7 +12,7 @@ from arrhenius_fracture.v9_pd_high_cycle import (
 class LinearAdapter:
     def __init__(self, rate, threshold, drift=0.0):
         self.x=np.zeros(1); self.rate=rate; self.threshold=np.array([threshold]); self.action=np.zeros(1)
-        self.cycles=0.0; self.ledger=0.0; self.status=np.zeros(1,np.uint8); self.rng=np.random.default_rng(91); self.drift=drift
+        self.cycles=0.0; self.ledger=0.0; self.log_action=np.full(1,-math.inf); self.status=np.zeros(1,np.uint8); self.rng=np.random.default_rng(91); self.drift=drift
     def dormant_eligibility(self): return (not np.any(self.status), "dormant")
     def active_state(self): return ActiveState(self.x, (("x",(1,),"float64"),))
     def restore_active_state(self,s,v): self.x=np.asarray(v,float).copy()
@@ -20,9 +20,11 @@ class LinearAdapter:
     def exact_private_cycle(self):
         s=self.active_state(); e=ActiveState(s.vector+self.drift,s.specification); lr=np.array([math.log(self.rate)])
         return CycleEvaluation(s,e,lr,{"ledger":1.0},np.array([0.,1.]),lr[None,:],{},"dormant",self.protected_signatures().topology)
-    def commit_private_cycle(self,e): self.x=e.state_end.vector.copy(); self.ledger+=1
+    def commit_private_cycle(self,e): self.x=e.state_end.vector.copy(); self.commit_ledger_increments(e.ledger_increments)
+    def commit_ledger_increments(self,x): self.ledger+=float(x.get("ledger",0.0))
     def remaining_birth_actions(self): return self.threshold-self.action
     def commit_birth_action(self,q,n): self.action+=q
+    def commit_log_birth_action(self,q,n): self.log_action=np.logaddexp(self.log_action,q); self.action=np.exp(self.log_action)
     def physical_cycles(self): return self.cycles
     def set_physical_cycles(self,n): self.cycles=float(n)
 

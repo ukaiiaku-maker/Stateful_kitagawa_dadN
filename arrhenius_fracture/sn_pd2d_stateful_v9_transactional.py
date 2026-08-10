@@ -25,6 +25,7 @@ import hashlib
 import math
 import os
 import sys
+from copy import deepcopy
 from dataclasses import fields
 from pathlib import Path
 
@@ -57,9 +58,106 @@ from .v9_fem_transaction import EmbeddedFEMTransaction, FEMPhysicalState
 from .v9_physical_integrator import plastic_chain_log_rates
 from .v9_array_codec import AtomicArrayGenerationStore
 from .v9_cached_fem import CachedIntactFEM
+from .v9_pd_high_cycle import DormantPDHighCycleEngine, HighCycleConfig
+from .v9_pd_high_cycle_adapter import SpatialPDDormantAdapter
 
 
 MODEL_ID = "SN_2D_intact_FEM_stateful_local_peridynamics_v9_transactional_log_domain"
+
+
+def _logdiffexp(log_total, log_old):
+    total = np.asarray(log_total, float); old = np.asarray(log_old, float)
+    out = np.full_like(total, -math.inf)
+    only = np.isfinite(total) & ~np.isfinite(old); out[only] = total[only]
+    valid = np.isfinite(total) & np.isfinite(old) & (total > old)
+    out[valid] = total[valid] + np.log1p(-np.exp(old[valid] - total[valid]))
+    return out
+
+
+def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crack,
+        plast_chain, cached_fem, fem_transaction, sigma_max, sigma_min,
+        ep_gp, rho_gp, epsp_acc_gp, u, plastic_work, cycles):
+    """Authoritative private one-cycle operation extracted from the block loop.
+
+    The same cached FEM, pre/post midpoint construction, PD equilibrium, and
+    v9 finite-memory update are used. Persistent thresholds are made unreachable
+    on the private state, so the operation computes action without comparing or
+    consuming a physical first-passage threshold.
+    """
+    trial = deepcopy(pd_state)
+    trial.site_birth_threshold = np.full_like(trial.site_birth_threshold, math.inf)
+    stochastic_before = (
+        deepcopy(patch._candidate_rng.bit_generator.state),
+        deepcopy(patch._event_rng.bit_generator.state),
+    )
+    fem0 = FEMPhysicalState(ep_gp, rho_gp, epsp_acc_gp, u, plastic_work)
+    Umax, Umin, u_zero, _, _ = cached_fem.affine(ep_gp, sigma_max, sigma_min, u)
+    first = cached_fem.representative_cycle(
+        ep_gp, rho_gp, Umax, Umin, args.T, args.frequency_Hz,
+        args.plastic_n_phase, plast_chain, u_zero, args.k_store, args.k_dyn,
+        args.rho_floor, args.rho_cap, args.max_dep_phase, args.max_rho_rel_phase,
+    )
+    proposal = fem_transaction.propose(fem0, 1.0, first_cycle=first)
+    if proposal.normalized_error > 1.0:
+        raise RuntimeError("one physical cycle fails the accepted FEM transaction tolerance")
+
+    def coupled_fields(ep, rho, epsacc, displacement):
+        Uhi, Ulo, uzero, _, _ = cached_fem.affine(ep, sigma_max, sigma_min, displacement)
+        eps_node, rho_node, P, Dloc = project_plastic_state(
+            mesh, epsacc, rho, args.epsp_shield_scale, args.epsp_damage_scale)
+        chi = args.shield_chi if shield_on else 0.0
+        Gsh = args.Gshield_eV if shield_on else 0.0
+        sigma_back = args.sigma_back_max_GPa * 1e9 * P
+        state_shift = Gsh * P - args.Gstored_eV * Dloc
+        hist = cached_fem.stress_histories(ep, Uhi, Ulo, args.hazard_n_phase, uzero)
+        delivery = phase_resolved_delivery_rate(args, plast_chain, hist["seq_node"], rho_node, args.T)
+        log_delivery = phase_resolved_delivery_log_rate(args, plast_chain, hist["seq_node"], rho_node, args.T)
+        ep_node = project_gp_to_nodes(mesh, ep)
+        _, _, _, bond_amp, point_amp = patch.solve_local_mechanics(trial, hist["u_max"], ep_node)
+        return hist, delivery, log_delivery, P, state_shift, sigma_back, chi, point_amp, bond_amp
+
+    pre = coupled_fields(ep_gp, rho_gp, epsp_acc_gp, u)
+    state1 = proposal.state
+    post = coupled_fields(state1.ep_gp, state1.rho_gp, state1.epsp_acc_gp, state1.u)
+    sigma_mid = 0.5 * (pre[0]["sigma_node"] + post[0]["sigma_node"])
+    delivery_mid = 0.5 * (pre[1] + post[1])
+    log_delivery_mid = np.logaddexp(pre[2], post[2]) - math.log(2.0)
+    point_amp = 0.5 * (pre[7] + post[7]); bond_amp = 0.5 * (pre[8] + post[8])
+    log_birth0 = np.asarray(trial.log_birth_cumulative_hazard, float).copy()
+    born0 = np.asarray(trial.born_cumulative, float).copy()
+    healed0 = np.asarray(trial.healed_cumulative, float).copy()
+    diagnostics = patch.update(
+        trial, crack, sigma_mid, delivery_mid, args.T, args.frequency_Hz, 1.0,
+        cycles, post[4], post[5], post[6], post[3], point_amp, bond_amp,
+        log_delivery_rate_phase_global=log_delivery_mid,
+    )
+    if (patch._candidate_rng.bit_generator.state != stochastic_before[0]
+            or patch._event_rng.bit_generator.state != stochastic_before[1]):
+        raise RuntimeError("private dormant cycle consumed RNG state")
+    if np.any(trial.site_status != pd_state.site_status) or np.any(trial.bond_damage != pd_state.bond_damage):
+        raise RuntimeError("private dormant cycle changed discrete PD state")
+    log_node_action = _logdiffexp(trial.log_birth_cumulative_hazard, log_birth0)
+    ledger = {
+        "plastic_work": float(state1.plastic_work_J_per_m - plastic_work),
+        "born_cumulative": np.maximum(trial.born_cumulative - born0, 0.0),
+        "healed_cumulative": np.maximum(trial.healed_cumulative - healed0, 0.0),
+    }
+    return {
+        "ep_gp": np.asarray(state1.ep_gp).copy(), "rho_gp": np.asarray(state1.rho_gp).copy(),
+        "epsp_acc_gp": np.asarray(state1.epsp_acc_gp).copy(), "u": np.asarray(post[0]["u_end"]).copy(),
+        "log_delivery_memory": np.asarray(trial.log_delivery_memory).copy(),
+        "available": np.asarray(trial.available).copy(), "embryo": np.asarray(trial.embryo).copy(),
+        "stable": np.asarray(trial.stable).copy(), "inactive": np.asarray(trial.inactive).copy(),
+        "completion": np.asarray(trial.completion).copy(),
+        "log_birth_action": log_node_action, "ledger_increments": ledger,
+        "phase": np.linspace(0.0, 1.0, args.hazard_n_phase, endpoint=False),
+        "phase_log_birth_rate": np.empty((0, len(log_node_action))),
+        "diagnostics": {"max_effective_stress_Pa": diagnostics.max_effective_stress_Pa,
+                        "max_delivery_memory": diagnostics.max_delivery_memory,
+                        "max_completion": diagnostics.max_completion,
+                        "fem_embedded_error": proposal.normalized_error},
+        "transition_signature": "dormant_fixed_topology",
+    }
 
 
 def _sha256_file(path: Path) -> str:
@@ -89,6 +187,17 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Accepted f7c8fb1 synthetic high-cycle milestone immediately before
+        # extracting the side-effect-free real one-cycle callback. The frozen
+        # physical modules are identical; only driver orchestration changed.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "37352c88a763492cdafa47d51d587c52285baf86e52840fa7c2c0485a6a80ff5",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # S002 accepted boundary before lowering the exact periodic-map
         # activation threshold from 1024 to 32 cycles.
@@ -365,6 +474,7 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "out", "resume", "skip_existing", "checkpoint_every_blocks",
     "checkpoint_path", "snapshot_every", "print_every", "max_blocks",
     "cycles_max",
+    "pd_high_cycle", "pd_high_cycle_max_segment", "pd_high_cycle_checkpoint_decades",
 }
 
 
@@ -896,6 +1006,31 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     next_block = start_block
     stable_endpoint = args.fatigue_endpoint == "stable_crack_birth"
     spatial_birth_endpoint = args.fatigue_endpoint == "stable_spatial_crack_birth"
+    high_cycle_mode_rows = []
+
+    def build_high_cycle_adapter():
+        def evaluator(adapter):
+            payload = evaluate_dormant_exact_cycle(
+                args=args, shield_on=shield_on, mesh=adapter.mesh, patch=adapter.patch,
+                pd_state=adapter.pd_state, crack=crack, plast_chain=plast_chain,
+                cached_fem=cached_fem, fem_transaction=fem_transaction,
+                sigma_max=sigma_max, sigma_min=sigma_min, ep_gp=adapter.ep_gp,
+                rho_gp=adapter.rho_gp, epsp_acc_gp=adapter.epsp_acc_gp, u=adapter.u,
+                plastic_work=adapter.plastic_work, cycles=adapter.cycles,
+            )
+            adapter.ep_gp = payload.pop("ep_gp"); adapter.rho_gp = payload.pop("rho_gp")
+            adapter.epsp_acc_gp = payload.pop("epsp_acc_gp"); adapter.u = payload.pop("u")
+            adapter.pd_state.log_delivery_memory = payload.pop("log_delivery_memory")
+            adapter.pd_state.delivery_memory = np.where(np.isfinite(adapter.pd_state.log_delivery_memory),
+                np.exp(np.minimum(adapter.pd_state.log_delivery_memory,709.0)),0.0)
+            for field in ("available","embryo","stable","inactive","completion"):
+                setattr(adapter.pd_state,field,payload.pop(field))
+            return payload
+        return SpatialPDDormantAdapter(
+            patch=patch, pd_state=pd_state, mesh=mesh, ep_gp=ep_gp, rho_gp=rho_gp,
+            epsp_acc_gp=epsp_acc_gp, u=u, cycles=cycles, plastic_work=Wp_total,
+            cycle_evaluator=evaluator,
+        )
 
     for ib in range(start_block, args.max_blocks):
         if (
@@ -909,6 +1044,38 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             or (spatial_birth_endpoint and pd_state.cycles_front_capture is not None)
         ):
             break
+
+        if args.pd_high_cycle:
+            adapter = build_high_cycle_adapter()
+            eligible, _ = adapter.dormant_eligibility()
+            if eligible:
+                decade = 10.0 ** math.ceil(math.log10(max(cycles, 1.0)) - 1e-14)
+                if decade <= cycles * (1.0 + 1e-14): decade *= 10.0
+                segment = min(args.cycles_max - cycles, args.pd_high_cycle_max_segment,
+                              max(decade - cycles, 1.0))
+                engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
+                    projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2)))
+                hc = engine.advance(segment)
+                if hc.cycles_consumed > 0.0:
+                    ep_gp = adapter.ep_gp.copy(); rho_gp = adapter.rho_gp.copy()
+                    epsp_acc_gp = adapter.epsp_acc_gp.copy(); u = adapter.u.copy()
+                    Wp_total = adapter.plastic_work; cycles = adapter.cycles
+                    _, _, u_zero_hc, _, _ = cached_fem.affine(ep_gp, sigma_max, sigma_min, u)
+                    _, _, s1_res_hc, _ = stress_state_intact(mesh, u_zero_hc, ep_gp, Dmat, mat)
+                    last_residual = project_gp_to_nodes(mesh, s1_res_hc)
+                    high_cycle_mode_rows.extend({
+                        "cycles_total": cycles, "requested_segment": segment,
+                        "mode": mode.mode, "accepted_cycles": mode.cycles,
+                        "exact_map_evaluations": mode.exact_map_evaluations,
+                        "accepted": mode.accepted, "detail": mode.detail,
+                    } for mode in hc.modes)
+                    mode_path = outdir / "v9_pd_high_cycle_mode_history.json"
+                    tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
+                    tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
+                    os.replace(tmp_mode, mode_path)
+                    engine.write_atomic_mode_checkpoint(outdir / "v9_pd_high_cycle_controller.json")
+                    if not hc.event_guard_reached:
+                        continue
 
         geometry_audit = _geometry_resolution_audit(
             mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
@@ -1917,6 +2084,11 @@ def build_parser():
     p.add_argument("--block-cycles", type=float, default=1e7, dest="block_cycles")
     p.add_argument("--min-block-cycles", type=float, default=1e-6, dest="min_block_cycles")
     p.add_argument("--max-blocks", type=int, default=3000, dest="max_blocks")
+    p.add_argument("--pd-high-cycle", action="store_true", dest="pd_high_cycle",
+                   help="enable the versioned dormant fixed-topology event-to-event engine")
+    p.add_argument("--pd-high-cycle-max-segment", type=float, default=1e9, dest="pd_high_cycle_max_segment")
+    p.add_argument("--pd-high-cycle-checkpoint-decades", action="store_true", default=True,
+                   dest="pd_high_cycle_checkpoint_decades")
     p.add_argument("--target-dep-eq-block", type=float, default=2e-4, dest="target_dep_eq_block")
     p.add_argument("--target-rho-rel-block", type=float, default=0.05, dest="target_rho_rel_block")
     p.add_argument("--target-delivery-events", type=float, default=float("inf"), dest="target_delivery_events", help="optional cap on expected plastic-delivery events per adaptive block")
