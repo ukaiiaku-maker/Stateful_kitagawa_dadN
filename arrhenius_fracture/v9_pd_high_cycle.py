@@ -117,6 +117,7 @@ class HighCycleConfig:
     exact_retry_cycles: int = 8
     event_guard_cycles: float = 2.0
     minimum_positive_coordinate: float = -math.inf
+    max_exact_map_evaluations: int = 128
 
 
 @dataclass
@@ -451,6 +452,13 @@ class DormantPDHighCycleEngine:
             return AdvanceResult(0.0, False, self.exact_map_evaluations,
                                  self.accepted_projected_cycles, self.mode_history, True)
         while consumed < requested:
+            if self.exact_map_evaluations >= self.config.max_exact_map_evaluations:
+                self.mode_history.append(ModeRecord(
+                    "efficiency_budget", 0.0, 0, False,
+                    {"exact_map_evaluations": self.exact_map_evaluations,
+                     "accepted_projected_cycles": self.accepted_projected_cycles},
+                ))
+                break
             ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
             remaining = requested - consumed
             current_residual, current_fields = active_distance(self.adapter, ev.state_start, ev.state_end)

@@ -66,3 +66,38 @@ real projected physical state, but one-cycle training still limits useful
 segment growth. The next numerical task is a multi-cycle exact training burst;
 the direct embedded macro-stepper remains the accepted fallback and no
 accelerated low-stress material result is yet claimed.
+
+The same archived 690.443200494 MPa trajectory subsequently completed an
+atomic `N=1e8` boundary (generation
+`generation_3655f6ccf3044ebf8a826261d9987b23`). It remains dormant: 4,349
+available realized sites, zero realized births/stable sites, zero bond damage,
+and no seed/front/topology transition. The maximum nodal cumulative birth
+action is `0.140255573333055`, the maximum final per-cycle birth intensity is
+`6.978364374432825e-13`, and the minimum remaining persistent-site threshold
+action is `9.647106699392403e-6`. This is a finite runout/checkpoint, not an
+endurance classification. Expected-population diagnostics reach about 0.627
+births/stable sites and remain distinct from the realized persistent clocks.
+
+Production fallback was bounded with a private-map efficiency budget. Once
+the projective fit ceased providing useful cycles per exact map, control
+returned to the authoritative embedded macro-stepper and deferred another
+qualification until the next logarithmic checkpoint. Mode-history writes are
+append-only across subsequent atomic resumes.
+
+An extension of the same condition reached atomic generation
+`generation_c18519735d8640a8b6cad153c26158ff` at
+`N=168634947.0289538`, again with zero realized births, stable sites, damage,
+or topology change. The maximum cumulative action increased only from
+`0.140255573333055` to `0.140256540348356` over the additional 6.86e7 cycles;
+the nearest remaining threshold changed from `9.647106699392403e-6` to
+`9.645864666437046e-6`. The actual final maximum birth rate is
+`1.4023253737703178e-13` per cycle and the direct controller estimates a
+`2.00129794714e10`-cycle next wait. This strong rate decay is scientifically
+important but is not by itself a proof of endurance.
+
+The current single-cycle projective fit is not production-efficient on this
+tail: exact state curvature is below `1e-9`, but two-cycle log-hazard prediction
+error remains about `9.4e-4`, above the `2e-4` admission tolerance. A longer
+exact training window/rate-separated fit is therefore required before a
+credible 1e10--1e12 continuation; brute-force continuation was stopped at the
+hash-verified atomic boundary.

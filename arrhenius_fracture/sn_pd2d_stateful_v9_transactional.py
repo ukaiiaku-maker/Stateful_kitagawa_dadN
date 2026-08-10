@@ -176,6 +176,8 @@ def _active_source_sha256() -> dict[str, str]:
         "physical_integrator": plastic_chain_log_rates.__module__,
         "cached_fem": CachedIntactFEM.__module__,
         "array_codec": AtomicArrayGenerationStore.__module__,
+        "pd_high_cycle_engine": DormantPDHighCycleEngine.__module__,
+        "pd_high_cycle_adapter": SpatialPDDormantAdapter.__module__,
     }
     paths = {name: Path(getattr(sys.modules.get(module), "__file__", "")) for name, module in modules.items()}
     if not driver_file.is_file() or any(not path.is_file() for path in paths.values()):
@@ -187,6 +189,29 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Completed 690.443 MPa N=1e8 boundary before making the diagnostic
+        # high-cycle mode history append-only across atomic restarts.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "454c00588a077a3be3e9d9fe3261f643156ff7eca4b92831f5697a8e46ef7fc8",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_high_cycle_adapter": "c314f55d18bfa929c8345ec0c893a0c3554230f6e672188d125b416f93cc3a6e",
+        "pd_high_cycle_engine": "d5d92d616a9ba8dc3726bb544070c3f1fdd7a2bdef59e49edacfe5eb2f8085cc",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Accepted 690.443 MPa N=1.6023057e7 boundary before adding an
+        # orchestration-only projective efficiency budget and fingerprinting
+        # the already active high-cycle engine/adapter sources.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "e05cc9d486d76c3520dc3963dfc5f89f4300b22be1dda62b525fd9f7f6b10de0",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # Historical K360 accepted boundary immediately before sub-ULP event
         # localization repair; physical arrays and stochastic state unchanged.
@@ -1027,7 +1052,13 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     next_block = start_block
     stable_endpoint = args.fatigue_endpoint == "stable_crack_birth"
     spatial_birth_endpoint = args.fatigue_endpoint == "stable_spatial_crack_birth"
+    high_cycle_mode_path = outdir / "v9_pd_high_cycle_mode_history.json"
     high_cycle_mode_rows = []
+    if resumed and high_cycle_mode_path.is_file():
+        existing_mode_rows = json.loads(high_cycle_mode_path.read_text())
+        if not isinstance(existing_mode_rows, list):
+            raise RuntimeError("high-cycle mode history is not a JSON list")
+        high_cycle_mode_rows = existing_mode_rows
     high_cycle_retry_after = float(args.pd_high_cycle_start_cycles)
 
     def build_high_cycle_adapter():
@@ -1085,7 +1116,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     "exact_map_evaluations": mode.exact_map_evaluations,
                     "accepted": mode.accepted, "detail": mode.detail,
                 } for mode in hc.modes)
-                mode_path = outdir / "v9_pd_high_cycle_mode_history.json"
+                mode_path = high_cycle_mode_path
                 tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
                 tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
                 os.replace(tmp_mode, mode_path)
@@ -1097,7 +1128,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     _, _, u_zero_hc, _, _ = cached_fem.affine(ep_gp, sigma_max, sigma_min, u)
                     _, _, s1_res_hc, _ = stress_state_intact(mesh, u_zero_hc, ep_gp, Dmat, mat)
                     last_residual = project_gp_to_nodes(mesh, s1_res_hc)
-                    if not hc.event_guard_reached:
+                    efficiency_limited = any(mode.mode == "efficiency_budget" for mode in hc.modes)
+                    if efficiency_limited:
+                        high_cycle_retry_after = 10.0 ** math.ceil(
+                            math.log10(max(cycles + 1.0, 10.0))
+                        )
+                    if not hc.event_guard_reached and not efficiency_limited:
                         continue
                 else:
                     # The authoritative embedded macro-stepper is the efficient

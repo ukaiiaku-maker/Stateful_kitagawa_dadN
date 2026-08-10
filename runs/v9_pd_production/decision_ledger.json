@@ -146,7 +146,23 @@
       "classification": "performance defect",
       "issue": "one-cycle projective training admits only O(1-10) real cycles per segment on the evolving K360 tail",
       "evidence": "the conservation-closed real engine persisted 38 accepted projected cycles but a bounded retry remained in advance() for minutes before reaching the next macro block",
-      "resolution": "implement an exact multi-cycle training burst and rate-separated drift fit before further production continuation",
+      "resolution": "cap private exact-map work, return to the authoritative embedded macro-stepper when projected cycles per map are inadequate, and defer multi-cycle training to the next acceleration refinement",
+      "status": "resolved_with_bounded_fallback"
+    },
+    {
+      "id": "HC-019",
+      "classification": "implementation_defect",
+      "issue": "diagnostic high-cycle mode history was replaced rather than extended on process restart",
+      "evidence": "the completed N=1e8 resume retained only its latest 14 mode records although earlier accepted projective evidence remained documented",
+      "resolution": "load the existing JSON list on atomic resume and replace the file atomically only after appending new records",
+      "status": "resolved"
+    },
+    {
+      "id": "HC-020",
+      "classification": "performance defect",
+      "issue": "single-cycle hazard training remains too short for the decaying 690.443 MPa tail",
+      "evidence": "at N=1e8 physical-state curvature was 8.1e-10, but the smallest two-cycle proposal retained 9.39e-4 log-hazard prediction error; direct continuation to N=1.68634947e8 reduced the rate to 1.4023e-13/cycle and predicted wait to 2.0013e10 cycles",
+      "resolution": "preserve the atomic tail and implement a multi-cycle/rate-separated training fit before 1e10-scale continuation; do not brute-force the estimated wait",
       "status": "open"
     }
   ]
