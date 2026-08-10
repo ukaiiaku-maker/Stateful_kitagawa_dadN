@@ -164,7 +164,11 @@ def main():
         last_h = H
 
     final_stationary = bool(state_rows[-1]["stationary_periodic_orbit"])
-    if final_stationary:
+    # Canonical v3 production tables contain physical checkpoints only.
+    # Stationary projections must live in a separately named derived product;
+    # otherwise a later direct checkpoint can coexist with an earlier
+    # projected row under the same condition/N key.
+    if final_stationary and not args.canonical_elastic_v3:
         final_kernel = kernels[-1]
         subset = [row for row in gate_rows if float(row["N"]) == targets[-1]]
         p = stationary_marked_renewal(1.0, final_kernel["cycle_hazard"],

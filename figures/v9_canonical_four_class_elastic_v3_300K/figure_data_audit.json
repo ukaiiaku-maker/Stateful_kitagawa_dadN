@@ -1,0 +1,13 @@
+{
+  "schema": "V9_CANONICAL_300K_FIGURE_DATA_AUDIT_1",
+  "commit_expected": "5d6b1eef331ca88a4a55c8a34fc7d988f2882ac9",
+  "direct_checkpoint_conditions": 48,
+  "descent_checkpoint_conditions": 32,
+  "gate_rows": 24576,
+  "atomic_checkpoints_verified": 48,
+  "H_relationship": "quiet_tail_state == atomic summary == atomic birth capsule == corrected survival",
+  "cycle_hazard_semantics": "direct phase-integrated checkpoint kernel quantity; never H/N",
+  "survival_semantics": "derived from direct checkpoint H and evaluated gate admission",
+  "practical_stress_semantics": "bracketed finite_1e14 interpolation, not endurance limit",
+  "stationary_projection_in_physical_rows": false
+}

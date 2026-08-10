@@ -7,6 +7,7 @@ import numpy as np
 
 from arrhenius_fracture.v9_quiet_tail_kernel import stationary_marked_renewal
 from scripts.run_v9_quiet_tail_kernel import atomic_merge_csv
+from scripts.rebuild_v9_endurance_descent import reconstruct_direct_checkpoint_survival
 
 
 class QuietTailKernelTests(unittest.TestCase):
@@ -23,6 +24,24 @@ class QuietTailKernelTests(unittest.TestCase):
                 rows = list(csv.DictReader(stream))
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["value"], "2")
+
+    def test_direct_checkpoint_H_replaces_stationary_projection(self):
+        states = [
+            {"material_class": "weak-T", "option_id": "row", "sigma_a_MPa": 329,
+             "N": 1e8, "H_cleave": 7.8e-6},
+            {"material_class": "weak-T", "option_id": "row", "sigma_a_MPa": 329,
+             "N": 1e10, "H_cleave": 7.7e-4},
+        ]
+        gates = [
+            {"material_class": "weak-T", "sigma_a_MPa": 329, "N": N,
+             "admitted_length_m": 1e-6}
+            for N in (1e8, 1e10)
+        ]
+        rows = reconstruct_direct_checkpoint_survival(states, gates)
+        self.assertEqual(rows[-1]["H_cleave"], 7.7e-4)
+        self.assertAlmostEqual(rows[-1]["S_stable_birth"], np.exp(-7.7e-4))
+        self.assertEqual(rows[-1]["estimator"],
+                         "direct_checkpoint_H_plus_evaluated_gate_admission")
 
     def test_all_admitted_marks_reduce_to_poisson_attempt_survival(self):
         rows = [
