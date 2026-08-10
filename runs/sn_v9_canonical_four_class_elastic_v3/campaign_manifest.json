@@ -32,5 +32,12 @@
     "weak-T": "undetermined", "ceramic": "undetermined"
   },
   "prior_bulk_plasticity_results_role": "noncanonical_bulk_plasticity_controls",
-  "temperature_work_resumed": false
+  "temperature_work_resumed": false,
+  "stress_descent_status": "complete_two_actual_bracketing_conditions_per_class",
+  "stress_selection": "sequential_actual_response_log_hazard_secant_not_uniform_sweep",
+  "descent_conditions_completed": 8,
+  "descent_trajectories_completed": 32,
+  "descent_gate_result": "all_evaluated_phase_Xi_points_admitted",
+  "practical_1e14_survival_stresses_bracketed": [0.9, 0.5, 0.1],
+  "strict_endurance_inferred_from_finite_horizon": false
 }

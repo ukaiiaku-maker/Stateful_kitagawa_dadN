@@ -153,11 +153,16 @@ def energy_gate_envelope(condition, kernel, xi_values):
                 evaluation_cache=phase_cache)
             trial_rows = gate["trial_rows"]
             released = max((float(row["elastic_release_J_per_m"]) for row in trial_rows), default=0.0)
+            minimum_margin = min(
+                (float(row["energy_residual_J_per_m"]) for row in trial_rows),
+                default=math.nan,
+            )
             rows.append({
                 "phase_index": phase_index, "phase": float(phi), "Xi": float(xi),
                 "proposed_length_m": gate["stochastic_proposed_event_length_m"],
                 "maximum_released_energy_J_per_m": released,
                 "resistance_J_per_m2": gate["hazard_resistance_J_per_m2"],
+                "minimum_energy_gate_margin_J_per_m": minimum_margin,
                 "admitted_length_m": gate["committed_event_length_m"],
                 "reason": gate["arrest_reason"],
                 "mesh_resolved": any(bool(r["topology_changed"]) for r in trial_rows),

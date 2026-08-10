@@ -8,11 +8,20 @@
     {"material_class": "Peak", "sigma_a_MPa": 735.9214951373579, "horizons": [1e8, 1e10, 1e12, 1e14]},
     {"material_class": "DBTT", "sigma_a_MPa": 700.0, "horizons": [1e8, 1e10, 1e12, 1e14]},
     {"material_class": "weak-T", "sigma_a_MPa": 350.0, "horizons": [1e8, 1e10, 1e12, 1e14]},
-    {"material_class": "ceramic", "sigma_a_MPa": 400.0, "horizons": [1e8, 1e10, 1e12, 1e14]}
+    {"material_class": "ceramic", "sigma_a_MPa": 400.0, "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "Peak", "sigma_a_MPa": 650.0, "role": "descent_informative", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "Peak", "sigma_a_MPa": 631.0, "role": "descent_survival_bracket", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "DBTT", "sigma_a_MPa": 660.0, "role": "descent_informative", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "DBTT", "sigma_a_MPa": 648.0, "role": "descent_survival_bracket", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "weak-T", "sigma_a_MPa": 329.0, "role": "descent_informative", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "weak-T", "sigma_a_MPa": 310.0, "role": "descent_survival_bracket", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "ceramic", "sigma_a_MPa": 342.0, "role": "descent_informative", "horizons": [1e8, 1e10, 1e12, 1e14]},
+    {"material_class": "ceramic", "sigma_a_MPa": 332.0, "role": "descent_survival_bracket", "horizons": [1e8, 1e10, 1e12, 1e14]}
   ],
   "finite_life_verification": {
     "material_class": "Peak", "sigma_a_MPa": 804.139,
     "N_stable_crack_birth": 255.065512355417
   },
-  "atomic_checkpoint_root": "runs/sn_v9_canonical_four_class_elastic_v3/quiet_tail_checkpoints"
+  "atomic_checkpoint_root": "runs/sn_v9_canonical_four_class_elastic_v3/quiet_tail_checkpoints",
+  "descent_checkpoint_layout": "<class>/descent/sigmaA_<stress>MPa/N_<cycles>"
 }

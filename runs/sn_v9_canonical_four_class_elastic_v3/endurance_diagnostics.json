@@ -10,7 +10,15 @@
     "Peak": "undetermined", "DBTT": "undetermined",
     "weak-T": "undetermined", "ceramic": "undetermined"
   },
-  "stable_birth_basis": "all sampled phase-Xi gates admit through 1e14, but stationary signed-MPZ asymptote is not yet proven",
+  "stable_birth_basis": "all sampled phase-Xi gates admit at eight descended conditions through 1e14, but no accepted-event lower-bound or permanent-closure proof is established",
   "finite_runout_used_as_endurance_proof": false,
-  "exp_minus_H_semantics": "no_cleavage_attempt_survival; equals tabulated stable-birth survival only where evaluated admission probability is one"
+  "exp_minus_H_semantics": "no_cleavage_attempt survival; equals tabulated stable-birth survival only where evaluated admission probability is one",
+  "descent_1e14": {
+    "Peak": {"lower_MPa": 631.0, "lower_H": 0.07468102607749416, "lower_S": 0.92803945950882, "upper_MPa": 650.0, "upper_H": 3.0806321803516563, "upper_S": 0.04593021129193332},
+    "DBTT": {"lower_MPa": 648.0, "lower_H": 0.10357533387488073, "lower_S": 0.9016080985517037, "upper_MPa": 660.0, "upper_H": 1.337240037989723, "upper_S": 0.26256935088661904},
+    "weak-T": {"lower_MPa": 310.0, "lower_H": 0.08488388614248607, "lower_S": 0.9186189425981006, "upper_MPa": 329.0, "upper_H": 7.645746665230013, "upper_S": 0.0004780732162028233},
+    "ceramic": {"lower_MPa": 332.0, "lower_H": 0.07439511296208634, "lower_S": 0.9283048360974254, "upper_MPa": 342.0, "upper_H": 0.9250680904348206, "upper_S": 0.396504419997448}
+  },
+  "phase_Xi_rejected_fraction_all_descent_checkpoints": 0.0,
+  "practical_survival_estimates_file": "300K_practical_survival_stress_estimates.csv"
 }

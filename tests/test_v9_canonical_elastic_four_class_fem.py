@@ -124,6 +124,7 @@ class CanonicalElasticFourClassFEMTests(unittest.TestCase):
         condition = self.make(); condition.birth.hazard_threshold_action = 1e100
         condition.advance(7.0)
         kernel = phase_resolved_cycle(condition)
+        self.assertGreaterEqual(kernel["cycle_hazard"], 0.0)
         with tempfile.TemporaryDirectory() as directory:
             generation = save_condition_checkpoint(
                 condition, Path(directory), kernel, {"N": condition.cycles})
