@@ -26,6 +26,49 @@ import numpy as np
 from .fatigue_v1 import ExpFloorBarrierParams, ScaledExpFloorBarrier
 
 
+@dataclass(frozen=True)
+class AuditedExpFloorBarrier:
+    """Direct executable form of the audited four-class barrier surface."""
+
+    G00_eV: float
+    gT_eV_per_K: float
+    sigc0_Pa: float
+    sT_Pa_per_K: float
+    alpha: float
+    exponent: float
+    floor_fraction: float
+    rate_prefactor: float
+    Tref_K: float = 481.33
+    floor_min_eV: float = 1.0e-4
+    floor_max_fraction: float = 0.95
+
+    def deltaG_eV(self, stress_Pa, T_K):
+        sigma = np.maximum(np.asarray(stress_Pa, dtype=float), 0.0)
+        dT = float(T_K) - self.Tref_K
+        G0 = max(self.G00_eV + self.gT_eV_per_K * dT, 1.0e-12)
+        sigc = max(self.sigc0_Pa + self.sT_Pa_per_K * dT, 1.0)
+        floor = min(
+            self.floor_max_fraction * G0,
+            max(self.floor_min_eV, self.floor_fraction * G0),
+        )
+        return np.maximum(
+            floor + (G0 - floor) * np.exp(
+                -max(self.alpha, 0.0)
+                * np.power(sigma / sigc, max(self.exponent, 1.0e-9))
+            ),
+            0.0,
+        )
+
+    def rate(self, stress_Pa, T_K):
+        kb_eV_per_K = 8.617333262145e-5
+        return self.rate_prefactor * np.exp(np.clip(
+            -self.deltaG_eV(stress_Pa, T_K)
+            / max(kb_eV_per_K * float(T_K), 1.0e-30),
+            -700.0,
+            0.0,
+        ))
+
+
 @dataclass
 class ArrheniusPlasticChain:
     emit: ScaledExpFloorBarrier
@@ -138,6 +181,17 @@ def build_chain_from_namespace(args, b_m: float) -> ArrheniusPlasticChain:
         value = getattr(args, arg_name, None)
         if value is not None:
             setattr(base, field_name, float(value) * scale)
+
+    audited = getattr(args, "audited_four_class_barriers", None)
+    if audited is not None:
+        def barrier(name):
+            return AuditedExpFloorBarrier(**dict(audited[name]))
+        return ArrheniusPlasticChain(
+            emit=barrier("emission"), peierls=barrier("peierls"),
+            taylor=barrier("taylor"), b_m=float(b_m),
+            phi_taylor_max=float(getattr(args, "phi_taylor_max", 20.0)),
+            plastic_event_strain=float(getattr(args, "plastic_event_strain", 1.0e-5)),
+        )
 
     emit = ScaledExpFloorBarrier(
         base=base, mechanism="surface_dislocation_emission",

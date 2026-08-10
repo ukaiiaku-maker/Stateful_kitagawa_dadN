@@ -163,6 +163,11 @@ class ScratchExpFloorBarrier:
         self.G0_mu_power = float(args.crack_G0_mu_power)
         self.sigc_mu_power = float(args.crack_sigc_mu_power)
         self.S_crack_kB = float(args.S_crack_kB)
+        self.gT_eV_per_K = getattr(args, "crack_gT_eV_per_K", None)
+        self.sT_Pa_per_K = (
+            None if getattr(args, "crack_sT_GPa_per_K", None) is None
+            else float(args.crack_sT_GPa_per_K) * 1.0e9
+        )
         self.rate_prefactor = float(args.nu0_crack)
 
     def _G0_sigc(self, T_K):
@@ -173,6 +178,12 @@ class ScratchExpFloorBarrier:
             )
             G0 = self.G00_eV * ratio ** self.G0_mu_power
             sigc = self.sigc0_Pa * ratio ** self.sigc_mu_power
+        elif self.T_mode == "audited_linear":
+            if self.gT_eV_per_K is None or self.sT_Pa_per_K is None:
+                raise RuntimeError("audited_linear cleavage requires exact temperature slopes")
+            dT = float(T_K) - self.Tref_K
+            G0 = self.G00_eV + float(self.gT_eV_per_K) * dT
+            sigc = self.sigc0_Pa + float(self.sT_Pa_per_K) * dT
         else:
             G0 = self.G00_eV
             sigc = self.sigc0_Pa
@@ -884,6 +895,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     last_diag = None
     next_block = start_block
     stable_endpoint = args.fatigue_endpoint == "stable_crack_birth"
+    spatial_birth_endpoint = args.fatigue_endpoint == "stable_spatial_crack_birth"
 
     for ib in range(start_block, args.max_blocks):
         if (
@@ -894,6 +906,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             or pd_state.cycles_precapture_stalled is not None
             or geometry_invalid_reason is not None
             or (stable_endpoint and pd_state.cycles_first_stable is not None)
+            or (spatial_birth_endpoint and pd_state.cycles_front_capture is not None)
         ):
             break
 
@@ -1341,7 +1354,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 f"gsat={int(geometry_saturated)} abort={int(diag.diffuse_abort)}"
             )
 
-        if ib == 0 or (args.snapshot_every > 0 and ib % args.snapshot_every == 0):
+        if getattr(args, "pd_image_policy", "selected") == "selected" and (
+            ib == 0 or (args.snapshot_every > 0 and ib % args.snapshot_every == 0)
+        ):
             patch.plot_snapshot(
                 pd_state,
                 outdir / f"pd_patch_block_{ib:05d}.png",
@@ -1369,6 +1384,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 or pd_state.cycles_precapture_stalled is not None
                 or geometry_invalid_reason is not None
                 or (stable_endpoint and pd_state.cycles_first_stable is not None)
+                or (spatial_birth_endpoint and pd_state.cycles_front_capture is not None)
             )
         )
         if checkpoint_due:
@@ -1416,26 +1432,33 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             patch=patch,
             rows=rows,
         )
-    patch.plot_snapshot(pd_state, outdir / "pd_patch_final.png", title=f"final N={cycles:.3e}")
-    patch.plot_initiation_diagnostics(
-        pd_state,
-        outdir / "pd_initiation_diagnostics_final.png",
-        title=f"{case_name}, sigma_a={sigma_a_MPa:g} MPa, final N={cycles:.3e}",
+    image_policy = getattr(args, "pd_image_policy", "selected")
+    save_terminal_image = image_policy == "selected" or (
+        image_policy == "event_only"
+        and (pd_state.cycles_first_stable is not None or pd_state.cycles_front_capture is not None)
     )
+    if save_terminal_image:
+        patch.plot_snapshot(pd_state, outdir / "pd_patch_final.png", title=f"final N={cycles:.3e}")
+        patch.plot_initiation_diagnostics(
+            pd_state,
+            outdir / "pd_initiation_diagnostics_final.png",
+            title=f"{case_name}, sigma_a={sigma_a_MPa:g} MPa, final N={cycles:.3e}",
+        )
     epsp_node, rho_node, P, Dloc = project_plastic_state(
         mesh, epsp_acc_gp, rho_gp, args.epsp_shield_scale, args.epsp_damage_scale
     )
-    _plot_fem_fields(
-        mesh,
-        [
-            ("accumulated eps_p", epsp_node),
-            ("rho (m^-2)", rho_node),
-            ("residual sigma1 (MPa)", last_residual * 1e-6),
-        ],
-        outdir / "fem_fields_final.png",
-        root_xy,
-        feature_nodes,
-    )
+    if save_terminal_image:
+        _plot_fem_fields(
+            mesh,
+            [
+                ("accumulated eps_p", epsp_node),
+                ("rho (m^-2)", rho_node),
+                ("residual sigma1 (MPa)", last_residual * 1e-6),
+            ],
+            outdir / "fem_fields_final.png",
+            root_xy,
+            feature_nodes,
+        )
     np.savez_compressed(
         outdir / "pd_state_final.npz",
         global_nodes=patch.global_nodes,
@@ -1504,7 +1527,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_audit_final = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
-    if stable_endpoint and pd_state.cycles_first_stable is not None:
+    if spatial_birth_endpoint and pd_state.cycles_front_capture is not None:
+        status = "stable_spatial_crack_birth"
+    elif stable_endpoint and pd_state.cycles_first_stable is not None:
         status = "stable_crack_birth"
     elif geometry_invalid_reason is not None:
         status = "geometry_invalid_underresolved"
@@ -1560,6 +1585,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "run_signature": _checkpoint_signature(args, case_name, sigma_a_MPa),
         "coupling": "one_way_FEM_to_PD_with_local_PD_redistribution",
         "case": case_name,
+        "mechanics_treatment": "stateful_PD",
+        "fatigue_endpoint": args.fatigue_endpoint,
+        "pd_image_policy": getattr(args, "pd_image_policy", "selected"),
+        "four_class_option_id": getattr(args, "four_class_option_id", None),
+        "four_class_registry_audit": getattr(args, "four_class_registry_audit", None),
+        "four_class_transfer_contract": getattr(args, "four_class_transfer_contract", None),
         "fatigue_model": args.fatigue_model,
         "fatigue_model_preset_applied": bool(args.fatigue_model_preset_applied),
         "fatigue_model_role": (
@@ -1761,6 +1792,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "pd_stochastic_transition_probability_cap": float(args.max_transition_probability),
         "pd_rng_streams": "independent_candidate_and_event_streams_from_pd_seed",
         "root_radius_initial_m": root_radius0,
+        "analytic_notch_root_radius_m": float(geom.root_radius),
         "root_radius_final_m": local_root_radius(mesh, feature_nodes),
         "root_radius_over_spacing_final": float(geometry_audit_final.get("root_radius_over_spacing", np.nan)),
         "minimum_element_area_over_initial_final": float(geometry_audit_final.get("minimum_element_area_over_initial", np.nan)),
@@ -1837,6 +1869,8 @@ def run_sweep(args):
                         "geometry_invalid_underresolved",
                         "right_censored",
                         "right_censored_geometry_saturated",
+                        "stable_crack_birth",
+                        "stable_spatial_crack_birth",
                     }
                     complete = (
                         cached.get("status") in complete_statuses
@@ -1951,8 +1985,10 @@ def build_parser():
     p.add_argument("--crack-exp-a", type=float, default=0.70, dest="crack_exp_a")
     p.add_argument("--crack-exp-n", type=float, default=0.60, dest="crack_exp_n")
     p.add_argument("--crack-floor-frac", type=float, default=0.010, dest="crack_floor_frac")
-    p.add_argument("--crack-T-mode", choices=["linear", "mu_scale"], default="mu_scale", dest="crack_T_mode")
+    p.add_argument("--crack-T-mode", choices=["linear", "mu_scale", "audited_linear"], default="mu_scale", dest="crack_T_mode")
     p.add_argument("--crack-Tref-K", type=float, default=481.33, dest="crack_Tref_K")
+    p.add_argument("--crack-gT-eV-per-K", type=float, default=None, dest="crack_gT_eV_per_K")
+    p.add_argument("--crack-sT-GPa-per-K", type=float, default=None, dest="crack_sT_GPa_per_K")
     p.add_argument("--crack-mu-dlnmu-dT-per-K", type=float, default=-1.5e-4, dest="crack_mu_dlnmu_dT_per_K")
     p.add_argument("--crack-G0-mu-power", type=float, default=1.0, dest="crack_G0_mu_power")
     p.add_argument("--crack-sigc-mu-power", type=float, default=1.0, dest="crack_sigc_mu_power")
@@ -2120,9 +2156,11 @@ def build_parser():
     p.add_argument("--checkpoint-path", default="", dest="checkpoint_path")
     p.add_argument("--resume", action="store_true", dest="resume")
     p.add_argument("--snapshot-every", type=int, default=25, dest="snapshot_every")
+    p.add_argument("--pd-image-policy", choices=("none", "event_only", "selected"),
+                   default="selected", dest="pd_image_policy")
     p.add_argument("--print-every", type=int, default=1, dest="print_every")
     p.add_argument(
-        "--fatigue-endpoint", choices=("physical_handoff", "stable_crack_birth"),
+        "--fatigue-endpoint", choices=("physical_handoff", "stable_crack_birth", "stable_spatial_crack_birth"),
         default="physical_handoff", dest="fatigue_endpoint",
     )
     return p
