@@ -1,0 +1,22 @@
+{
+  "schema": "V9_FINAL_FOUR_CLASS_ZERO_LOAD_AUDIT_1",
+  "T_K": 300.0,
+  "sigma_Pa": 0.0,
+  "registry_sha256": "4ba723c80abcfdd7101cee0afaa9b4104eebf2a8e847892528128664829c7760",
+  "selection_sha256": "3267ac05595cee0800a81a6300e80cb0e71b216067c35cc7a50d82ac4c70e4a2",
+  "active_parameter_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+  "source_comparison": "authoritative UnifiedMPZFrontEngine.lambda_cleave",
+  "source_parity_all_exact": true,
+  "initial_state_all_rows": {
+    "mobile_total": 0.0,
+    "retained_total": 0.0,
+    "signed_K_shield_Pa_sqrt_m": 0.0,
+    "tip_radius_m": 4.553794235144863e-05
+  },
+  "rows": [
+    {"class":"Peak","option_id":"v913_paper_peak01_0242980_persistent_sites","active_parameter_row_sha256":"81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826","G_cleave_zero_eV":2.534540817318809,"raw_cleavage_rate_zero_s":2.6399047865146583e-31,"effective_cleavage_rate_zero_s":3.066292212012687e-105,"emission_rate_zero_per_site_s":3.3206110962121255e-21},
+    {"class":"DBTT","option_id":"v913_paper_dbtt01_0202500_persistent_sites","active_parameter_row_sha256":"32989bc4cba81a5d2d9ee4c84f46fb0494773b172b383ef80c5fa907dbfd7b21","G_cleave_zero_eV":1.340729352323424,"raw_cleavage_rate_zero_s":2.99735506590064e-11,"effective_cleavage_rate_zero_s":4.4881082869835694e-45,"emission_rate_zero_per_site_s":3.922926793619872e-27},
+    {"class":"weak-T","option_id":"v913_paper_weakT01_0129902_persistent_sites","active_parameter_row_sha256":"2d12d1b47cade7cb2486bb76d8f953aae5895499195f5558d645686783d9c432","G_cleave_zero_eV":1.5918719427780834,"raw_cleavage_rate_zero_s":1.8102075133876917e-15,"effective_cleavage_rate_zero_s":9.886301229437888e-58,"emission_rate_zero_per_site_s":1.8447013518682339e-10},
+    {"class":"ceramic","option_id":"v913_paper_ceramic01_0077080_persistent_sites","active_parameter_row_sha256":"98b20b4cba7d5d23d33efe16c551839480346557abb7e2f83a355fff6ff068e2","G_cleave_zero_eV":2.054949663861841,"raw_cleavage_rate_zero_s":3.0086040816152153e-23,"effective_cleavage_rate_zero_s":4.5388295187593955e-81,"emission_rate_zero_per_site_s":2.4029054550373395e-45}
+  ]
+}

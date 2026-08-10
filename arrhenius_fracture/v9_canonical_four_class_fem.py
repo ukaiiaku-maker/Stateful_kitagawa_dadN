@@ -143,18 +143,24 @@ class CanonicalFourClassFEMCondition:
         while True:
             proposal = self.fem_transaction.propose(self.fem, proposal_cycles)
             if proposal.normalized_error <= 1.0:
-                break
+                pre = self._root_history(self.fem)
+                post = self._root_history(proposal.state)
+                root_history = 0.5 * (pre + post)
+                birth_start = self.birth.copy()
+                try:
+                    endpoint = self.birth.advance_fem_phase_block(
+                        proposal_cycles, self.args.frequency_Hz, self.args.T,
+                        root_history,
+                    )
+                    break
+                except RuntimeError as exc:
+                    self.birth = birth_start
+                    if "failed to bracket persistent-site backstress root" not in str(exc):
+                        raise
             proposal_cycles *= 0.5
             self.rejected_blocks += 1
             if proposal_cycles < self.args.min_block_cycles:
-                raise RuntimeError("canonical FEM transaction failed below minimum block")
-        pre = self._root_history(self.fem)
-        post = self._root_history(proposal.state)
-        root_history = 0.5 * (pre + post)
-        birth_start = self.birth.copy()
-        endpoint = self.birth.advance_fem_phase_block(
-            proposal_cycles, self.args.frequency_Hz, self.args.T, root_history
-        )
+                raise RuntimeError("canonical FEM/MPZ transaction failed below minimum block")
         consumed = float(endpoint["cycles_consumed"])
         if consumed < proposal_cycles:
             localized = self.fem_transaction.propose(self.fem, consumed)

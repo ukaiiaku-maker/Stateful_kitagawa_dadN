@@ -10,8 +10,19 @@
   "stabilization_healing_active": false,
   "post_birth_growth_active": false,
   "stress_selection": "sequential_adaptive_log10_N50_gap",
-  "completed_valid_conditions": 5,
-  "invalid_diagnostic_conditions": 1,
-  "status": "fail_closed_on_canonical_ceramic_zero_load_cleavage_saturation",
-  "blocker": "The exact audited ceramic row gives a 1e-12 eV cleavage barrier and renewal-ceiling cleavage rate at zero stress and 300 K."
+  "canonical_options": {
+    "Peak": "v913_paper_peak01_0242980_persistent_sites",
+    "DBTT": "v913_paper_dbtt01_0202500_persistent_sites",
+    "weak-T": "v913_paper_weakT01_0129902_persistent_sites",
+    "ceramic": "v913_paper_ceramic01_0077080_persistent_sites"
+  },
+  "historical_rejected_transfer_controls": [
+    "v913_paper_weakT01_0257068_persistent_sites",
+    "v913_paper_ceramic01_0189364_persistent_sites"
+  ],
+  "completed_valid_conditions": 10,
+  "historical_control_conditions": 2,
+  "status": "final_v10227_rows_qualified_300K_skeletons_in_progress",
+  "parameter_provenance_correction_applied": true,
+  "zero_load_source_parity": "pass"
 }

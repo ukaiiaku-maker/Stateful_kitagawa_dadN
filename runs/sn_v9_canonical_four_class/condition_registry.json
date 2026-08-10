@@ -10,5 +10,12 @@
     "DBTT_300K_770",
     "weakT_300K_250",
     "ceramic_300K_zero"
+    ,"weakT_final_300K_400"
+    ,"weakT_final_300K_450"
+    ,"ceramic_final_300K_400"
+    ,"ceramic_final_300K_450"
+    ,"ceramic_final_300K_500"
+    ,"weakT_final_900K_400"
+    ,"weakT_final_1300K_400"
   ]
 }
