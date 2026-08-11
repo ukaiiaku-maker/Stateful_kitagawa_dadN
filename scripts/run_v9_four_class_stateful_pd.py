@@ -155,6 +155,7 @@ def build_parser():
     parser.add_argument("--shared-root-internal-max-cycles", type=float, default=1.0e5)
     parser.add_argument("--shared-root-transition-max-cycles", type=float, default=1.0e5)
     parser.add_argument("--shared-root-poststable-max-cycles", type=float, default=1.0e5)
+    parser.add_argument("--shared-root-survival-threshold-action", type=float, default=None)
     parser.add_argument("--min-block-cycles", type=float, default=1.0e-6)
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
@@ -181,7 +182,7 @@ def main(argv=None):
     cli = build_parser().parse_args(argv)
     args = build_legacy_parser().parse_args([])
     for name in (
-        "cycles_max", "block_cycles", "shared_root_internal_max_cycles", "shared_root_transition_max_cycles", "shared_root_poststable_max_cycles", "min_block_cycles", "max_blocks", "seed",
+        "cycles_max", "block_cycles", "shared_root_internal_max_cycles", "shared_root_transition_max_cycles", "shared_root_poststable_max_cycles", "shared_root_survival_threshold_action", "min_block_cycles", "max_blocks", "seed",
         "pd_seed", "global_cleavage_seed", "spatial_mark_seed",
         "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",

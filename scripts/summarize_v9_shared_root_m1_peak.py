@@ -14,13 +14,30 @@ import numpy as np
 
 
 CASES = {
-    "m1_2000_seed42": "Peak_2000/Peak/shielded/sigmaA_2000MPa",
+    "m1_2000_seed42_coarse_1e5_baseline": "Peak_2000/Peak/shielded/sigmaA_2000MPa",
+    "m1_2000_seed42_rate_separated_v2": "rate_separated_restart_from_fine_stable_v4/Peak/shielded/sigmaA_2000MPa",
     "m1_1500_seed42": "Peak_1500_VHCF/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed43": "Peak_1500_seed43/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed44": "Peak_1500_seed44/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed45": "Peak_1500_seed45/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed46_rate_separated": "Peak_1500_seed46_rate_separated/Peak/shielded/sigmaA_1500MPa",
 }
+
+CANONICAL_BY_STRESS_SEED = {
+    (2000.0, 42017, 42018): "m1_2000_seed42_rate_separated_v2",
+}
+
+
+def validate_condition_registry(entries):
+    seen = {}
+    for row in entries:
+        if not row["production_analyzer_eligible"]:
+            continue
+        key = (float(row["sigma_a_MPa"]), int(row["hazard_seed"]), int(row["mark_seed"]))
+        if key in seen:
+            raise ValueError(f"ambiguous canonical stress/seed rows: {key}: {seen[key]}, {row['condition']}")
+        seen[key] = row["condition"]
+    return seen
 
 
 def sha256(path: Path) -> str:
@@ -43,11 +60,15 @@ def main(argv=None):
     out = args.out or args.root / "qualification"
     out.mkdir(parents=True, exist_ok=True)
 
-    rows, manifest = [], {"schema": "V9_SHARED_ROOT_M1_PEAK_SUMMARY_1", "cases": {}}
+    rows, registry_rows = [], []
+    manifest = {"schema": "V9_SHARED_ROOT_M1_PEAK_SUMMARY_2", "cases": {}}
     for label, rel in CASES.items():
         case = args.root / rel
         summary_path = case / "summary.json"
         summary = json.loads(summary_path.read_text())
+        run_args = json.loads((case / "run_args.json").read_text())
+        hazard_seed = int(run_args["global_cleavage_seed"])
+        mark_seed = int(run_args["spatial_mark_seed"])
         mpz = summary["signed_mpz_state_final"]
         slip_pos = total(mpz["accumulated_slip_positive"])
         slip_neg = total(mpz["accumulated_slip_negative"])
@@ -86,6 +107,22 @@ def main(argv=None):
             "model_id": summary["cleavage_clock_model"],
             "restart_provenance": "hash-verified atomic v9 generation store",
         }
+        canonical_label = CANONICAL_BY_STRESS_SEED.get((float(summary["sigma_a_MPa"]), hazard_seed, mark_seed))
+        eligible = canonical_label in (None, label)
+        registry_rows.append({
+            "condition": label,
+            "sigma_a_MPa": float(summary["sigma_a_MPa"]),
+            "hazard_seed": hazard_seed,
+            "mark_seed": mark_seed,
+            "numerical_protocol": ("coarse_1e5_baseline" if label.endswith("coarse_1e5_baseline")
+                                   else "rate_separated_v2" if label.endswith("rate_separated_v2")
+                                   else "historical_mixed_protocol_diagnostic"),
+            "production_analyzer_eligible": eligible,
+            "canonical_condition": canonical_label,
+            "summary_path": str(summary_path),
+            "summary_sha256": sha256(summary_path),
+            "checkpoint_sha256": sha256(case / "checkpoint_latest.npz"),
+        })
 
     fields = list(rows[0])
     with (out / "endpoint_results.csv").open("w", newline="") as stream:
@@ -113,7 +150,16 @@ def main(argv=None):
     }
     (out / "seed_ensemble.json").write_text(json.dumps(ensemble, indent=2) + "\n")
 
-    control = args.root / CASES["m1_2000_seed42"]
+    validate_condition_registry(registry_rows)
+    registry = {
+        "schema": "V9_SHARED_ROOT_M1_PEAK_CONDITION_REGISTRY_1",
+        "uniqueness_key": ["sigma_a_MPa", "hazard_seed", "mark_seed"],
+        "selection_rule": "only production_analyzer_eligible rows may enter production S-N analysis",
+        "conditions": registry_rows,
+    }
+    (out / "condition_registry.json").write_text(json.dumps(registry, indent=2) + "\n")
+
+    control = args.root / CASES["m1_2000_seed42_coarse_1e5_baseline"]
     comparisons = {}
     for label, path in {
         "caller_partition_10x": args.root / "partition_2000_block1e4_v2/Peak/shielded/sigmaA_2000MPa",
@@ -146,6 +192,7 @@ def main(argv=None):
         "endpoint_results.csv": sha256(out / "endpoint_results.csv"),
         "seed_ensemble.json": sha256(out / "seed_ensemble.json"),
         "trajectory_equivalence.json": sha256(out / "trajectory_equivalence.json"),
+        "condition_registry.json": sha256(out / "condition_registry.json"),
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 

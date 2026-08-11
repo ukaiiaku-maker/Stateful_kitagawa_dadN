@@ -1,0 +1,95 @@
+{
+  "schema": "V9_SHARED_ROOT_M1_PEAK_CONDITION_REGISTRY_1",
+  "uniqueness_key": [
+    "sigma_a_MPa",
+    "hazard_seed",
+    "mark_seed"
+  ],
+  "selection_rule": "only production_analyzer_eligible rows may enter production S-N analysis",
+  "conditions": [
+    {
+      "condition": "m1_2000_seed42_coarse_1e5_baseline",
+      "sigma_a_MPa": 2000.0,
+      "hazard_seed": 42017,
+      "mark_seed": 42018,
+      "numerical_protocol": "coarse_1e5_baseline",
+      "production_analyzer_eligible": false,
+      "canonical_condition": "m1_2000_seed42_rate_separated_v2",
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_2000/Peak/shielded/sigmaA_2000MPa/summary.json",
+      "summary_sha256": "643a3680cfd6da45fdee519f1af4df6c8ad6a53dd048ff6be26d48ff85b454a3",
+      "checkpoint_sha256": "1b393acd26fe06714889946fb922928fb6939ef3f47caf032de5058a40507016"
+    },
+    {
+      "condition": "m1_2000_seed42_rate_separated_v2",
+      "sigma_a_MPa": 2000.0,
+      "hazard_seed": 42017,
+      "mark_seed": 42018,
+      "numerical_protocol": "rate_separated_v2",
+      "production_analyzer_eligible": true,
+      "canonical_condition": "m1_2000_seed42_rate_separated_v2",
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/rate_separated_restart_from_fine_stable_v4/Peak/shielded/sigmaA_2000MPa/summary.json",
+      "summary_sha256": "e77806656cdf1b9b377e078cb7974734081b0f775e7e9626ae221b6114cc45ca",
+      "checkpoint_sha256": "786930682158ebb454703b34b660d47958d4ed41f103cf893ee31ff2ba4f3db9"
+    },
+    {
+      "condition": "m1_1500_seed42",
+      "sigma_a_MPa": 1500.0,
+      "hazard_seed": 42017,
+      "mark_seed": 42018,
+      "numerical_protocol": "historical_mixed_protocol_diagnostic",
+      "production_analyzer_eligible": true,
+      "canonical_condition": null,
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_VHCF/Peak/shielded/sigmaA_1500MPa/summary.json",
+      "summary_sha256": "a3df1f1a156e9d74b06a419f2b7b18f0b853a799f933e2b0f263d0011112b8b3",
+      "checkpoint_sha256": "81d9e98c3f6cbdb3f060e4940072f5631ac0aa70fcd2ba74f3fc25ab7ceae350"
+    },
+    {
+      "condition": "m1_1500_seed43",
+      "sigma_a_MPa": 1500.0,
+      "hazard_seed": 42017,
+      "mark_seed": 43043,
+      "numerical_protocol": "historical_mixed_protocol_diagnostic",
+      "production_analyzer_eligible": true,
+      "canonical_condition": null,
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed43/Peak/shielded/sigmaA_1500MPa/summary.json",
+      "summary_sha256": "52e53e87bbcbd9dfccd63109edff0e2162592c0184193e9e345e7ddf8f638fcb",
+      "checkpoint_sha256": "c9abec49b5df3fcd7b1a2e1f1b64a2027138039f1114ed77d21daa21620e7438"
+    },
+    {
+      "condition": "m1_1500_seed44",
+      "sigma_a_MPa": 1500.0,
+      "hazard_seed": 42017,
+      "mark_seed": 43044,
+      "numerical_protocol": "historical_mixed_protocol_diagnostic",
+      "production_analyzer_eligible": true,
+      "canonical_condition": null,
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed44/Peak/shielded/sigmaA_1500MPa/summary.json",
+      "summary_sha256": "63e8e7503dd718c697bd871bc5953772553198f2cf1c7adf94df2df62eebbba8",
+      "checkpoint_sha256": "a13e7d45a9aad31d39d2820f129451bccc477791d8ffa9c7137edfa2bb6b931d"
+    },
+    {
+      "condition": "m1_1500_seed45",
+      "sigma_a_MPa": 1500.0,
+      "hazard_seed": 42017,
+      "mark_seed": 43045,
+      "numerical_protocol": "historical_mixed_protocol_diagnostic",
+      "production_analyzer_eligible": true,
+      "canonical_condition": null,
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed45/Peak/shielded/sigmaA_1500MPa/summary.json",
+      "summary_sha256": "c80760c0064e26554bc82666c03bd27ca3ef9b140c9ce08521545b63da279091",
+      "checkpoint_sha256": "e6b9c003e3787040e27ce12153f365f6528d8a9c3dcaf1e7a0222427a7da754f"
+    },
+    {
+      "condition": "m1_1500_seed46_rate_separated",
+      "sigma_a_MPa": 1500.0,
+      "hazard_seed": 42017,
+      "mark_seed": 43046,
+      "numerical_protocol": "historical_mixed_protocol_diagnostic",
+      "production_analyzer_eligible": true,
+      "canonical_condition": null,
+      "summary_path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed46_rate_separated/Peak/shielded/sigmaA_1500MPa/summary.json",
+      "summary_sha256": "44fb6230b27d2e5652d76dee7efea4d57166fe9bb2e915b305f993234d51e01a",
+      "checkpoint_sha256": "6fa19954256f4edc9b4caaece08b864251f00391c364f0c4c228cb903c26d409"
+    }
+  ]
+}

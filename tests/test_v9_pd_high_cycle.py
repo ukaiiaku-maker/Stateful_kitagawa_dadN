@@ -213,6 +213,51 @@ def test_exact_private_window_training_partition_guard_and_restart():
     assert guarded.action[0] < guarded.threshold[0]
 
 
+def test_private_window_event_guard_converts_per_second_rate_at_nondefault_frequency():
+    class PerSecondWindow(SyntheticDormantPD):
+        def __init__(self, frequency_hz):
+            super().__init__(rate=1e-30, threshold=0.015, contraction=1.0)
+            self.frequency_hz = float(frequency_hz)
+        def exact_private_window(self, dN):
+            n=float(dN); start=self.active_state(); end=ActiveState(start.vector,start.specification)
+            action=n/self.frequency_hz
+            return CycleEvaluation(
+                start,end,np.array([math.log(action)]),{"ledger":n},
+                np.array([0.,1.]),np.array([[0.],[0.]]),{},"dormant",
+                self.protected_signatures().topology,
+                phase_rate_seconds_per_cycle=1.0/self.frequency_hz,
+            )
+
+    config=cfg(periodic_admission_distance=0.0,private_window_initial_cycles=10,
+               private_window_max_cycles=10,minimum_projected_cycles_per_exact_map=0.0)
+    # Ten cycles carry action 0.01 at 1 kHz.  A two-cycle guard is 0.002,
+    # therefore this is safe.  Treating the phase rate as per-cycle would
+    # incorrectly reject it by orders of magnitude.
+    model=PerSecondWindow(1000.0)
+    result=DormantPDHighCycleEngine(model,config).advance(10)
+    assert result.accepted_projected_cycles == 10
+    row=next(row for row in result.modes if row.mode=="exact_private_window")
+    assert row.detail["phase_rate_seconds_per_cycle"] == 1e-3
+    assert math.isclose(math.exp(row.detail["guard_log_action_upper_bound"]),0.002)
+
+
+def test_private_window_event_guard_frequency_conversion_is_not_1000hz_cancellation():
+    for frequency_hz in (20.0, 2500.0):
+        class Window(SyntheticDormantPD):
+            def exact_private_window(self,dN):
+                n=float(dN);start=self.active_state();end=ActiveState(start.vector,start.specification)
+                return CycleEvaluation(start,end,np.array([math.log(n/frequency_hz)]),
+                    {"ledger":n},np.array([0.,1.]),np.array([[0.],[0.]]),{},"dormant",
+                    self.protected_signatures().topology,
+                    phase_rate_seconds_per_cycle=1.0/frequency_hz)
+        model=Window(rate=1e-30,threshold=100.,contraction=1.)
+        config=cfg(periodic_admission_distance=0.0,private_window_initial_cycles=10,
+                   private_window_max_cycles=10,minimum_projected_cycles_per_exact_map=0.0)
+        result=DormantPDHighCycleEngine(model,config).advance(10)
+        row=next(row for row in result.modes if row.mode=="exact_private_window")
+        assert math.isclose(math.exp(row.detail["guard_log_action_upper_bound"]),2.0/frequency_hz)
+
+
 def test_log_action_below_float_range_survives_large_formal_skip():
     model = SyntheticDormantPD(rate=1.0, threshold=1.0)
     model.rate = 0.0

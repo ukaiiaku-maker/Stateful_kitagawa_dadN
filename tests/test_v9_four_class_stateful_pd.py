@@ -28,6 +28,7 @@ class FourClassStatefulPDTests(unittest.TestCase):
         self.assertEqual(args.shared_root_internal_max_cycles, 1.0e5)
         self.assertEqual(args.shared_root_transition_max_cycles, 1.0e5)
         self.assertEqual(args.shared_root_poststable_max_cycles, 1.0e5)
+        self.assertIsNone(args.shared_root_survival_threshold_action)
         refined = build_four_class_parser().parse_args([
             "--material-class", "Peak", "--sigma-a-MPa", "500",
             "--source-root", "/tmp/source",

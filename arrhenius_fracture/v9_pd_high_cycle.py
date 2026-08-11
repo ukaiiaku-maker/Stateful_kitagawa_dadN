@@ -78,6 +78,10 @@ class CycleEvaluation:
     transition_signature: str
     topology_signature: str
     private_invariants_preserved: bool = True
+    # Multiplying a phase rate by this value converts its time basis to one
+    # physical cycle.  Canonical cleavage rates are per second, whereas older
+    # synthetic adapters expose rates per cycle and retain the default 1.0.
+    phase_rate_seconds_per_cycle: float = 1.0
 
     @property
     def birth_action(self) -> np.ndarray:
@@ -396,8 +400,20 @@ class DormantPDHighCycleEngine:
         phase_rates = [np.asarray(ev.phase_log_birth_rate, float).ravel()
                        for ev in (full, left, right) if np.asarray(ev.phase_log_birth_rate).size]
         max_log_rate = max((float(np.max(rate)) for rate in phase_rates), default=-math.inf)
+        time_scales = [float(ev.phase_rate_seconds_per_cycle) for ev in (full, left, right)]
+        if any(not np.isfinite(scale) or scale <= 0.0 for scale in time_scales):
+            return False, {"reason": "invalid_phase_rate_seconds_per_cycle"}
+        max_time_scale = max(time_scales)
+        # The action extrapolation has been checked against the split exact
+        # window, but a conservative crossing guard must also cover the
+        # measured validation residual.  hazard_error is already logarithmic;
+        # log1p(state_error) makes the normalized state mismatch an additional
+        # nonnegative multiplicative allowance.
+        validation_log_margin = hazard_error + math.log1p(state_error)
         guard_log = (-math.inf if not np.isfinite(max_log_rate) else
-                     max_log_rate + math.log(max(self.config.event_guard_cycles, 1e-300)))
+                     max_log_rate
+                     + math.log(max(self.config.event_guard_cycles * max_time_scale, 1e-300))
+                     + validation_log_margin)
         guarded_action = np.logaddexp(full.log_birth_action, guard_log)
         event_safe = bool(np.all(guarded_action < remaining_log))
         efficiency = horizon / 3.0
@@ -418,6 +434,9 @@ class DormantPDHighCycleEngine:
             "log_action": full.log_birth_action, "ledgers": ledgers,
             "state_error": state_error, "state_error_by_field": state_error_by_field,
             "log_hazard_error": hazard_error, "ledger_error": ledger_error,
+            "phase_rate_seconds_per_cycle": max_time_scale,
+            "validation_log_margin": validation_log_margin,
+            "guard_log_action_upper_bound": guard_log,
             "ledger_error_by_name": ledger_error_by_name,
             "transition_preserved": transition_ok, "event_safe": event_safe,
             "projected_cycles_per_exact_map": efficiency,

@@ -3,6 +3,18 @@
 Status: numerical production gate qualified at the existing Peak 1500/2000 MPa
 controls. This document does not select or report a new physical stress.
 
+The first S-N integration policy is now fixed at 0.6103515625 cycles for
+pre-attempt localization and reversible-embryo transitions, and 625 cycles for
+post-stable topology. The measured residual attempt-coordinate uncertainty is
+approximately 0.027%; representative front-coordinate discretization is
+approximately 0.1--0.15%. A 156.25-cycle morphology check remains required at
+one lower-stress production condition before publication.
+
+The high-cycle action guard treats canonical phase rates as rates per second and
+multiplies the requested guard cycles by the explicit seconds per cycle. Its
+upper bound also includes the measured state and log-hazard validation
+residuals. Tests at 20, 1000, and 2500 Hz prevent a hidden unit cancellation.
+
 ## Corrected local-stress reference
 
 The immutable first audit remains in `fem_pd_local_tip_reference`. The corrected

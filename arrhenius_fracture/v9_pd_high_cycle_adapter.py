@@ -296,7 +296,10 @@ class SpatialPDDormantAdapter:
             np.asarray(payload.get("phase", []), float),
             np.asarray(payload.get("phase_log_birth_rate", []), float),
             dict(payload.get("diagnostics", {})),
-            str(payload.get("transition_signature", "dormant")), before.topology)
+            str(payload.get("transition_signature", "dormant")), before.topology,
+            phase_rate_seconds_per_cycle=float(
+                payload.get("phase_rate_seconds_per_cycle", 1.0)
+            ))
 
     def exact_private_cycle(self):
         return self._exact_private_evaluation(1.0)

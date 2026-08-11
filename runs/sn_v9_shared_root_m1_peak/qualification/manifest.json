@@ -1,10 +1,17 @@
 {
-  "schema": "V9_SHARED_ROOT_M1_PEAK_SUMMARY_1",
+  "schema": "V9_SHARED_ROOT_M1_PEAK_SUMMARY_2",
   "cases": {
-    "m1_2000_seed42": {
+    "m1_2000_seed42_coarse_1e5_baseline": {
       "path": "runs/sn_v9_shared_root_m1_peak/Peak_2000/Peak/shielded/sigmaA_2000MPa",
       "summary_sha256": "643a3680cfd6da45fdee519f1af4df6c8ad6a53dd048ff6be26d48ff85b454a3",
       "checkpoint_sha256": "1b393acd26fe06714889946fb922928fb6939ef3f47caf032de5058a40507016",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_2000_seed42_rate_separated_v2": {
+      "path": "runs/sn_v9_shared_root_m1_peak/rate_separated_restart_from_fine_stable_v4/Peak/shielded/sigmaA_2000MPa",
+      "summary_sha256": "e77806656cdf1b9b377e078cb7974734081b0f775e7e9626ae221b6114cc45ca",
+      "checkpoint_sha256": "786930682158ebb454703b34b660d47958d4ed41f103cf893ee31ff2ba4f3db9",
       "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
       "restart_provenance": "hash-verified atomic v9 generation store"
     },
@@ -45,8 +52,9 @@
     }
   },
   "generated": {
-    "endpoint_results.csv": "80e32b921c3ae4146620d8cc83cc637e03801a5d01eebc4723f39cdc79838105",
+    "endpoint_results.csv": "3c52f4973065c5a00f616457a1f46e5d21c4b6e54b6a6219faee536a06bd518e",
     "seed_ensemble.json": "339a3e37b4fad07f62412a07beb3c7c1c6397d9c96b6b6a08e7a33ba685bf1e9",
-    "trajectory_equivalence.json": "3f4417a255357bfaab6cb81e2ca5de1de31d75c600778fa258cb1de3cbd1087b"
+    "trajectory_equivalence.json": "3f4417a255357bfaab6cb81e2ca5de1de31d75c600778fa258cb1de3cbd1087b",
+    "condition_registry.json": "52d0a404764854c797a22fd04db4030a6dc009212936c82ec45af1db22d30490"
   }
 }

@@ -1175,6 +1175,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 else "reversible_embryo_after_completed_event_rejected_hybrid"
             ),
         )
+        survival_threshold = getattr(args, "shared_root_survival_threshold_action", None)
+        if survival_threshold is not None:
+            survival_threshold = float(survival_threshold)
+            if not math.isfinite(survival_threshold) or survival_threshold <= 0.0:
+                raise RuntimeError("conditional-survival threshold action must be finite and positive")
+            shared_clock.global_threshold_action = survival_threshold
         # Birth is external/global in this mode. Stabilization, healing and
         # topology remain the existing PD transition engine.
         patch.cfg.birth_scale = 0.0
@@ -1379,6 +1385,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 adapter.shared_clock.mpz=proposed["state"].mpz.copy()
                 payload["log_birth_action"]=np.asarray([proposed["detail"]["log_action_increment"]])
                 payload["phase_log_birth_rate"]=np.asarray(proposed["detail"]["phase_log_rate_s"])
+                payload["phase_rate_seconds_per_cycle"]=1.0/float(args.frequency_Hz)
                 payload["diagnostics"]["shared_root_log_action_increment"]=proposed["detail"]["log_action_increment"]
             return payload
         adapter_type=SharedRootSpatialPDDormantAdapter if shared_root_mode else SpatialPDDormantAdapter
@@ -1411,8 +1418,17 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             if eligible:
                 decade = 10.0 ** math.ceil(math.log10(max(cycles, 1.0)) - 1e-14)
                 if decade <= cycles * (1.0 + 1e-14): decade *= 10.0
-                segment = min(args.cycles_max - cycles, args.pd_high_cycle_max_segment,
-                              max(decade - cycles, 1.0))
+                remaining_campaign = args.cycles_max - cycles
+                # A sub-two-cycle logarithmic target cannot train a private
+                # window and previously caused repeated one-cycle controller
+                # probes near startup.  Request at least one useful 64-cycle
+                # training window when the remaining horizon permits it; the
+                # engine still rejects it fail-closed if the transient is not
+                # sufficiently resolved.
+                useful_training = min(64.0, remaining_campaign,
+                                      args.pd_high_cycle_max_segment)
+                segment = min(remaining_campaign, args.pd_high_cycle_max_segment,
+                              max(decade - cycles, useful_training, 1.0))
                 engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
                     projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2),
                     private_window_initial_cycles=max(2,min(int(segment),int(args.pd_high_cycle_max_segment))),
@@ -1420,12 +1436,24 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     exact_retry_cycles=0,
                     minimum_projected_cycles_per_exact_map=16.0))
                 hc = engine.advance(segment)
-                high_cycle_mode_rows.extend({
+                new_mode_rows=[{
                     "cycles_total": adapter.cycles, "requested_segment": segment,
                     "mode": mode.mode, "accepted_cycles": mode.cycles,
                     "exact_map_evaluations": mode.exact_map_evaluations,
                     "accepted": mode.accepted, "detail": mode.detail,
-                } for mode in hc.modes)
+                } for mode in hc.modes]
+                if shared_root_mode:
+                    accepted_indices=[i for i,row in enumerate(new_mode_rows)
+                                      if row["accepted"] and row["accepted_cycles"]>0.0]
+                    if accepted_indices:
+                        last=accepted_indices[-1]
+                        new_mode_rows[last]["H_attempt_after_segment"]=float(
+                            adapter.shared_clock.global_cumulative_action
+                        )
+                        new_mode_rows[last]["log_H_attempt_after_segment"]=float(
+                            adapter.shared_clock.log_global_cumulative_action
+                        )
+                high_cycle_mode_rows.extend(new_mode_rows)
                 mode_path = high_cycle_mode_path
                 tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
                 tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
@@ -2820,6 +2848,8 @@ def build_parser():
                    dest="global_cleavage_seed")
     p.add_argument("--spatial-mark-seed", type=int, default=42018,
                    dest="spatial_mark_seed")
+    p.add_argument("--shared-root-survival-threshold-action", type=float, default=None,
+                   help="conditional no-event threshold used to record H(N) without realizing a mark")
     p.add_argument("--site-density-m2", type=float, default=5e10, dest="site_density_m2")
     p.add_argument(
         "--delivery-source",
