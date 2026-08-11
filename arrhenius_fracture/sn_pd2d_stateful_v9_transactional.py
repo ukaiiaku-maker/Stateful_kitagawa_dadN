@@ -716,6 +716,7 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "conditioned_premark_dir", "conditioned_branch_id",
     "conditioned_mark_stream_id", "conditioned_transition_stream_id",
     "conditioned_renewal_stream_id",
+    "conditioned_branch_metadata",
 }
 
 
