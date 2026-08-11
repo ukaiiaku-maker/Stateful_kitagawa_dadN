@@ -1,6 +1,9 @@
 {
   "available_site_rows": 3803,
   "cycles": 3000000.0,
+  "scientific_label": "Peak_blunt_12000MPa_overstress_topology_diagnostic",
+  "production_sn_point": false,
+  "classification_reason": "small-strain overstress diagnostic; declared six-bond front-capture endpoint not reached",
   "files": {
     "ACTIVE.json": {
       "bytes": 61,

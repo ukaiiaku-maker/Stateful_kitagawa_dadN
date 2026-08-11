@@ -24,9 +24,13 @@ from arrhenius_fracture.v9_stateful_peridynamics import V9StatefulPDPatch
 
 
 def build_context(run_args: Path, sigma_a_MPa: float):
-    source = json.loads(run_args.read_text())
+    source = driver._restore_nonfinite_tags(json.loads(run_args.read_text()))
     args = driver.build_parser().parse_args([])
-    valid = set(vars(args))
+    valid = set(vars(args)) | {
+        "four_class_option_id", "four_class_transfer_contract",
+        "four_class_registry_audit", "audited_four_class_barriers",
+        "fatigue_model_preset_applied",
+    }
     for key, value in source.items():
         if key in valid:
             setattr(args, key, value)
@@ -72,12 +76,17 @@ def main() -> None:
     parser.add_argument("--checkpoint", action="append", nargs=3,
                         metavar=("LABEL", "STORE", "GENERATION"), required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--table-prefix", default="690MPa_persistent_site")
     args_cli = parser.parse_args()
     rows = []
     for label, store_text, generation in args_cli.checkpoint:
         args, mesh, patch, chain, crack, cached, transaction, sigma_max, sigma_min = build_context(
             args_cli.run_args, args_cli.sigma_a_MPa
         )
+        if "delivery_source_multiplicity" not in driver._restore_nonfinite_tags(
+            json.loads(args_cli.run_args.read_text())
+        ):
+            delattr(args, "delivery_source_multiplicity")
         restored = driver._load_case_checkpoint(
             Path(store_text) / "checkpoint_latest.npz", args=args,
             case_name=args_cli.case, sigma_a_MPa=args_cli.sigma_a_MPa,
@@ -124,7 +133,7 @@ def main() -> None:
                 "state_shift_eV": float(rates["state_shift_eV"][node]),
             })
     args_cli.out.mkdir(parents=True, exist_ok=True)
-    table = args_cli.out / "690MPa_persistent_site_matched_checkpoints.csv"
+    table = args_cli.out / f"{args_cli.table_prefix}_matched_checkpoints.csv"
     with table.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=tuple(rows[0]))
         writer.writeheader(); writer.writerows(rows)
@@ -137,7 +146,7 @@ def main() -> None:
             "minimum_wait_site": min(subset, key=lambda r: (r["instantaneous_wait_cycles"], r["site_id"])),
             "maximum_cumulative_action_site": max(subset, key=lambda r: (r["cumulative_action"], -r["site_id"])),
         }
-    (args_cli.out / "690MPa_persistent_site_extrema.json").write_text(
+    (args_cli.out / f"{args_cli.table_prefix}_extrema.json").write_text(
         json.dumps(extrema, indent=2, sort_keys=True) + "\n"
     )
     print(json.dumps(extrema, indent=2, sort_keys=True))

@@ -89,6 +89,9 @@ def configure_four_class(args, material_class, source_root):
     # scalar flow here would squarely suppress delivery behind an unrelated
     # serial bottleneck and is not the authoritative emission semantics.
     args.delivery_source = "emission"
+    source_density_m2 = float(selected.row["rho_source0_m2"])
+    reference_source_area_m2 = float(selected.row["reference_source_area_um2"]) * 1e-12
+    args.delivery_source_multiplicity = source_density_m2 * reference_source_area_m2
     args.four_class_option_id = option_id
     args.four_class_registry_audit = registry_audit | {
         "constitutive_source_hashes": source_hashes,
@@ -106,6 +109,16 @@ def configure_four_class(args, material_class, source_root):
             "directional_bond_damage", "local_PD_redistribution",
             "stable_seed_competition", "front_capture", "root_topology",
         ],
+        "delivery_bridge": {
+            "model": "audited_v10221_aggregate_persistent_emission",
+            "per_source_rate": "lambda_emit_s-1",
+            "source_density_m2": source_density_m2,
+            "reference_source_area_m2": reference_source_area_m2,
+            "multiplicity_per_system": args.delivery_source_multiplicity,
+            "aggregate_rate": "multiplicity_per_system*lambda_emit_s-1",
+            "candidate_site_density_applied_to_delivery": False,
+            "qualification": "blocked_spatial_signed_MPZ_allocation_ambiguity",
+        },
         "not_claimed_exact_signed_MPZ_parity": [
             "scalar_FEM_plastic_state", "spatial_candidate_density",
             "PD_stabilization_healing", "PD_bond_growth_linkage",
@@ -168,7 +181,11 @@ def main(argv=None):
         "registry": args.four_class_registry_audit,
     }
     (cli.out / "campaign_contract.json").write_text(json.dumps(contract, indent=2, sort_keys=True) + "\n")
-    return run_sweep(args)
+    raise RuntimeError(
+        "four-class PD production is fail-closed: audited tensor-resolved "
+        "aggregate emission is recovered, but root-local versus node-local "
+        "signed-MPZ delivery allocation to the spatial PD patch is unresolved"
+    )
 
 
 if __name__ == "__main__":

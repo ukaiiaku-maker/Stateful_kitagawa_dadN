@@ -32,7 +32,7 @@ At `N=180000000` the aged protocol remains dormant. Additional cycles to
 embryo, stabilization, and front capture are all right-censored above
 11,365,052.9710462 cycles. No stress above 840.443 MPa was used.
 
-## HC-020 operator
+## HC-020a: exact-window, partition, restart, and stationary capability
 
 The production operator now trains on exact private macro-windows. Each
 candidate window is compared with an independently evaluated two-part exact
@@ -57,6 +57,17 @@ At the current 690 MPa terminal head, three accepted 64-cycle windows advance
 
 The earlier trial with `accepted_projected_cycles=0` is retained as a rejected
 qualification and is not called acceleration.
+
+HC-020a is complete for dormant exact-window/partition/restart qualification
+and certified stationary skipping.
+
+## HC-020b: nonstationary decaying-tail efficiency
+
+HC-020b remains open. Accepted 64-cycle exact windows demonstrate bounded local
+nonstationary propagation at 21.33 cycles per exact map, but no validated
+growing-window operator yet advances a materially decaying nonstationary tail
+over many decades efficiently. Stationary skips are HC-020a evidence and are
+not counted as completion of HC-020b.
 
 ## Persistent-site audit
 

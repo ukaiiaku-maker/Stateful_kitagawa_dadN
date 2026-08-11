@@ -1,6 +1,9 @@
 {
   "available_site_rows": 3804,
   "cycles": 10000000000.0,
+  "scientific_label": "Peak_blunt_4000MPa_K2_suppressed_runout_diagnostic",
+  "production_sn_point": false,
+  "classification_reason": "legacy per-source emission delivery omitted audited v10.2.21 aggregate source multiplicity",
   "files": {
     "ACTIVE.json": {
       "bytes": 61,
@@ -33,6 +36,10 @@
     "summary.json": {
       "bytes": 33757,
       "sha256": "0bf362f1aee50eaf97bd911f896560841d89c12a50bcff4c976b83e0e0e99680"
+    },
+    "terminal_exact_diagnostics.json": {
+      "bytes": 65806,
+      "sha256": "d6f19b0121c2d5b6a2fc970f03c5658d66af007005a00af54c27441aa9bc6933"
     },
     "v9_generations/generation_80f16e02ea444f918e34276d84df1be2/manifest.json": {
       "bytes": 3037,

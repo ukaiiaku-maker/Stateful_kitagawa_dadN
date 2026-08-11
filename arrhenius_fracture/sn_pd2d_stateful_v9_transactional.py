@@ -145,6 +145,10 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
         "born_cumulative": np.maximum(trial.born_cumulative - born0, 0.0),
         "healed_cumulative": np.maximum(trial.healed_cumulative - healed0, 0.0),
     }
+    s1_mid = 0.5 * (pre[0]["s1_node"] + post[0]["s1_node"])
+    sigma_tensor_mid = 0.5 * (pre[0]["sigma_node"] + post[0]["sigma_node"])
+    seq_mid = 0.5 * (pre[0]["seq_node"] + post[0]["seq_node"])
+    iph, inode = np.unravel_index(int(np.argmax(s1_mid)), s1_mid.shape)
     return {
         "ep_gp": np.asarray(state1.ep_gp).copy(), "rho_gp": np.asarray(state1.rho_gp).copy(),
         "epsp_acc_gp": np.asarray(state1.epsp_acc_gp).copy(), "u": np.asarray(post[0]["u_end"]).copy(),
@@ -155,11 +159,37 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
         "log_birth_action": log_node_action, "ledger_increments": ledger,
         "phase": np.linspace(0.0, 1.0, args.hazard_n_phase, endpoint=False),
         "phase_log_birth_rate": np.empty((0, len(log_node_action))),
+        "diagnostic_fields": {
+            "sigma_mid_global_voigt_Pa": sigma_tensor_mid,
+            "equivalent_stress_mid_global_Pa": seq_mid,
+        },
         "diagnostics": {"max_effective_stress_Pa": diagnostics.max_effective_stress_Pa,
                         "max_delivery_memory": diagnostics.max_delivery_memory,
                         "max_completion": diagnostics.max_completion,
                         "fem_embedded_error": proposal.normalized_error,
                         "private_window_cycles": dN,
+                        "fem_sigma1_cycle_max_Pa": float(s1_mid[iph, inode]),
+                        "fem_sigma1_hotspot_phase_index": int(iph),
+                        "fem_sigma1_hotspot_global_node": int(inode),
+                        "fem_sigma1_hotspot_x_m": float(mesh.nodes[inode, 0]),
+                        "fem_sigma1_hotspot_y_m": float(mesh.nodes[inode, 1]),
+                        "fem_hotspot_stress_voigt_xx_yy_xy_Pa": np.asarray(
+                            sigma_tensor_mid[iph, :, inode], float
+                        ),
+                        "fem_hotspot_equivalent_stress_Pa": float(seq_mid[iph, inode]),
+                        "local_sigma1_over_remote_sigma_max": float(
+                            s1_mid[iph, inode] / max(abs(sigma_max), 1e-300)
+                        ),
+                        "max_raw_cleavage_rate_s": float(
+                            np.max(diagnostics.max_raw_cleavage_rate_s)
+                            if np.ndim(diagnostics.max_raw_cleavage_rate_s) else
+                            diagnostics.max_raw_cleavage_rate_s
+                        ) if hasattr(diagnostics, "max_raw_cleavage_rate_s") else float(
+                            np.max(patch.last_rates["nucleation_rate_s"])
+                        ),
+                        "max_actual_site_birth_rate_per_cycle": float(
+                            np.exp(np.max(log_node_action))
+                        ),
                         "emission_drive_equivalent_stress_Pa": np.max(
                             0.5 * (pre[0]["seq_node"] + post[0]["seq_node"]), axis=0
                         )[patch.global_nodes]},
@@ -197,6 +227,62 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Peak 4 GPa legacy diagnostic stationary extension to N=1e14. This
+        # exact generation predates only read-only audit-script improvements.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "e69a5b087684cee66efa6113c23e1685d9609787ff239b8dc67a5c172a3bb8ae",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "ab38cbd7a9db8f5a5052d7c3b8490cc5d0470720ba2b8176bcd3f23e45c1c21b",
+        "pd_high_cycle_adapter": "bf2a05c31244e50bc52ebab5b3e78b9b31bccd3bb3310b05c058afac94775837",
+        "pd_high_cycle_engine": "7af93b75ae0df2594c1dd9455ed989cf9600cd31ba27c0de0c2209a15e9af2e5",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Peak 4 GPa legacy diagnostic stationary extension to N=1e12. The
+        # subsequent change only made its absent multiplicity explicit as the
+        # historical default 1.0 in presentation output.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "dfa8db7cd3bbca116e5ca6ee05d4f266cc3dc4e3aeb41cecd8e08ec201ee62ee",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "ab38cbd7a9db8f5a5052d7c3b8490cc5d0470720ba2b8176bcd3f23e45c1c21b",
+        "pd_high_cycle_adapter": "bf2a05c31244e50bc52ebab5b3e78b9b31bccd3bb3310b05c058afac94775837",
+        "pd_high_cycle_engine": "7af93b75ae0df2594c1dd9455ed989cf9600cd31ba27c0de0c2209a15e9af2e5",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Repaired Peak 12 GPa direct topology diagnostic at N=3e6.  Its
+        # physical modules match the accepted slow-seed repair; only the later
+        # HC-020 engine fingerprint differs from the 4 GPa tail package.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "147ffbac6ef75976a018580e4e040272e59aee57baa0e8cd58f46c898a283e4a",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "ab38cbd7a9db8f5a5052d7c3b8490cc5d0470720ba2b8176bcd3f23e45c1c21b",
+        "pd_high_cycle_adapter": "bf2a05c31244e50bc52ebab5b3e78b9b31bccd3bb3310b05c058afac94775837",
+        "pd_high_cycle_engine": "8c4537283a9302e4806f4742507b0a8bf45a4c4ac209f17ba38552749eea6fae",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Accepted 29786fc Peak diagnostic generations.  The subsequent
+        # aggregate-emission bridge and terminal-audit additions do not alter
+        # these preserved arrays; they are loaded only for explicit diagnostic
+        # reconstruction and never silently resumed as corrected production.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "147ffbac6ef75976a018580e4e040272e59aee57baa0e8cd58f46c898a283e4a",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "ab38cbd7a9db8f5a5052d7c3b8490cc5d0470720ba2b8176bcd3f23e45c1c21b",
+        "pd_high_cycle_adapter": "bf2a05c31244e50bc52ebab5b3e78b9b31bccd3bb3310b05c058afac94775837",
+        "pd_high_cycle_engine": "7af93b75ae0df2594c1dd9455ed989cf9600cd31ba27c0de0c2209a15e9af2e5",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # Peak 12 GPa accepted boundary immediately before repairing the
         # controller-partition-dependent primary-seed stall counter. The
@@ -464,7 +550,14 @@ def phase_resolved_delivery_rate(args, plast_chain, seq_node_phase, rho_node, T_
         )
     else:
         raise ValueError(f"unknown delivery source: {source}")
-    rate = max(float(args.delivery_scale), 0.0) * np.maximum(base, 0.0)
+    # ``base`` is a per-source Arrhenius rate.  Canonical four-class rows use
+    # the audited v10.2.21 aggregate persistent-emission observable
+    # M*lambda.  The multiplicity is one local source-zone measure; PD
+    # candidate density is a separate first-passage population and must not be
+    # folded into delivery a second time.
+    multiplicity = max(float(getattr(args, "delivery_source_multiplicity", 1.0)), 0.0)
+    rate = (max(float(args.delivery_scale), 0.0) * multiplicity
+            * np.maximum(base, 0.0))
     cap = float(args.delivery_rate_cap_s)
     if np.isfinite(cap) and cap > 0.0:
         rate = np.minimum(rate, cap)
@@ -496,7 +589,8 @@ def phase_resolved_delivery_log_rate(args, plast_chain, seq_node_phase, rho_node
         out = np.logaddexp.reduce(np.stack(terms), axis=0) if terms else np.full_like(logs["lambda_flow"], -math.inf)
     else:
         raise ValueError(f"unknown delivery source: {source}")
-    scale = float(args.delivery_scale)
+    scale = (float(args.delivery_scale)
+             * float(getattr(args, "delivery_source_multiplicity", 1.0)))
     if scale <= 0.0:
         return np.full_like(out, -math.inf)
     out = out + math.log(scale)
@@ -1527,6 +1621,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             "delivery_hit_count": args.delivery_hit_count,
             "delivery_memory_s": args.delivery_memory_s,
             "delivery_scale": args.delivery_scale,
+            "delivery_source_multiplicity": float(
+                getattr(args, "delivery_source_multiplicity", 1.0)
+            ),
             "sigma_a_MPa": sigma_a_MPa,
             "cycles_total": cycles,
         "cycles_target": float(args.cycles_max),
@@ -2100,6 +2197,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "pd_realized_stable_final": int(np.sum(pd_state.stable_sites)),
         "pd_delivery_source": str(args.delivery_source),
         "pd_delivery_scale": float(args.delivery_scale),
+        "pd_delivery_source_multiplicity": float(
+            getattr(args, "delivery_source_multiplicity", 1.0)
+        ),
         "pd_delivery_event_strain": float(args.delivery_event_strain),
         "pd_delivery_weight_emit": float(args.delivery_weight_emit),
         "pd_delivery_weight_peierls": float(args.delivery_weight_peierls),
@@ -2372,6 +2472,8 @@ def build_parser():
         help="plastic-event process used to populate the finite-memory delivery clock",
     )
     p.add_argument("--delivery-scale", type=float, default=1.0, dest="delivery_scale")
+    p.add_argument("--delivery-source-multiplicity", type=float, default=1.0,
+                   dest="delivery_source_multiplicity")
     p.add_argument(
         "--delivery-event-strain",
         type=float,

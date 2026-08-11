@@ -147,11 +147,11 @@ remaining action, wait, delivery rate/memory, K=2 completion, raw cleavage
 rate, effective opening stress, equivalent-stress emission drive, backstress,
 and state shift.
 
-## Blunt-notch Peak production start
+## Blunt-notch Peak diagnostic start
 
-The final production geometry is active at 300 K with `a=150 um`, `b=300 um`,
-`rho=600 um`, the audited Peak row, and no PD images. A 12,000 MPa finite
-stable-birth condition records first embryo at `81050.8859089888` cycles,
+The target geometry is active at 300 K with `a=150 um`, `b=300 um`,
+`rho=600 um`, the audited Peak row, and no PD images. The 12,000 MPa overstress
+topology diagnostic records first embryo at `81050.8859089888` cycles,
 stabilization at `81053.2753569623`, first softening at
 `92053.27535696232`, and root connection at `1528000`. At the preserved
 `N=3e6` checkpoint the original seed (node 297) has zero reselections and three
@@ -172,6 +172,14 @@ the HC-020 operator accepted 2,688 exact-window cycles with 130 exact-map
 evaluations, qualified the periodic state, and advanced the remaining
 `8,999,997,312` cycles by the stationary map. This is a preserved finite
 runout, not an endurance classification.
+
+Neither calculation is a qualified physical S-N bracket. The 4 GPa package is
+now labeled `Peak_blunt_4000MPa_K2_suppressed_runout_diagnostic`; the 12 GPa
+package is `Peak_blunt_12000MPa_overstress_topology_diagnostic`. The executable
+bridge audit found omitted aggregate source multiplicity and, separately, a
+non-parity scalar equivalent-stress projection. Corrected Peak production is
+fail-closed pending selection of a root-local versus node-local signed-MPZ/PD
+delivery allocation (or direct canonical-cleavage embryo attempts).
 
 Both Peak checkpoints have hash-verified packages under
 `runs/v9_pd_production/packages/`. The direct post-event 12,000 MPa package
