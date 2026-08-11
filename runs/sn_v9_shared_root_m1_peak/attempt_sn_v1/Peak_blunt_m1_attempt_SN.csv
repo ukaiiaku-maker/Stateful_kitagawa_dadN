@@ -2,3 +2,6 @@ sigma_a_MPa,quantile,target_action,cycles,lower_checkpoint_cycles,upper_checkpoi
 1500.0,N10,0.10536051565782628,513322825.50184876,100000000.0,1000000000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
 1500.0,N50,0.6931471805599453,3377055123.7406697,1000000000.0,10000000000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
 1500.0,N90,2.3025850929940455,11218334293.864714,10000000000.0,100000000000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
+1820.0,N10,0.10536051565782628,97067.13496708259,10000.0,100000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
+1820.0,N50,0.6931471805599453,638586.5758892479,100000.0,1000000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
+1820.0,N90,2.3025850929940455,2121338.68704313,1000000.0,10000000.0,piecewise_linear_inversion_of_actual_cumulative_action,True,False
