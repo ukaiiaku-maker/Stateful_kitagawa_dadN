@@ -1,6 +1,6 @@
 {
   "schema": "V9_BOUNDED_REGRESSION_MANIFEST_1",
-  "source_commit": "745903ccb06ef30dd74ab983c97daca5a7b9444e",
+  "source_commit": "0d2d39165c917c05ac8eae4aafd85bbaa1f23e3c",
   "groups": [
     {
       "test_group": "tests/test_endurance.py",
