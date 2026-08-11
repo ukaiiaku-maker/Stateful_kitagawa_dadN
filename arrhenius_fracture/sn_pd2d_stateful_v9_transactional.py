@@ -1094,6 +1094,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         feature_surface_global_nodes=feature_nodes,
     )
     shared_root_mode = str(getattr(args, "cleavage_clock_model", "legacy_per_site_K2")) == SHARED_ROOT_MODEL_ID
+    if shared_root_mode and bool(args.pd_high_cycle):
+        raise RuntimeError(
+            "shared-root marked cleavage is incompatible with the legacy PD "
+            "high-cycle adapter: signed MPZ/global clock/threshold/hazard RNG/mark RNG "
+            "are not in its active and protected state inventory"
+        )
     shared_clock = None
     if shared_root_mode:
         source_root = getattr(args, "four_class_source_root", None)
@@ -1104,7 +1110,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             option_id, source_root,
             shear_modulus_Pa=mat.E / (2.0 * (1.0 + mat.nu)),
             poisson=mat.nu, burgers_m=mat.b,
-            initial_tip_radius_m=float(args.notch_root_radius_m or 600e-6),
+            initial_tip_radius_m=float(root_radius0),
             hazard_seed=int(getattr(args, "global_cleavage_seed", args.seed)),
             mark_seed=int(getattr(args, "spatial_mark_seed", args.seed + 1000003)),
         )
@@ -1284,6 +1290,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             raise RuntimeError("high-cycle mode history is not a JSON list")
         high_cycle_mode_rows = existing_mode_rows
     high_cycle_retry_after = float(args.pd_high_cycle_start_cycles)
+    shared_approach_target = False
 
     def build_high_cycle_adapter():
         def evaluator(adapter, dN=1.0):
@@ -1654,53 +1661,133 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             root_tensors[:, 0, 0] = voigt[:, 0]
             root_tensors[:, 1, 1] = voigt[:, 1]
             root_tensors[:, 0, 1] = root_tensors[:, 1, 0] = voigt[:, 2]
-            clock_proposal = shared_clock.propose_phase_block(
-                dN, args.frequency_Hz, args.T, root_tensors
+            embryo_active_at_start = bool(np.any(pd_state.embryo_sites > 0))
+            stable_seed_at_start = bool(np.any(pd_state.stable_sites > 0))
+            clock_active = not embryo_active_at_start and not stable_seed_at_start
+            clock_proposal = (
+                shared_clock.propose_phase_block(
+                    dN, args.frequency_Hz, args.T, root_tensors
+                )
+                if clock_active else
+                shared_clock.propose_mpz_only_block(
+                    dN, args.frequency_Hz, args.T, root_tensors
+                )
             )
             consumed = float(clock_proposal["cycles_consumed"])
             representable = max(float(np.nextafter(cycles, math.inf) - cycles), 1e-12)
-            if clock_proposal["crossed"] and consumed < dN - representable:
-                # Reject the entire coupled proposal and retry at the exactly
-                # localized first-crossing boundary. No physical or RNG state
-                # has been committed at this point.
+            localization_tol = max(representable, 1e-10)
+            if clock_proposal["crossed"] and consumed < dN - localization_tol:
+                # The representative root history depends on the accepted FEM
+                # endpoint, so a direct fixed-point retry at ``consumed`` can
+                # oscillate without ever accepting physical time.  Reject this
+                # trial and accept only complete pre-crossing cycles on the
+                # next transaction.  Once the event is inside the immediately
+                # following cycle, retry at its localized fractional endpoint.
+                # This preserves the ordered cycle/phase coordinate and avoids
+                # a cascade of committed fractional pre-event microsteps.
                 ep_gp = fem_initial.ep_gp.copy(); rho_gp = fem_initial.rho_gp.copy()
                 epsp_acc_gp = fem_initial.epsp_acc_gp.copy(); u = fem_initial.u.copy()
                 Wp_total = float(fem_initial.plastic_work_J_per_m)
-                controller_next_block_cycles = max(consumed, representable)
-                continue
+                complete_before = math.floor(consumed)
+                if complete_before < 1:
+                    # The root phase history is the response of the final
+                    # physical cycle. Reintegrate the continuum endpoint to
+                    # the localized coordinate, while retaining that exact
+                    # phase history for the crossing and spatial mark.
+                    if geometry_active:
+                        raise RuntimeError(
+                            "shared-root fractional event localization requires "
+                            "fixed pre-capture geometry"
+                        )
+                    exact_fem = fem_transaction.propose(fem_initial, consumed)
+                    if exact_fem.normalized_error > 1.0:
+                        raise RuntimeError(
+                            "fractional shared-root FEM endpoint failed embedded tolerance"
+                        )
+                    ep_gp = np.asarray(exact_fem.state.ep_gp).copy()
+                    rho_gp = np.asarray(exact_fem.state.rho_gp).copy()
+                    epsp_acc_gp = np.asarray(exact_fem.state.epsp_acc_gp).copy()
+                    u = np.asarray(exact_fem.state.u).copy()
+                    Wp_total = float(exact_fem.state.plastic_work_J_per_m)
+                    dep_tensor_block = ep_gp - fem_initial.ep_gp
+                    dep_eq_block = epsp_acc_gp - fem_initial.epsp_acc_gp
+                    dN = consumed
+                else:
+                    ep_gp = fem_initial.ep_gp.copy(); rho_gp = fem_initial.rho_gp.copy()
+                    epsp_acc_gp = fem_initial.epsp_acc_gp.copy(); u = fem_initial.u.copy()
+                    Wp_total = float(fem_initial.plastic_work_J_per_m)
+                    controller_next_block_cycles = float(complete_before)
+                    shared_approach_target = True
+                    continue
             pd_trial = deepcopy(pd_state)
             clock_trial = clock_proposal["state"]
             event_rng_before = deepcopy(patch._event_rng.bit_generator.state)
             try:
-                if clock_proposal["crossed"]:
-                    local_raw = np.maximum(
-                        np.max(pre_rates["_nucleation_rate_phase_s"], axis=0), 1e-300
-                    )
-                    available = np.asarray(pd_trial.site_status, np.uint8) == 0
-                    phase_index = int(clock_proposal["phase_index"])
-                    marked_event = clock_trial.select_mark(
-                        pd_trial.site_node_index, available, np.log(local_raw),
-                        patch.initiation_weight, cycle=cycles + dN,
-                        phase_index=phase_index,
-                        local_fields={"root_global_node": root_global_node},
-                    )
-                    selected_node = int(marked_event["pd_node_id"])
-                    marked_event["local_fields"].update({
-                        "effective_opening_stress_Pa": float(
-                            pre_rates["effective_opening_stress_Pa"][selected_node]
-                        ),
-                        "local_raw_cleavage_propensity_s": float(local_raw[selected_node]),
-                        "initiation_weight": float(patch.initiation_weight[selected_node]),
-                    })
-                    patch.create_marked_embryo(
-                        pd_trial, marked_event["site_id"], cycles + dN
-                    )
+                # Advance every pre-existing PD transition/topology state to
+                # the localized boundary before constructing a mark. Birth is
+                # externally disabled in this versioned mode.
                 diag = patch.update(
                     pd_trial, crack, sigma_combined, delivery_combined, args.T,
                     args.frequency_Hz, dN, cycles, state_shift, sigma_back, chi,
                     P, point_amp, bond_amp,
                     log_delivery_rate_phase_global=log_delivery_combined,
                 )
+                if clock_proposal["crossed"]:
+                    phase_index = int(clock_proposal["phase_index"])
+                    s1_phase, _, _ = patch._point_drivers(
+                        sigma_combined[[phase_index]], point_amp
+                    )
+                    back_local = np.asarray(sigma_back, float)[patch.global_nodes]
+                    shift_local = np.asarray(state_shift, float)[patch.global_nodes]
+                    opening_local = np.maximum(
+                        s1_phase[0] - float(chi) * back_local, 0.0
+                    )
+                    barrier_local = np.maximum(
+                        crack.deltaG_eV(opening_local, args.T) + shift_local, 1e-12
+                    )
+                    log_local = (
+                        math.log(float(crack.rate_prefactor))
+                        - barrier_local / max(KB * args.T / EV_TO_J, 1e-30)
+                    )
+                    available = np.asarray(pd_trial.site_status, np.uint8) == 0
+                    marked_event = clock_trial.select_mark(
+                        pd_trial.site_node_index, available, log_local,
+                        patch.initiation_weight,
+                        cycle=cycles + float(clock_proposal["cycles_consumed"]),
+                        phase_index=phase_index,
+                        local_fields={
+                            "root_global_node": root_global_node,
+                            "phase_fraction": float(clock_proposal.get("phase_fraction", 0.0)),
+                        },
+                    )
+                    selected_node = int(marked_event["pd_node_id"])
+                    marked_event["local_fields"].update({
+                        "effective_opening_stress_Pa": float(opening_local[selected_node]),
+                        "local_PD_amplification": float(point_amp[selected_node]),
+                        "local_backstress_Pa": float(back_local[selected_node]),
+                        "local_state_shift_eV": float(shift_local[selected_node]),
+                        "local_cleavage_log_propensity_s": float(log_local[selected_node]),
+                        "initiation_weight": float(patch.initiation_weight[selected_node]),
+                        "available_site_count": int(np.count_nonzero(available)),
+                    })
+                    patch.create_marked_embryo(
+                        pd_trial, marked_event["site_id"],
+                        cycles + float(clock_proposal["cycles_consumed"])
+                    )
+                    # The new embryo is zero age at commit. Reflect it in the
+                    # block diagnostics without granting smooth or realized
+                    # stabilization/healing/growth exposure.
+                    diag.realized_embryos = int(np.sum(pd_trial.embryo_sites))
+                    diag.realized_births_cumulative = int(
+                        np.sum(pd_trial.born_sites_cumulative)
+                    )
+                    diag.max_embryo = float(np.max(pd_trial.embryo))
+                    diag.expected_embryos = float(np.sum(
+                        pd_trial.embryo * patch.mean_candidate_sites
+                    ))
+                    diag.expected_births_cumulative = float(np.sum(
+                        pd_trial.born_cumulative * patch.mean_candidate_sites
+                    ))
             except Exception:
                 patch._event_rng.bit_generator.state = event_rng_before
                 raise
@@ -1709,6 +1796,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             )
             pd_state = pd_trial
             shared_clock = clock_trial
+            if shared_approach_target and not clock_proposal["crossed"]:
+                controller_next_block_cycles = 1.0
+                shared_approach_target = False
         else:
             diag = patch.update(
                 pd_state, crack, sigma_combined, delivery_combined, args.T,
@@ -1745,6 +1835,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             "global_action_increment": (shared_action_increment if shared_root_mode else np.nan),
             "global_action_increment_per_cycle": (shared_action_increment / max(dN, 1e-300) if shared_root_mode else np.nan),
             "global_attempt_count": (shared_clock.attempt_count if shared_root_mode else np.nan),
+            "global_clock_policy_state": (
+                "stopped_stable_seed" if shared_root_mode and np.any(pd_state.stable_sites > 0)
+                else "paused_reversible_embryo" if shared_root_mode and np.any(pd_state.embryo_sites > 0)
+                else "active" if shared_root_mode else "legacy_per_site"
+            ),
             "global_action_ledger_closure_error": (
                 abs((shared_action_before + shared_action_increment)
                     - shared_clock.global_cumulative_action)
@@ -2352,6 +2447,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "pd_stochastic_transition_probability_cap": float(args.max_transition_probability),
         "pd_rng_streams": "independent_candidate_and_event_streams_from_pd_seed",
         "root_radius_initial_m": root_radius0,
+        "nominal_notch_root_radius_m": 600.0e-6,
+        "shared_mpz_initial_tip_radius_m": (root_radius0 if shared_root_mode else None),
         "analytic_notch_root_radius_m": float(geom.root_radius),
         "root_radius_final_m": local_root_radius(mesh, feature_nodes),
         "root_radius_over_spacing_final": float(geometry_audit_final.get("root_radius_over_spacing", np.nan)),

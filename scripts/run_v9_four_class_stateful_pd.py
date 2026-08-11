@@ -144,6 +144,8 @@ def build_parser():
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pd-seed", type=int)
+    parser.add_argument("--global-cleavage-seed", type=int, default=42017)
+    parser.add_argument("--spatial-mark-seed", type=int, default=42018)
     parser.add_argument("--site-density-m2", type=float, default=5e10)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--checkpoint-every-blocks", type=int, default=25)
@@ -161,7 +163,8 @@ def main(argv=None):
     args = build_legacy_parser().parse_args([])
     for name in (
         "cycles_max", "block_cycles", "min_block_cycles", "max_blocks", "seed",
-        "pd_seed", "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
+        "pd_seed", "global_cleavage_seed", "spatial_mark_seed",
+        "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",
         "pd_high_cycle", "pd_high_cycle_start_cycles", "pd_high_cycle_max_segment",
     ):

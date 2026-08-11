@@ -206,7 +206,12 @@ class SharedRootMarkedCleavageState:
 
     def propose_phase_block(self, cycles, frequency_Hz, T_K, root_tensors,
                             *, localization_relative_tolerance=1e-12):
-        """Side-effect-free proposal localized at at most the first crossing."""
+        """Side-effect-free ordered localization of at most the first crossing.
+
+        Complete cycles are advanced first.  The crossing cycle is then
+        evaluated in phase order and the final crossing is linearized only
+        inside its constant-rate phase interval.
+        """
         requested = max(float(cycles), 0.0)
         start = self.copy()
         trial = start.copy()
@@ -216,29 +221,85 @@ class SharedRootMarkedCleavageState:
         if not trial.threshold_crossed():
             return {"state": trial, "cycles_consumed": requested,
                     "cycles_unused": 0.0, "crossed": False, "detail": detail}
-        lo, hi = 0.0, requested
-        tolerance = max(requested * float(localization_relative_tolerance), 1e-12)
-        while hi - lo > tolerance:
-            mid = 0.5 * (lo + hi)
+        # Find the largest complete-cycle boundary strictly before crossing.
+        max_complete = int(math.floor(requested))
+        lo, hi = 0, max_complete
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
             probe = start.copy()
-            probe._advance_phase_block_exact(mid, frequency_Hz, T_K, root_tensors)
-            if probe.threshold_crossed(): hi = mid
+            if mid:
+                probe._advance_phase_block_exact(mid, frequency_Hz, T_K, root_tensors)
+            if probe.threshold_crossed(): hi = mid - 1
             else: lo = mid
+        complete = lo
         final = start.copy()
-        detail = final._advance_phase_block_exact(hi, frequency_Hz, T_K, root_tensors)
+        if complete:
+            final._advance_phase_block_exact(
+                float(complete), frequency_Hz, T_K, root_tensors
+            )
+
+        tensors = np.asarray(root_tensors, float)
+        drives = [final.mpz.resolve_root_tensor(tensor) for tensor in tensors]
+        opening = float(np.mean([d["opening_stress_Pa"] for d in drives]))
+        signed = np.mean(np.stack([d["tau_signed_Pa"] for d in drives]), axis=0)
+        period = 1.0 / float(frequency_Hz)
+        # Qualified canonical ordering: plastic half-step -> phase-ordered
+        # midpoint cleavage -> plastic half-step.  At a crossing the latter is
+        # not executed because the endpoint is inside the cleavage stage.
+        final.mpz.advance(0.5 * period, T_K, opening, signed)
+        logs = np.asarray([
+            final.cleavage_log_rate_s(d["opening_stress_Pa"], T_K)
+            for d in drives
+        ], float)
+        phase_dt = period / len(logs)
+        phase_actions = np.exp(np.clip(logs + math.log(phase_dt), -745.0, 709.0))
+        residual = max(final.global_threshold_action - final.global_cumulative_action, 0.0)
+        cumulative = np.cumsum(phase_actions)
+        phase = int(np.searchsorted(cumulative, residual, side="left"))
+        if phase >= len(logs):
+            raise RuntimeError("ordered phase localization failed to bracket crossing")
+        before_phase = float(cumulative[phase - 1]) if phase else 0.0
+        within = float(np.clip(
+            (residual - before_phase) / max(phase_actions[phase], 1e-300),
+            0.0, 1.0,
+        ))
+        consumed = float(complete) + (float(phase) + within) / len(logs)
         final.global_cumulative_action = final.global_threshold_action
         final.log_global_cumulative_action = math.log(final.global_threshold_action)
-        fractions = np.asarray(detail["phase_action_fraction"], float)
-        within_cycle = hi - math.floor(hi)
-        if hi > 0.0 and within_cycle <= 1e-14:
-            within_cycle = 1.0
-        phase = int(np.searchsorted(np.cumsum(fractions),
-                                   np.clip(within_cycle, 0.0, 1.0),
-                                   side="right"))
-        phase = min(phase, len(fractions) - 1)
-        return {"state": final, "cycles_consumed": hi,
-                "cycles_unused": requested - hi, "crossed": True,
-                "phase_index": phase, "detail": detail}
+        final.time_s += (float(phase) + within) * phase_dt
+        detail = {
+            "log_action_increment": math.log(max(
+                final.global_threshold_action - start.global_cumulative_action, 1e-300
+            )),
+            "action_increment": final.global_threshold_action - start.global_cumulative_action,
+            "phase_log_rate_s": logs,
+            "phase_action_per_cycle": phase_actions,
+            "phase_average_opening_stress_Pa": opening,
+            "phase_average_signed_shear_Pa": signed,
+            "complete_cycles_before_crossing": complete,
+            "crossing_phase_fraction": within,
+            "localization_mode": "ordered_complete_cycles_final_cycle_phase_within_phase",
+        }
+        return {"state": final, "cycles_consumed": consumed,
+                "cycles_unused": requested - consumed, "crossed": True,
+                "phase_index": phase, "phase_fraction": within,
+                "detail": detail}
+
+    def propose_mpz_only_block(self, cycles, frequency_Hz, T_K, root_tensors):
+        """Advance deterministic signed MPZ while the attempt clock is paused/stopped."""
+        trial = self.copy()
+        action = trial.global_cumulative_action
+        log_action = trial.log_global_cumulative_action
+        detail = trial._advance_phase_block_exact(
+            cycles, frequency_Hz, T_K, root_tensors
+        )
+        trial.global_cumulative_action = action
+        trial.log_global_cumulative_action = log_action
+        detail["action_increment"] = 0.0
+        detail["log_action_increment"] = -math.inf
+        detail["clock_advanced"] = False
+        return {"state": trial, "cycles_consumed": float(cycles),
+                "cycles_unused": 0.0, "crossed": False, "detail": detail}
 
     def select_mark(self, site_node_index, site_available, node_log_propensity,
                     node_initiation_weight, *, cycle, phase_index,
