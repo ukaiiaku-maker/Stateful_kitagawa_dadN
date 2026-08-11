@@ -1,0 +1,290 @@
+[
+  {
+    "FEM_Kt": 2.033691229284314,
+    "R": 0.1,
+    "cycles_checkpoint": 20.0,
+    "direct_summary_H_attempt": null,
+    "effective_cleavage_max_MPa": 3740.333141051312,
+    "epsp_acc_max": 3.0258607115205677e-31,
+    "exact_root_node_sigma1_max_MPa": 3794.3644093799,
+    "fem_dep_eq_cycle_max": 1.512930355721852e-32,
+    "fem_drho_cycle_max_m2": 0.0,
+    "fem_scalar_rate_maxima": {
+      "mu_emit_cycle_gp": 4.325328961804484e-23,
+      "mu_escape_cycle_gp": 1.5131385682146646e-27,
+      "mu_flow_cycle_gp": 1.5129303557218517e-27,
+      "mu_peierls_cycle_gp": 1.5131385682146646e-27,
+      "mu_taylor_cycle_gp": 30986619.107172668
+    },
+    "mesh_root_radius_um": 598.7445183220907,
+    "mpz": {
+      "emitted_total": 8.331538603919076e-17,
+      "rho_back_by_system_m2": [
+        2.6172611684678877e-05,
+        2.6172611684678816e-05
+      ],
+      "sigma_back_by_system_Pa": [
+        0.38884687444930627,
+        0.3888468744493058
+      ],
+      "signed_active_K_shield_Pa_sqrt_m": -8.958923167610606e-95,
+      "tip_radius_m": 0.0005987445183220907
+    },
+    "phase_order_comparison": {
+      "averaged_action_m3": 9.323390682898829e-57,
+      "averaged_backstress_max_Pa": 0.39844947779680306,
+      "averaged_emitted_increment": 4.165769301464037e-18,
+      "averaged_shielding": -9.862464321421237e-95,
+      "ordered_action_m3": 9.323390682898642e-57,
+      "ordered_backstress_max_Pa": 0.3995634459990229,
+      "ordered_emitted_increment": 4.655605307223963e-18,
+      "ordered_shielding": -6.549025195284299e-81,
+      "relative_action_difference": -2.0032774272066584e-14
+    },
+    "rates": {
+      "1": {
+        "N10": 1.0894175155115464e+16,
+        "N50": 7.167074635263113e+16,
+        "N90": 2.380850658903513e+17,
+        "per_cycle_action": 9.671270578787532e-18,
+        "phase_rate_max_s": 1.0019989866946264e-13
+      },
+      "2": {
+        "N10": 3.0804547228453433e+35,
+        "N50": 2.0265737051982736e+36,
+        "N90": 6.732132127658123e+36,
+        "per_cycle_action": 3.4202910004308476e-37,
+        "phase_rate_max_s": 5.0200098466852946e-33
+      },
+      "3": {
+        "N10": 1.1300665095058493e+55,
+        "N50": 7.434496784859022e+55,
+        "N90": 2.4696863740972948e+56,
+        "per_cycle_action": 9.323390682898644e-57,
+        "phase_rate_max_s": 1.6766815931919015e-52
+      }
+    },
+    "raw_cleavage_rate_max_s": 1.0019989866946264e-13,
+    "root_opening_max_MPa": 3740.333141051312,
+    "root_sigma1_max_MPa": 4519.3138428540315,
+    "sigma_a_MPa": 1000.0,
+    "sigma_max_MPa": 2222.222222222222,
+    "sigma_min_MPa": 222.22222222222223
+  },
+  {
+    "FEM_Kt": 2.0336912292586167,
+    "R": 0.1,
+    "cycles_checkpoint": 100000000000000.0,
+    "direct_summary_H_attempt": 0.0003395517199200718,
+    "effective_cleavage_max_MPa": 7480.66628088445,
+    "epsp_acc_max": 1.8231205102871076e-12,
+    "exact_root_node_sigma1_max_MPa": 7588.728818546547,
+    "fem_dep_eq_cycle_max": 1.8231205096303287e-26,
+    "fem_drho_cycle_max_m2": 0.0,
+    "fem_scalar_rate_maxima": {
+      "mu_emit_cycle_gp": 1.8427933803459186e-21,
+      "mu_escape_cycle_gp": 0.0777697834967665,
+      "mu_flow_cycle_gp": 1.8231205096303285e-21,
+      "mu_peierls_cycle_gp": 0.07776978460706481,
+      "mu_taylor_cycle_gp": 43466185.56057263
+    },
+    "mesh_root_radius_um": 598.7445183220907,
+    "mpz": {
+      "emitted_total": 0.0009244466379492383,
+      "rho_back_by_system_m2": [
+        290404738.29012996,
+        290404738.29012996
+      ],
+      "sigma_back_by_system_Pa": [
+        1295259.9305563201,
+        1295259.9305563201
+      ],
+      "signed_active_K_shield_Pa_sqrt_m": -2.048159236701892e-60,
+      "tip_radius_m": 0.0005987445184823806
+    },
+    "phase_order_comparison": {
+      "averaged_action_m3": 3.3955171592584026e-18,
+      "averaged_backstress_max_Pa": 1295259.9305563264,
+      "averaged_emitted_increment": 9.324138683375338e-18,
+      "averaged_shielding": -2.0481592366965006e-60,
+      "ordered_action_m3": 3.3955171592588267e-18,
+      "ordered_backstress_max_Pa": 1295259.93055633,
+      "ordered_emitted_increment": 1.4094628242311558e-17,
+      "ordered_shielding": -6.112694021886035e-40,
+      "relative_action_difference": 1.2489696086433343e-13
+    },
+    "rates": {
+      "1": {
+        "N10": 1596.0901563663997,
+        "N50": 10500.379434339578,
+        "N90": 34881.50544991011,
+        "per_cycle_action": 6.601163176000419e-05,
+        "phase_rate_max_s": 0.7298096299951238
+      },
+      "2": {
+        "N10": 6170238162.916328,
+        "N50": 40592845994.59094,
+        "N90": 134846515560.86757,
+        "per_cycle_action": 1.7075599494854543e-11,
+        "phase_rate_max_s": 2.6631091844593347e-07
+      },
+      "3": {
+        "N10": 3.1029298547507372e+16,
+        "N50": 2.041359675270336e+17,
+        "N90": 6.781250057050671e+17,
+        "per_cycle_action": 3.395517159258827e-18,
+        "phase_rate_max_s": 6.47854203448105e-14
+      }
+    },
+    "raw_cleavage_rate_max_s": 0.7298096299951238,
+    "root_opening_max_MPa": 7480.666281885776,
+    "root_sigma1_max_MPa": 9038.627685593852,
+    "sigma_a_MPa": 2000.0,
+    "sigma_max_MPa": 4444.444444444444,
+    "sigma_min_MPa": 444.44444444444446
+  },
+  {
+    "FEM_Kt": 2.03369122928391,
+    "R": 0.1,
+    "cycles_checkpoint": 1000000000000.0,
+    "direct_summary_H_attempt": 0.03211324078705222,
+    "effective_cleavage_max_MPa": 8041.716253234261,
+    "epsp_acc_max": 3.333274059535306e-14,
+    "exact_root_node_sigma1_max_MPa": 8157.8834801528465,
+    "fem_dep_eq_cycle_max": 3.3332740593419865e-26,
+    "fem_drho_cycle_max_m2": 0.0,
+    "fem_scalar_rate_maxima": {
+      "mu_emit_cycle_gp": 3.3420018199127594e-21,
+      "mu_escape_cycle_gp": 3.6567559479577287,
+      "mu_flow_cycle_gp": 3.3332740593419858e-21,
+      "mu_peierls_cycle_gp": 3.656758280671658,
+      "mu_taylor_cycle_gp": 44065853.17074633
+    },
+    "mesh_root_radius_um": 598.7445183220907,
+    "mpz": {
+      "emitted_total": 1.0482454196671168e-05,
+      "rho_back_by_system_m2": [
+        3292947.632299918,
+        3292947.632299918
+      ],
+      "sigma_back_by_system_Pa": [
+        137926.42946979232,
+        137926.42946979232
+      ],
+      "signed_active_K_shield_Pa_sqrt_m": -9.947871389620634e-60,
+      "tip_radius_m": 0.0005987445183239082
+    },
+    "phase_order_comparison": {
+      "averaged_action_m3": 3.2113240758242915e-14,
+      "averaged_backstress_max_Pa": 137926.4294698613,
+      "averaged_emitted_increment": 1.0482879755219221e-17,
+      "averaged_shielding": -9.947871389615048e-60,
+      "ordered_action_m3": 3.211324076001683e-14,
+      "ordered_backstress_max_Pa": 137926.4294699079,
+      "ordered_emitted_increment": 1.756746332605419e-17,
+      "ordered_shielding": -1.38460683783805e-38,
+      "relative_action_difference": 5.523935395896712e-11
+    },
+    "rates": {
+      "1": {
+        "N10": 74.74288863460268,
+        "N50": 491.719523205774,
+        "N90": 1633.4568989418788,
+        "per_cycle_action": 0.0014096393326849424,
+        "phase_rate_max_s": 15.351852944893484
+      },
+      "2": {
+        "N10": 13726251.124329856,
+        "N50": 90302445.91233914,
+        "N90": 299978232.1132458,
+        "per_cycle_action": 7.675840599409855e-09,
+        "phase_rate_max_s": 0.00011783848838932072
+      },
+      "3": {
+        "N10": 3280905731227.4536,
+        "N50": 21584466847798.203,
+        "N90": 71702046834865.72,
+        "per_cycle_action": 3.211324076001683e-14,
+        "phase_rate_max_s": 6.030122768857009e-10
+      }
+    },
+    "raw_cleavage_rate_max_s": 15.351852944893484,
+    "root_opening_max_MPa": 8041.716253246467,
+    "root_sigma1_max_MPa": 9716.524762134237,
+    "sigma_a_MPa": 2150.0,
+    "sigma_max_MPa": 4777.777777777777,
+    "sigma_min_MPa": 477.77777777777777
+  },
+  {
+    "FEM_Kt": 2.0336912292843112,
+    "R": 0.1,
+    "cycles_checkpoint": 586759.639157665,
+    "direct_summary_H_attempt": 0.037363528078493934,
+    "effective_cleavage_max_MPa": 9350.832852605947,
+    "epsp_acc_max": 7.952684998664846e-20,
+    "exact_root_node_sigma1_max_MPa": 9485.911023427101,
+    "fem_dep_eq_cycle_max": 1.3553565153291465e-25,
+    "fem_drho_cycle_max_m2": 0.0,
+    "fem_scalar_rate_maxima": {
+      "mu_emit_cycle_gp": 1.3566444722235585e-20,
+      "mu_escape_cycle_gp": 2234.6158325580914,
+      "mu_flow_cycle_gp": 1.3553565153291463e-20,
+      "mu_peierls_cycle_gp": 2235.3369245338413,
+      "mu_taylor_cycle_gp": 45306802.216722205
+    },
+    "mesh_root_radius_um": 598.7445183220907,
+    "mpz": {
+      "emitted_total": 8.263171025267564e-12,
+      "rho_back_by_system_m2": [
+        2.595784245981735,
+        2.595784245981729
+      ],
+      "sigma_back_by_system_Pa": [
+        122.45862472103529,
+        122.45862472103515
+      ],
+      "signed_active_K_shield_Pa_sqrt_m": -5.541615452187797e-60,
+      "tip_radius_m": 0.0005987445183220907
+    },
+    "phase_order_comparison": {
+      "averaged_action_m3": 1.8729482297567446e-06,
+      "averaged_backstress_max_Pa": 122.45872907250767,
+      "averaged_emitted_increment": 1.408270642095378e-17,
+      "averaged_shielding": -5.541615459706037e-60,
+      "ordered_action_m3": 1.8729482297567401e-06,
+      "ordered_backstress_max_Pa": 122.45883251607307,
+      "ordered_emitted_increment": 2.804289850745922e-17,
+      "ordered_shielding": -8.658399454914044e-38,
+      "relative_action_difference": -2.3742903847708786e-15
+    },
+    "rates": {
+      "1": {
+        "N10": 0.18635203570311007,
+        "N50": 1.2259752843153646,
+        "N90": 4.072601740604732,
+        "per_cycle_action": 0.5653843021370756,
+        "phase_rate_max_s": 5857.655325628243
+      },
+      "2": {
+        "N10": 89.79670496395786,
+        "N50": 590.7557729831329,
+        "N90": 1962.4481994895696,
+        "per_cycle_action": 0.0011733227371774424,
+        "phase_rate_max_s": 17.08921369021624
+      },
+      "3": {
+        "N10": 56253.83231842484,
+        "N50": 370083.4702996419,
+        "N90": 1229390.677441793,
+        "per_cycle_action": 1.87294822975674e-06,
+        "phase_rate_max_s": 0.033351280191029814
+      }
+    },
+    "raw_cleavage_rate_max_s": 5857.655325628243,
+    "root_opening_max_MPa": 9350.832852605947,
+    "root_sigma1_max_MPa": 11298.284607135061,
+    "sigma_a_MPa": 2500.0,
+    "sigma_max_MPa": 5555.555555555556,
+    "sigma_min_MPa": 555.5555555555555
+  }
+]
