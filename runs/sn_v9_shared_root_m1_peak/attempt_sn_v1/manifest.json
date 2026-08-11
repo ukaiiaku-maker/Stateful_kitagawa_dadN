@@ -2,12 +2,418 @@
   "schema": "V9_PEAK_BLUNT_M1_ATTEMPT_SN_1",
   "material": "Peak",
   "temperature_K": 300.0,
+  "repository_base_commit_at_analysis": "84668335451b06a254d751c47ab8b4c62fa6e38d",
   "geometry": "ideal smooth 600 um blunt notch",
   "correlated_front_segment_um": 10.0,
   "source_mode_histories": {
+    "1172.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1172_v1/Peak/shielded/sigmaA_1172MPa/v9_pd_high_cycle_mode_history.json",
+    "1290.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1290_v1/Peak/shielded/sigmaA_1290MPa/v9_pd_high_cycle_mode_history.json",
+    "1460.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1460_v1/Peak/shielded/sigmaA_1460MPa/v9_pd_high_cycle_mode_history.json",
     "1500.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1500_1e12_v1/Peak/shielded/sigmaA_1500MPa/v9_pd_high_cycle_mode_history.json",
-    "1820.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1820_v1/Peak/shielded/sigmaA_1820MPa/v9_pd_high_cycle_mode_history.json"
+    "1630.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1630_v1/Peak/shielded/sigmaA_1630MPa/v9_pd_high_cycle_mode_history.json",
+    "1820.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1820_v1/Peak/shielded/sigmaA_1820MPa/v9_pd_high_cycle_mode_history.json",
+    "2000.0": "runs/sn_v9_shared_root_m1_peak/attempt_survival_2000_v2/Peak/shielded/sigmaA_2000MPa/v9_pd_high_cycle_mode_history.json"
   },
   "quantile_semantics": "global attempt survival only; not stable-front survival",
-  "stationarity_assumed": false
+  "stationarity_assumed": false,
+  "conditions": {
+    "1172.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1172_v1/Peak/shielded/sigmaA_1172MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "0658be4461bbb033f357f944b6aafc34a4634d650fbec645f558760c1f5ce191",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "analysis_only": true,
+        "mark_rng_consumed": false,
+        "physical_threshold_draw": false,
+        "protocol": "conditional_no_event_action",
+        "stop_at_exact_action_boundary": false,
+        "threshold_override_action": 1e+100,
+        "topology_continuation_permitted": false
+      },
+      "checkpoint_generation": "generation_19c3158dcdbb459fbede8605cd449090",
+      "checkpoint_sha256": "010a344b88293962b6f88d161d6f25c9be09b4874f451c1b2e4c926bbb54f741",
+      "controller_sha256": "4a4e4209b872bee021ccd81b6509e0c14f2ce3305d00f95268e77c2886bb4dd2",
+      "mode_history_sha256": "57ac47bd2feb2473b76afbadda79358f94e34d09ee1374e5c4c21d71d7bc411b",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 6133474819124.0,
+        "projective": 0,
+        "stationary": 9993866525180876.0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 712,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        1e+16
+      ]
+    },
+    "1290.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1290_v1/Peak/shielded/sigmaA_1290MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "0658be4461bbb033f357f944b6aafc34a4634d650fbec645f558760c1f5ce191",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "analysis_only": true,
+        "mark_rng_consumed": false,
+        "physical_threshold_draw": false,
+        "protocol": "conditional_no_event_action",
+        "stop_at_exact_action_boundary": false,
+        "threshold_override_action": 1e+100,
+        "topology_continuation_permitted": false
+      },
+      "checkpoint_generation": "generation_c4b380cddcba4037a89d6352b1807ad2",
+      "checkpoint_sha256": "a061bf33b391221a0dfddc2d3b1945841280c4a48c0ac2838cb2cd63b7b713a8",
+      "controller_sha256": "44c5990bba29e2713d9067a26c682dde24c9666f44dec8e569959ae4c375cb5d",
+      "mode_history_sha256": "0daeb56399e04df6c1e794c40107dab47e7448c0ad0981884d8a62f35d4caea7",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 3717159784628.0,
+        "projective": 0,
+        "stationary": 96282840215372.0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 479,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        100000000000000.0
+      ]
+    },
+    "1460.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1460_v1/Peak/shielded/sigmaA_1460MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "0658be4461bbb033f357f944b6aafc34a4634d650fbec645f558760c1f5ce191",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "analysis_only": true,
+        "mark_rng_consumed": false,
+        "physical_threshold_draw": false,
+        "protocol": "conditional_no_event_action",
+        "stop_at_exact_action_boundary": false,
+        "threshold_override_action": 1e+100,
+        "topology_continuation_permitted": false
+      },
+      "checkpoint_generation": "generation_22efcfc6faa547949e7806e4e08e1caf",
+      "checkpoint_sha256": "888305f2ffe34c309c0d4de1ce5f186b486006f861b7bcc7c087ec69f9fcd5c4",
+      "controller_sha256": "9d6c27a65c18046577e4b076dd4aedf517685147ec66c6044459b573dcf99623",
+      "mode_history_sha256": "4376f97101083a0942053311958aacbbf722044aab43ef0c4f8c11001a1104c4",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 650324510001.0,
+        "projective": 0,
+        "stationary": 349675489999.0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 229,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        1000000000000.0
+      ]
+    },
+    "1500.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1500_1e12_v1/Peak/shielded/sigmaA_1500MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "dc79713a9feb4f96533b0955ab1e55c7e09bb848b86d969a759e5f885822af5d",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "protocol": "conditional_no_event_action",
+        "analysis_only": true,
+        "physical_threshold_draw": false,
+        "mark_rng_consumed": false,
+        "topology_continuation_permitted": false,
+        "threshold_override_action": 1e+100,
+        "reconstructed_from_run_args": true
+      },
+      "checkpoint_generation": "generation_9966bbe3fcab4d2089aad6cbcceed22e",
+      "checkpoint_sha256": "1f0abb116a1971b49007f513d632190d77617c59d6f108632db17f5cd25b63f9",
+      "controller_sha256": "5473feded9dc9982f877d8db1d487aa33a085e7553d5bf8bf3175c05e45bcfb9",
+      "mode_history_sha256": "e87bdc4005a5b2df9c434732490710047a5e4f95fc788b3ed748bce30b541376",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 650324510001.0,
+        "projective": 0,
+        "stationary": 349675489999.0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 229,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        1000000000000.0
+      ]
+    },
+    "1630.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1630_v1/Peak/shielded/sigmaA_1630MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "0658be4461bbb033f357f944b6aafc34a4634d650fbec645f558760c1f5ce191",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "analysis_only": true,
+        "mark_rng_consumed": false,
+        "physical_threshold_draw": false,
+        "protocol": "conditional_no_event_action",
+        "stop_at_exact_action_boundary": false,
+        "threshold_override_action": 1e+100,
+        "topology_continuation_permitted": false
+      },
+      "checkpoint_generation": "generation_c35a69576e874aa68a4d876f9ff60344",
+      "checkpoint_sha256": "9d0c6744ee3c25d8c5e28a239408d3420753821ff9a36687e3da096312727ca6",
+      "controller_sha256": "9be0ff3e56214f4ed2e62928cee0fda1093090994a146b95534ee2702531c2e6",
+      "mode_history_sha256": "57798fb76ea132a83d4b6345190ef1cbbc1757f2231dc8dbf7294e5e65e43897",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 10000000000.0,
+        "projective": 0,
+        "stationary": 0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 45,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        10000000000.0
+      ]
+    },
+    "1820.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_1820_v1/Peak/shielded/sigmaA_1820MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "dc79713a9feb4f96533b0955ab1e55c7e09bb848b86d969a759e5f885822af5d",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "protocol": "conditional_no_event_action",
+        "analysis_only": true,
+        "physical_threshold_draw": false,
+        "mark_rng_consumed": false,
+        "topology_continuation_permitted": false,
+        "threshold_override_action": 1e+100,
+        "reconstructed_from_run_args": true
+      },
+      "checkpoint_generation": "generation_2c102ceec1e647109a63a6f7e47bea71",
+      "checkpoint_sha256": "4adcb7b660459e43f49b7cd307c3193a7dfbf49857f527d0d8f08e329e7bd7a2",
+      "controller_sha256": "7152a4b3528bc6db9a139db52c36d2937efc7e9b2b013381bece49438093daf8",
+      "mode_history_sha256": "49b2bcd32b1be9a444a905a54a2459ae8151fa2e810f89e2fc089f99442e7728",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 100000000.0,
+        "projective": 0,
+        "stationary": 0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 24,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        100000000.0
+      ]
+    },
+    "2000.0": {
+      "run_path": "runs/sn_v9_shared_root_m1_peak/attempt_survival_2000_v2/Peak/shielded/sigmaA_2000MPa",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "material_row_sha256": "81db2cbf8c2c8a6fa02e23ce65abdc8422171eff046cb409d4d1a525bec2b826",
+      "material_fingerprint_sha256": "eeb992cb8f956351833ff148d7611c8fc9e210f2a02eb44a00caa85558001fc5",
+      "source_hashes": {
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "2f9ba969a32cfac678c52cd5f6a08fff2b53c9d1c4d0fa307a33bc36ba1a1c95",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
+      },
+      "temperature_K": 300.0,
+      "R": 0.1,
+      "frequency_Hz": 1000.0,
+      "nominal_root_radius_m": 0.0006,
+      "mesh_resolved_initial_root_radius_m": 0.0005987445183220907,
+      "conditional_survival_protocol": {
+        "analysis_only": true,
+        "mark_rng_consumed": false,
+        "physical_threshold_draw": false,
+        "protocol": "conditional_no_event_action",
+        "threshold_override_action": 1e+100,
+        "topology_continuation_permitted": false
+      },
+      "checkpoint_generation": "generation_de786b6f35534e21b7b935ccf2d91223",
+      "checkpoint_sha256": "b9a5328212a1e159d697a3b3381800600ada57fb87a239cbef2320661cfea105",
+      "controller_sha256": "f010266673ffc58f1f1529a519b714c89025dbb3dcfdcde390c8a923b8a99d3d",
+      "mode_history_sha256": "cc47f6f8ce9a09ac9fa65e7eeb9beaf71e6767add896e2c3c3096346a2cf0da7",
+      "accepted_cycle_totals_by_mode": {
+        "exact_private_window": 100000.0,
+        "projective": 0,
+        "stationary": 0,
+        "exact_burst": 0
+      },
+      "campaign_exact_map_evaluations": 15,
+      "mechanics_validity": "valid",
+      "geometry_resolution_audit": {
+        "area_pass": true,
+        "failure_reasons": [],
+        "minimum_element_area_m2": 2.790311508297466e-11,
+        "minimum_element_area_over_initial": 1.0,
+        "pass": true,
+        "radius_pass": true,
+        "root_radius_m": 0.0005987445183220907,
+        "root_radius_over_spacing": 49.89537652684091
+      },
+      "action_checkpoint_support_cycles": [
+        64.0,
+        100000.0
+      ]
+    }
+  }
 }

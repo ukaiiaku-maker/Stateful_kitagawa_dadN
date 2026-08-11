@@ -108,7 +108,8 @@ def main(argv=None):
             "restart_provenance": "hash-verified atomic v9 generation store",
         }
         canonical_label = CANONICAL_BY_STRESS_SEED.get((float(summary["sigma_a_MPa"]), hazard_seed, mark_seed))
-        eligible = canonical_label in (None, label)
+        historical = label.startswith("m1_1500_")
+        eligible = canonical_label == label
         registry_rows.append({
             "condition": label,
             "sigma_a_MPa": float(summary["sigma_a_MPa"]),
@@ -118,6 +119,7 @@ def main(argv=None):
                                    else "rate_separated_v2" if label.endswith("rate_separated_v2")
                                    else "historical_mixed_protocol_diagnostic"),
             "production_analyzer_eligible": eligible,
+            "diagnostic_ensemble_eligible": historical,
             "canonical_condition": canonical_label,
             "summary_path": str(summary_path),
             "summary_sha256": sha256(summary_path),

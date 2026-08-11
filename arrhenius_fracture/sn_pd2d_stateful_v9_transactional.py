@@ -763,6 +763,20 @@ def _checkpoint_signature(args, case_name, sigma_a_MPa):
     return payload
 
 
+def _conditional_survival_protocol(args):
+    threshold=getattr(args,"shared_root_survival_threshold_action",None)
+    conditional=threshold is not None
+    return {
+        "protocol":"conditional_no_event_action" if conditional else "physical_threshold_first_passage",
+        "analysis_only":conditional,
+        "physical_threshold_draw":not conditional,
+        "mark_rng_consumed":False if conditional else None,
+        "topology_continuation_permitted":False if conditional else True,
+        "threshold_override_action":float(threshold) if conditional else None,
+        "stop_at_exact_action_boundary":bool(getattr(args,"shared_root_stop_at_analysis_action_boundary",False)),
+    }
+
+
 def _save_case_checkpoint(
     path,
     *,
@@ -822,6 +836,7 @@ def _save_case_checkpoint(
         "shared_root_marked_clock_capsule": (
             _json_safe(shared_clock.capsule()) if shared_clock is not None else None
         ),
+        "conditional_survival_protocol":_conditional_survival_protocol(args),
     }
     arrays["metadata_json"] = np.asarray(json.dumps(metadata, allow_nan=True))
     tmp = path.with_name(path.name + ".tmp")
@@ -862,6 +877,12 @@ def _load_case_checkpoint(
     store = AtomicArrayGenerationStore(path.parent / "v9_generations")
     data, encoded_metadata, summary, _ = store.load(generation=generation)
     metadata = _restore_nonfinite_tags(encoded_metadata)
+    stored_protocol=metadata.get("conditional_survival_protocol",{})
+    requested_protocol=_conditional_survival_protocol(args)
+    if stored_protocol.get("analysis_only",False) and not requested_protocol["analysis_only"]:
+        raise RuntimeError("analysis-only conditional checkpoint cannot resume through physical mark/embryo path")
+    if stored_protocol.get("analysis_only",False) and requested_protocol["topology_continuation_permitted"]:
+        raise RuntimeError("conditional checkpoint forbids topology continuation")
     if metadata.get("checkpoint_version") != _CHECKPOINT_VERSION:
         raise RuntimeError("unsupported STATEFUL_PD_V9 checkpoint version")
     if metadata.get("model_id") != MODEL_ID:
@@ -1236,6 +1257,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_saturated = False
     geometry_saturation_cycles = None
     geometry_invalid_reason = None
+    analysis_action_boundary_reached = False
     geometry_audit = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
@@ -1338,6 +1360,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 "stress_step_source_checkpoint": stress_step_source,
                 "stress_step_source_generation": str(getattr(args, "stress_step_source_generation", "") or ""),
                 "stress_step_source_sigma_a_MPa": getattr(args, "stress_step_source_sigma_a_MPa", None),
+                "conditional_survival_protocol":_conditional_survival_protocol(args),
             },
             f,
             indent=2,
@@ -1409,6 +1432,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             or (spatial_birth_endpoint and pd_state.cycles_front_capture is not None)
             or (completed_global_event_endpoint and shared_root_mode
                 and shared_clock.attempt_count > 0)
+            or analysis_action_boundary_reached
         ):
             break
 
@@ -1429,6 +1453,19 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                                       args.pd_high_cycle_max_segment)
                 segment = min(remaining_campaign, args.pd_high_cycle_max_segment,
                               max(decade - cycles, useful_training, 1.0))
+                if (shared_root_mode
+                        and getattr(args,"shared_root_stop_at_analysis_action_boundary",False)
+                        and shared_clock.global_cumulative_action>0.0):
+                    remaining_action=max(shared_clock.global_threshold_action
+                                         - shared_clock.global_cumulative_action,0.0)
+                    observed_mean_rate=(shared_clock.global_cumulative_action
+                                        / max(cycles,1e-300))
+                    if remaining_action>0.0 and observed_mean_rate>0.0:
+                        # Proposal optimization only. Acceptance still requires
+                        # the exact split-window/state/hazard guard, so this
+                        # estimate cannot alter the integrated action.
+                        conservative_approach=max(2.0,0.8*remaining_action/observed_mean_rate)
+                        segment=min(segment,conservative_approach)
                 engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
                     projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2),
                     private_window_initial_cycles=max(2,min(int(segment),int(args.pd_high_cycle_max_segment))),
@@ -1482,6 +1519,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                         high_cycle_retry_after = 10.0 ** math.ceil(
                             math.log10(max(cycles + 1.0, 10.0))
                         )
+                    elif hc.event_guard_reached:
+                        # Re-enter the guarded private-window solver after one
+                        # exact cycle.  Deferring to the next decade can turn a
+                        # well-bracketed analysis boundary into thousands of
+                        # unnecessary fine macro steps.
+                        high_cycle_retry_after = cycles + 1.0
                     if not hc.event_guard_reached and not efficiency_limited:
                         continue
                 else:
@@ -1859,7 +1902,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 )
                 if clock_proposal["crossed"]:
                     phase_index = int(clock_proposal["phase_index"])
-                    if shared_root_m3_parity:
+                    if (getattr(args,"shared_root_stop_at_analysis_action_boundary",False)
+                            and _conditional_survival_protocol(args)["analysis_only"]):
+                        analysis_action_boundary_reached=True
+                    elif shared_root_m3_parity:
                         marked_event = clock_trial.commit_completed_event(
                             cycle=cycles + float(clock_proposal["cycles_consumed"]),
                             phase_index=phase_index,
@@ -2440,6 +2486,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "cycles_connected": pd_state.cycles_connected,
         "status": status,
         "resumed_from_checkpoint": bool(resumed),
+        "conditional_survival_protocol":_conditional_survival_protocol(args),
+        "analysis_action_boundary_reached":bool(analysis_action_boundary_reached),
         "checkpoint_path": str(checkpoint_path),
         "pd_points": len(patch.xy),
         "pd_bonds": len(patch.bonds),
@@ -2850,6 +2898,8 @@ def build_parser():
                    dest="spatial_mark_seed")
     p.add_argument("--shared-root-survival-threshold-action", type=float, default=None,
                    help="conditional no-event threshold used to record H(N) without realizing a mark")
+    p.add_argument("--shared-root-stop-at-analysis-action-boundary", action="store_true",
+                   help="stop at the exact conditional action crossing without mark or threshold renewal")
     p.add_argument("--site-density-m2", type=float, default=5e10, dest="site_density_m2")
     p.add_argument(
         "--delivery-source",

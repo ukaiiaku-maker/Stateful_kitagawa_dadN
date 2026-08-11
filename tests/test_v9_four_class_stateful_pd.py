@@ -7,7 +7,8 @@ import numpy as np
 from arrhenius_fracture.sn_arrhenius_chain import AuditedExpFloorBarrier
 from arrhenius_fracture.sn_feature_geometry_v8_7 import BluntNotchGeometry
 from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
-    ScratchExpFloorBarrier, _checkpoint_signature, build_parser as build_pd_parser,
+    ScratchExpFloorBarrier, _checkpoint_signature, _conditional_survival_protocol,
+    build_parser as build_pd_parser,
 )
 from scripts.run_v9_four_class_stateful_pd import build_parser as build_four_class_parser
 
@@ -29,6 +30,7 @@ class FourClassStatefulPDTests(unittest.TestCase):
         self.assertEqual(args.shared_root_transition_max_cycles, 1.0e5)
         self.assertEqual(args.shared_root_poststable_max_cycles, 1.0e5)
         self.assertIsNone(args.shared_root_survival_threshold_action)
+        self.assertFalse(args.shared_root_stop_at_analysis_action_boundary)
         refined = build_four_class_parser().parse_args([
             "--material-class", "Peak", "--sigma-a-MPa", "500",
             "--source-root", "/tmp/source",
@@ -44,6 +46,18 @@ class FourClassStatefulPDTests(unittest.TestCase):
         b.shared_root_transition_max_cycles=.6103515625
         b.shared_root_poststable_max_cycles=625.
         self.assertEqual(_checkpoint_signature(a,"shielded",2000.),_checkpoint_signature(b,"shielded",2000.))
+
+    def test_conditional_survival_protocol_is_explicitly_analysis_only(self):
+        args=build_pd_parser().parse_args([])
+        args.shared_root_survival_threshold_action=1e100
+        protocol=_conditional_survival_protocol(args)
+        self.assertEqual(protocol["protocol"],"conditional_no_event_action")
+        self.assertTrue(protocol["analysis_only"])
+        self.assertFalse(protocol["physical_threshold_draw"])
+        self.assertFalse(protocol["mark_rng_consumed"])
+        self.assertFalse(protocol["topology_continuation_permitted"])
+        self.assertEqual(protocol["threshold_override_action"],1e100)
+        self.assertFalse(protocol["stop_at_exact_action_boundary"])
 
     def test_audited_exp_floor_matches_definition(self):
         barrier = AuditedExpFloorBarrier(
