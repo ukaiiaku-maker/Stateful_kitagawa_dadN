@@ -20,7 +20,10 @@ CASES={
     2000.0:ROOT/"attempt_survival_2000_v2/Peak/shielded/sigmaA_2000MPa",
 }
 OUT=ROOT/"attempt_sn_v1"
-EXACT_BOUNDARIES={(1820.0,"N50"):ROOT/"attempt_boundary_1820_N50_v3/Peak/shielded/sigmaA_1820MPa/summary.json"}
+EXACT_BOUNDARIES={
+    (1500.0,"N50"):ROOT/"premark_boundary_1500_N50_v1/Peak/shielded/sigmaA_1500MPa/summary.json",
+    (1820.0,"N50"):ROOT/"attempt_boundary_1820_N50_v3/Peak/shielded/sigmaA_1820MPa/summary.json",
+}
 
 
 def checkpoints(sigma_a_MPa,path):
@@ -84,9 +87,10 @@ def main():
                   "relative_interpolation_error":abs(reported-interpolated)/reported if exact else "",
                   "lower_checkpoint_cycles":left["cycles"],
                   "upper_checkpoint_cycles":right["cycles"],
-                  "method":"piecewise_linear_inversion_of_actual_cumulative_action",
+                  "method":("exact_ordered_phase_action_boundary_localization" if exact
+                            else "piecewise_linear_inversion_of_actual_cumulative_action"),
                   "trajectory_supported":True,"exact_endpoint_run":bool(exact)})
-    with (OUT/"Peak_blunt_m1_attempt_SN.csv").open("w",newline="") as f:
+    with (OUT/"Peak_blunt_m1_attempt_SN_v2.csv").open("w",newline="") as f:
         w=csv.DictWriter(f,fieldnames=list(q[0]),lineterminator="\n");w.writeheader();w.writerows(q)
     provenance={}
     for stress,case in CASES.items():

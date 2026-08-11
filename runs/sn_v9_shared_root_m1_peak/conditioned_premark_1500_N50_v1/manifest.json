@@ -1,0 +1,9 @@
+{
+  "capsule_sha256": "68243cad7497a6fb3a9ec73e8dc304debc5b3d3cf6434981dea39f71edece4b7",
+  "source_files": {
+    "runs/sn_v9_shared_root_m1_peak/premark_boundary_1500_N50_v1/Peak/shielded/sigmaA_1500MPa/checkpoint_latest.npz": "2f29c2653a2918d1b40ec188d51e85a9145b18d769dfbbc1cf3295fbba57b2af",
+    "runs/sn_v9_shared_root_m1_peak/premark_boundary_1500_N50_v1/Peak/shielded/sigmaA_1500MPa/summary.json": "28384fb2e8b6688c0b31e36d5995793f25a585b9af670c7b5e626a932761d967",
+    "runs/sn_v9_shared_root_m1_peak/premark_boundary_1500_N50_replay_v2/Peak/shielded/sigmaA_1500MPa/checkpoint_latest.npz": "dde6d48bcadc085904198c24c055860f44990224178ec86b709d892c69a1a9c7",
+    "runs/sn_v9_shared_root_m1_peak/premark_boundary_1500_N50_replay_v2/Peak/shielded/sigmaA_1500MPa/summary.json": "7db26a03ca68ce3415d10e8f71c6dccabd6f7c5b6a28158da1e24f538ead07b3"
+  }
+}

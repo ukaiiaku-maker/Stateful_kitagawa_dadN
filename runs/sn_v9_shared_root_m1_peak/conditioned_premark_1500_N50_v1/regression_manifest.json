@@ -1,0 +1,237 @@
+{
+  "schema": "V9_BOUNDED_REGRESSION_MANIFEST_1",
+  "source_commit": "b956d88b422342a4ee973eef6222535df2ced478",
+  "groups": [
+    {
+      "test_group": "tests/test_endurance.py",
+      "collected": 14,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 14
+    },
+    {
+      "test_group": "tests/test_k360_endurance_tail.py",
+      "collected": 1,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 1
+    },
+    {
+      "test_group": "tests/test_stateful_pd_v8_3_core.py",
+      "collected": 50,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 50
+    },
+    {
+      "test_group": "tests/test_stateful_pd_v8_3_sweep.py",
+      "collected": 7,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 7
+    },
+    {
+      "test_group": "tests/test_v9_array_codec.py",
+      "collected": 4,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 4
+    },
+    {
+      "test_group": "tests/test_v9_canonical_elastic_four_class_fem.py",
+      "collected": 6,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 6
+    },
+    {
+      "test_group": "tests/test_v9_canonical_four_class_birth.py",
+      "collected": 9,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 9
+    },
+    {
+      "test_group": "tests/test_v9_conditioned_premark_converter.py",
+      "collected": 1,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 1
+    },
+    {
+      "test_group": "tests/test_v9_fem_pd_local_tip_reference.py",
+      "collected": 3,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
+      "test_group": "tests/test_v9_fem_transaction.py",
+      "collected": 8,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 8
+    },
+    {
+      "test_group": "tests/test_v9_four_class_registry.py",
+      "collected": 2,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "test_group": "tests/test_v9_four_class_signed_mpz.py",
+      "collected": 5,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 5
+    },
+    {
+      "test_group": "tests/test_v9_four_class_stateful_pd.py",
+      "collected": 6,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 6
+    },
+    {
+      "test_group": "tests/test_v9_log_rates.py",
+      "collected": 7,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 7
+    },
+    {
+      "test_group": "tests/test_v9_m1_peak_summary_registry.py",
+      "collected": 3,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
+      "test_group": "tests/test_v9_pd_bridge_reconstruction.py",
+      "collected": 2,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "test_group": "tests/test_v9_pd_emission_delivery_bridge.py",
+      "collected": 2,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 2
+    },
+    {
+      "test_group": "tests/test_v9_pd_high_cycle.py",
+      "collected": 18,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 18
+    },
+    {
+      "test_group": "tests/test_v9_pd_real_cycle_callback.py",
+      "collected": 1,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 1
+    },
+    {
+      "test_group": "tests/test_v9_pd_shared_root_marked_cleavage.py",
+      "collected": 10,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 10
+    },
+    {
+      "test_group": "tests/test_v9_peak_attempt_survival_analysis.py",
+      "collected": 1,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 1
+    },
+    {
+      "test_group": "tests/test_v9_physical_integrator.py",
+      "collected": 7,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 7
+    },
+    {
+      "test_group": "tests/test_v9_quiet_tail_kernel.py",
+      "collected": 4,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 4
+    },
+    {
+      "test_group": "tests/test_v9_sn_campaign.py",
+      "collected": 7,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 7
+    },
+    {
+      "test_group": "tests/test_v9_stable_birth_energy_gate.py",
+      "collected": 6,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 6
+    },
+    {
+      "test_group": "tests/test_v9_stateful_peridynamics.py",
+      "collected": 4,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 4
+    },
+    {
+      "test_group": "tests/test_v9_transactional.py",
+      "collected": 10,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 10
+    },
+    {
+      "test_group": "tests/test_v9_v87_adapter.py",
+      "collected": 10,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 10
+    }
+  ],
+  "totals": {
+    "collected": 208,
+    "passed": 208,
+    "failed": 0,
+    "skipped": 0
+  },
+  "all_passed": true
+}

@@ -2,7 +2,7 @@
   "schema": "V9_PEAK_BLUNT_M1_ATTEMPT_SN_1",
   "material": "Peak",
   "temperature_K": 300.0,
-  "repository_base_commit_at_analysis": "84668335451b06a254d751c47ab8b4c62fa6e38d",
+  "repository_base_commit_at_analysis": "b956d88b422342a4ee973eef6222535df2ced478",
   "geometry": "ideal smooth 600 um blunt notch",
   "correlated_front_segment_um": 10.0,
   "source_mode_histories": {

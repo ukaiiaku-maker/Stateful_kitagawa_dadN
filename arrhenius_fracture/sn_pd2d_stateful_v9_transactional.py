@@ -63,6 +63,7 @@ from .v9_pd_high_cycle_adapter import SpatialPDDormantAdapter, SharedRootSpatial
 from .v9_pd_shared_root_marked_cleavage import (
     MODEL_ID as SHARED_ROOT_MODEL_ID, M1_PRODUCTION_MODEL_ID,
     M3_PARITY_MODEL_ID, SHARED_ROOT_MODEL_IDS, SharedRootMarkedCleavageState,
+    normalized_available_site_marks,
 )
 
 SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES = 1.0e5
@@ -1258,6 +1259,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_saturation_cycles = None
     geometry_invalid_reason = None
     analysis_action_boundary_reached = False
+    analysis_boundary_localization = None
     geometry_audit = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
@@ -1904,6 +1906,40 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                     phase_index = int(clock_proposal["phase_index"])
                     if (getattr(args,"shared_root_stop_at_analysis_action_boundary",False)
                             and _conditional_survival_protocol(args)["analysis_only"]):
+                        s1_phase, _, _ = patch._point_drivers(
+                            sigma_combined[[phase_index]], point_amp
+                        )
+                        back_local=np.asarray(sigma_back,float)[patch.global_nodes]
+                        shift_local=np.asarray(state_shift,float)[patch.global_nodes]
+                        opening_local=np.maximum(s1_phase[0]-float(chi)*back_local,0.0)
+                        barrier_local=np.maximum(
+                            crack.deltaG_eV(opening_local,args.T)+shift_local,1e-12
+                        )
+                        log_local=(math.log(float(crack.rate_prefactor))
+                                   -barrier_local/max(KB*args.T/EV_TO_J,1e-30))
+                        available=np.asarray(pd_trial.site_status,np.uint8)==0
+                        site_ids,mark_p,mark_logw=normalized_available_site_marks(
+                            pd_trial.site_node_index,available,log_local,
+                            patch.initiation_weight,
+                        )
+                        positive=mark_p>0.0
+                        entropy=float(-np.sum(mark_p[positive]*np.log(mark_p[positive])))
+                        analysis_boundary_localization={
+                            "schema":"V9_CONDITIONED_ATTEMPT_PREMARK_LOCALIZATION_1",
+                            "crossing_cycle":float(cycles+clock_proposal["cycles_consumed"]),
+                            "phase_index":phase_index,
+                            "phase_fraction":float(clock_proposal.get("phase_fraction",0.0)),
+                            "root_phase_tensor_Pa":root_tensors[phase_index].tolist(),
+                            "local_opening_stress_Pa":opening_local.tolist(),
+                            "local_backstress_Pa":back_local.tolist(),
+                            "local_state_shift_eV":shift_local.tolist(),
+                            "local_cleavage_log_propensity_s":log_local.tolist(),
+                            "available_site_ids":site_ids.tolist(),
+                            "normalized_mark_probability":mark_p.tolist(),
+                            "mark_log_weight":mark_logw.tolist(),
+                            "mark_entropy_nats":entropy,
+                            "mark_probability_sum":float(np.sum(mark_p)),
+                        }
                         analysis_action_boundary_reached=True
                     elif shared_root_m3_parity:
                         marked_event = clock_trial.commit_completed_event(
@@ -2488,6 +2524,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "resumed_from_checkpoint": bool(resumed),
         "conditional_survival_protocol":_conditional_survival_protocol(args),
         "analysis_action_boundary_reached":bool(analysis_action_boundary_reached),
+        "analysis_boundary_localization":analysis_boundary_localization,
         "checkpoint_path": str(checkpoint_path),
         "pd_points": len(patch.xy),
         "pd_bonds": len(patch.bonds),
