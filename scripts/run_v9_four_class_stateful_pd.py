@@ -152,6 +152,7 @@ def build_parser():
     parser.add_argument("--out", type=Path, default=Path("runs/sn_v9_four_class_stateful_pd"))
     parser.add_argument("--cycles-max", type=float, default=1.0e8)
     parser.add_argument("--block-cycles", type=float, default=1.0e5)
+    parser.add_argument("--shared-root-internal-max-cycles", type=float, default=1.0e5)
     parser.add_argument("--min-block-cycles", type=float, default=1.0e-6)
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
@@ -177,7 +178,7 @@ def main(argv=None):
     cli = build_parser().parse_args(argv)
     args = build_legacy_parser().parse_args([])
     for name in (
-        "cycles_max", "block_cycles", "min_block_cycles", "max_blocks", "seed",
+        "cycles_max", "block_cycles", "shared_root_internal_max_cycles", "min_block_cycles", "max_blocks", "seed",
         "pd_seed", "global_cleavage_seed", "spatial_mark_seed",
         "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",
@@ -205,7 +206,7 @@ def main(argv=None):
         "material_class": cli.material_class,
         "option_id": args.four_class_option_id,
         "analytic_notch_root_radius_m": 600.0e-6,
-        "authoritative_macro_transaction_ceiling_cycles": 1.0e5,
+        "shared_root_internal_macro_ceiling_cycles": cli.shared_root_internal_max_cycles,
         "external_block_partition_changes_physical_path": False,
         "pd_image_policy": args.pd_image_policy,
         "transfer": args.four_class_transfer_contract,

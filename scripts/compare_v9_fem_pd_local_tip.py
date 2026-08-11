@@ -16,6 +16,7 @@ from arrhenius_fracture.v9_pd_shared_root_marked_cleavage import (
     M1_PRODUCTION_MODEL_ID, M3_PARITY_MODEL_ID, SharedRootMarkedCleavageState,
 )
 from arrhenius_fracture.v9_quiet_tail_kernel import restore_condition_checkpoint
+from arrhenius_fracture.sn_intact_fem import stress_state_intact
 
 PEAK = "v913_paper_peak01_0242980_persistent_sites"
 SOURCE = Path("/Volumes/Data/Data/Nanopillar_calculation/PF-fracture-fatigue_v10_2_21_persistent_sites_top1")
@@ -25,6 +26,7 @@ PD_CASES = {
     2000.: Path("runs/sn_v9_shared_root_m1_peak/Peak_2000/Peak/shielded/sigmaA_2000MPa"),
     1500.: Path("runs/sn_v9_shared_root_m1_peak/Peak_1500_VHCF/Peak/shielded/sigmaA_1500MPa"),
 }
+_FEM_MECHANICS = {}
 
 def digest(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def loadjson(p): return json.loads(Path(p).read_text(), parse_constant=lambda _x: float("inf"))
@@ -38,6 +40,14 @@ def eff(opening, shield, r0, r):
     K=np.maximum(opening,0)*math.sqrt(2*math.pi*r0)-shield
     return np.maximum(K,0)/math.sqrt(2*math.pi*r)
 def sums(a,prefix): return float(sum(np.sum(a[k]) for k in a if k.startswith(prefix)))
+def fem_mechanics(stress):
+    if stress not in _FEM_MECHANICS:
+        c=CanonicalElasticFourClassFEMCondition.from_run_args(MECHANICS,PEAK,SOURCE,stress,1720)
+        h=c._elastic_history; phase,node=np.unravel_index(np.argmax(h["s1_node"]),h["s1_node"].shape)
+        gp,_,s1gp,_=stress_state_intact(c.mesh,h["u_hist"][phase],c.fem.ep_gp,c.cached_fem.Dmat,c.cached_fem.material)
+        elem=int(np.argmax(s1gp)); centroid=np.mean(c.mesh.nodes[c.mesh.elems[elem]],axis=0)
+        _FEM_MECHANICS[stress]=(c,int(node),int(elem),centroid)
+    return _FEM_MECHANICS[stress]
 def csvrows(path):
     with Path(path).open(newline="") as f: return list(csv.DictReader(f))
 def audit_source_tables():
@@ -66,6 +76,7 @@ def fem_rows():
         raw=np.exp(a["kernel_cleavage_log_rate_raw_s"]); m1=float(np.mean(raw)/audit["frequency_Hz"])
         sigma_max=2*stress/(1-audit["R"])
         root_s1=np.linalg.eigvalsh(tensors)[:,-1]
+        condition,hotnode,hotelem,hotxy=fem_mechanics(stress); rootxy=condition.mesh.nodes[audit["root_node"]]
         key=("Peak",stress,N); sr=survival[key]; dr=descent.get(key)
         matching_gate=[x for x in gates if x["material_class"]=="Peak" and float(x["sigma_a_MPa"])==stress and float(x["N"])==N]
         admitted=[float(x["admitted_length_m"]) for x in matching_gate if float(x["admitted_length_m"])>0]
@@ -73,7 +84,9 @@ def fem_rows():
           sigma_min_MPa=audit["R"]*sigma_max,sigma_max_MPa=sigma_max,N=N,
           nominal_a_um=360.,nominal_b_um=127.2792206135786,nominal_rho_um=45.,
           mesh_root_radius_um=audit["root_radius_initial_m"]*1e6,analytical_Kt=1+2*360/127.2792206135786,
-          FEM_Kt=float(max(root_s1)/(sigma_max*1e6)),root_node=audit["root_node"],
+          FEM_Kt=float(max(root_s1)/(sigma_max*1e6)),Kt_root_opening=float(max(opening)/(sigma_max*1e6)),Kt_root_principal=float(max(root_s1)/(sigma_max*1e6)),
+          Kt_hotspot_principal=float(np.max(condition._elastic_history["s1_node"])/(sigma_max*1e6)),root_node=audit["root_node"],root_x_m=rootxy[0],root_y_m=rootxy[1],
+          hotspot_node=hotnode,hotspot_node_x_m=condition.mesh.nodes[hotnode,0],hotspot_node_y_m=condition.mesh.nodes[hotnode,1],hotspot_element=hotelem,hotspot_element_x_m=hotxy[0],hotspot_element_y_m=hotxy[1],root_hotspot_distance_m=float(np.linalg.norm(rootxy-condition.mesh.nodes[hotnode])),
           root_opening_max_MPa=float(max(opening)/1e6),effective_cleavage_max_MPa=float(max(effective)/1e6),
           raw_m1_action_per_cycle=m1,m3_action_per_cycle=ks["cycle_hazard"],cumulative_action=summ["H_cleave"],
           cycle_hazard=summ["cycle_hazard"],backstress_max_Pa=float(max(abs(a["kernel_sigma_back_by_system_Pa"]))),
@@ -91,12 +104,22 @@ def fem_rows():
           data_role="direct_atomic_checkpoint",tensor_sha256=hashlib.sha256(tensors.tobytes()).hexdigest(),_tensors=tensors))
     return rows
 
-def pd_record(stress,case):
+def pd_record(stress,case,generation_name=None):
     args,mesh,patch,chain,crack,cached,transaction,smax,smin=build_context(case/"run_args.json",stress)
-    with np.load(case/"checkpoint_latest.npz",allow_pickle=True) as z:
-      md=driver._restore_nonfinite_tags(json.loads(str(z["metadata_json"].item())))
-      mesh.nodes[:]=z["mesh_nodes"]
-      ep=z["ep_gp"].copy(); u=z["u"].copy(); root=z["root_xy"].copy(); capsule=md["shared_root_marked_clock_capsule"]
+    if generation_name:
+      gd=case/"v9_generations"/generation_name
+      md=driver._restore_nonfinite_tags(loadjson(gd/"state_metadata.json"))
+      with np.load(gd/"state_arrays.npz") as z:
+        mesh.nodes[:]=z["mesh_nodes"];ep=z["ep_gp"].copy();u=z["u"].copy();root=z["root_xy"].copy()
+      driver.rebuild_mesh_geometry(mesh,root);patch.update_geometry(mesh,root)
+      capsule=md["shared_root_marked_clock_capsule"]
+      checkpoint_cycle=float(md["cycles"])
+    else:
+      with np.load(case/"checkpoint_latest.npz",allow_pickle=True) as z:
+        md=driver._restore_nonfinite_tags(json.loads(str(z["metadata_json"].item())))
+        mesh.nodes[:]=z["mesh_nodes"]
+        ep=z["ep_gp"].copy(); u=z["u"].copy(); root=z["root_xy"].copy(); capsule=md["shared_root_marked_clock_capsule"]
+      checkpoint_cycle=loadjson(case/"summary.json")["cycles_total"]
     summary=loadjson(case/"summary.json")
     option_id=capsule["audit"].get("option_id",PEAK)
     source_root=capsule["audit"].get("source_repository",str(SOURCE))
@@ -113,9 +136,12 @@ def pd_record(stress,case):
     effective=np.array([clock.effective_opening_stress_Pa(x) for x in opening]); raw=np.exp([clock.mpz.cleavage_log_rate_s(x,args.T) for x in effective])
     m1=float(np.mean(raw)/args.frequency_Hz); m3=float(np.mean([canonical_effective_cleavage_rate(x,3.,1e-6) for x in raw])/args.frequency_Hz)
     mpz=clock.mpz.summary(); sigma_max=smax/1e6; root_s1=np.linalg.eigvalsh(tensors)[:,-1]
+    phase,hotnode=np.unravel_index(np.argmax(hist["s1_node"]),hist["s1_node"].shape)
+    _,_,s1gp,_=stress_state_intact(mesh,hist["u_hist"][phase],ep,cached.Dmat,cached.material); hotelem=int(np.argmax(s1gp));hotxy=np.mean(mesh.nodes[mesh.elems[hotelem]],axis=0)
     return dict(model="PD_m1",geometry="blunt_600um",sigma_a_MPa=stress,sigma_min_MPa=smin/1e6,sigma_max_MPa=sigma_max,
-      N=summary["cycles_total"],nominal_a_um=150.,nominal_b_um=300.,nominal_rho_um=600.,
-      mesh_root_radius_um=summary["root_radius_initial_m"]*1e6,analytical_Kt=2.,FEM_Kt=float(max(root_s1)/(smax)),root_node=node,
+      N=checkpoint_cycle,nominal_a_um=150.,nominal_b_um=300.,nominal_rho_um=600.,
+      mesh_root_radius_um=summary["root_radius_initial_m"]*1e6,analytical_Kt=2.,FEM_Kt=float(max(root_s1)/(smax)),Kt_root_opening=float(max(opening)/smax),Kt_root_principal=float(max(root_s1)/smax),Kt_hotspot_principal=float(np.max(hist["s1_node"])/smax),
+      root_node=node,root_x_m=mesh.nodes[node,0],root_y_m=mesh.nodes[node,1],hotspot_node=int(hotnode),hotspot_node_x_m=mesh.nodes[hotnode,0],hotspot_node_y_m=mesh.nodes[hotnode,1],hotspot_element=hotelem,hotspot_element_x_m=hotxy[0],hotspot_element_y_m=hotxy[1],root_hotspot_distance_m=float(np.linalg.norm(mesh.nodes[node]-mesh.nodes[hotnode])),
       root_opening_max_MPa=float(max(opening)/1e6),effective_cleavage_max_MPa=float(max(effective)/1e6),
       raw_m1_action_per_cycle=m1,m3_action_per_cycle=m3,cumulative_action=summary["H_attempt_final"],cycle_hazard=m1,
       backstress_max_Pa=float(max(abs(np.asarray(mpz["sigma_back_by_system_Pa"])))),shielding_Pa_sqrt_m=mpz["signed_active_K_shield_Pa_sqrt_m"],
@@ -124,7 +150,7 @@ def pd_record(stress,case):
       slip_positive=float(np.sum(mpz["accumulated_slip_positive"])),slip_negative=float(np.sum(mpz["accumulated_slip_negative"])),
       aggregate_emission=mpz["emitted_total"],endpoint="front_capture_after_stable_spatial_seed",event_or_censor_cycle=summary["cycles_total"],
       conditional_attempt_admission_probability=math.nan,rejected_phase_xi_fraction=math.nan,minimum_admitted_length_m=math.nan,maximum_admitted_length_m=math.nan,minimum_energy_gate_margin_J_per_m=math.nan,
-      checkpoint_generation="checkpoint_latest_hash_verified",data_role="deterministically_reconstructed_root_tensor_from_atomic_PD_checkpoint",
+      checkpoint_generation=generation_name or "checkpoint_latest_hash_verified",data_role="deterministically_reconstructed_root_tensor_from_atomic_PD_checkpoint",
       tensor_sha256=hashlib.sha256(tensors.tobytes()).hexdigest(),_tensors=tensors,_clock=clock)
 
 def parity():
@@ -164,7 +190,14 @@ def plots(rows,out):
     latest={}
     for r in public: latest[(r["model"],r["sigma_a_MPa"])]=r
     pts=list(latest.values()); colors={"FEM_v3":"#3569a8","PD_m1":"#c43c39"}
-    specs=[("effective_cleavage_max_MPa","sigma_a_MPa","01_effective_stress_vs_nominal","effective cleavage stress, MPa","nominal stress amplitude, MPa"),
+    fig,ax=plt.subplots(figsize=(7.0,4.2)); x=np.arange(len(pts)); width=.25
+    for j,(field,label) in enumerate((("Kt_root_opening","root opening"),("Kt_root_principal","clock-root principal"),("Kt_hotspot_principal","field-hotspot principal"))):
+      ax.bar(x+(j-1)*width,[r[field] for r in pts],width,label=label)
+    ax.set_xticks(x,[f"{r['model']}\n{r['sigma_a_MPa']:g} MPa" for r in pts],rotation=20,ha="right")
+    ax.set_ylabel("stress concentration factor")
+    ax.set_title("Distinct root-opening, root-principal, and hotspot definitions")
+    ax.grid(axis="y",alpha=.25);ax.legend(frameon=False,fontsize=8);fig.tight_layout();fig.savefig(out/"00_Kt_definitions.png",dpi=180);plt.close(fig)
+    specs=[("effective_cleavage_max_MPa","sigma_a_MPa","01_effective_stress_vs_nominal","effective cleavage stress from Kt_root_opening transfer, MPa","nominal stress amplitude, MPa"),
       ("effective_cleavage_max_MPa","raw_m1_action_per_cycle","02_m1_action_vs_effective","effective cleavage stress, MPa","raw m=1 action / cycle"),
       ("effective_cleavage_max_MPa","m3_action_per_cycle","03_m3_action_vs_effective","effective cleavage stress, MPa","m=3 action / cycle")]
     for x,y,name,xlab,ylab in specs:
@@ -187,7 +220,7 @@ def plots(rows,out):
     ax.set_xscale("log");ax.set_yticks(list(levels.values()),list(levels));ax.set_xlabel("cycle coordinate");ax.set_title("Endpoint ladder: distinct event semantics");ax.grid(alpha=.25);ax.legend(frameon=False,fontsize=8);fig.tight_layout();fig.savefig(out/"05_endpoint_ladder.png",dpi=180);plt.close(fig)
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument("--out",type=Path,default=Path("runs/sn_v9_shared_root_m1_peak/fem_pd_local_tip_reference"));a=ap.parse_args();a.out.mkdir(parents=True,exist_ok=True)
+    ap=argparse.ArgumentParser();ap.add_argument("--out",type=Path,default=Path("runs/sn_v9_shared_root_m1_peak/fem_pd_local_tip_reference_v2"));a=ap.parse_args();a.out.mkdir(parents=True,exist_ok=True)
     table_audit=audit_source_tables()
     rows=fem_rows()+[pd_record(s,p) for s,p in PD_CASES.items()]
     public=[{k:v for k,v in r.items() if not k.startswith('_')} for r in rows]; fields=list(public[0])

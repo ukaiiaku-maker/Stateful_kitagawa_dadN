@@ -1,0 +1,38 @@
+{
+  "fem_campaign_commit": "5d6b1eef331ca88a4a55c8a34fc7d988f2882ac9",
+  "source_table_relationship_audit": {
+    "quiet_tail_rows": 48,
+    "survival_rows": 48,
+    "descent_rows": 32,
+    "direct_H_relationship": "exact"
+  },
+  "source_files": {
+    "campaign_manifest.json": "6ce522fd805ba29c5d5b36b8e03a3810695e725454ed1624b1b7f0c99a2fb563",
+    "condition_registry.json": "ae7fe82e7f70280c3aff0e83cec69ea0b091b1734324434dcfbea63ce27cb983",
+    "300K_quiet_tail_state.csv": "1a920f3b53769aadc89422ae5fafb8c391aad52358ce4de6416af49a08698a26",
+    "300K_stable_birth_survival.csv": "7edd92386113180aae48e06ceecb89ee3496a9b2142ef1c4ff2c2f0c762e7cb9",
+    "300K_endurance_stress_descent.csv": "f60f4507eb0b8a833ece30c871a3a6fb5de7572fad78a4285f16580c71f9b1c8",
+    "300K_practical_survival_stress_estimates.csv": "6175cd0aeff4cc8930956a3e14702feff01f1c06809048c829dc001948ef4e37",
+    "300K_energy_gate_envelope.csv": "a6651bc35fb694b7c5f91f0a045b7a3d73223d7e575ce99bd7c5f40210d8772e",
+    "finite_life_event.json": "013aa5b915c99b3041fddae77dfaf38666238c4cce841053ed95344df513423e"
+  },
+  "mechanics_request": "runs/sn_v9_single_seed_skeleton/K360_FAILURE/solver_output/shielded/sigmaA_735p921MPa/run_args.json",
+  "mechanics_request_sha256": "985f233c0132073046489b2ee73303c4c00e6e998d5b1011fa6076a4e912d6ca",
+  "output_files": {
+    "FEM_PD_CONSTITUTIVE_PARITY_MATRIX.csv": "be46a0199f2bb333aa2ee9630179389d91675ba7143ce1d92adcd29d6e2bdc38",
+    "02_m1_action_vs_effective.png": "2546879692d49e597457b6fbfdd75fd6e7514e658f05587287f8c7986dc4a874",
+    "FEM_PD_CONSTITUTIVE_PARITY.json": "5e161315016d8c2aa74149c0a5c0d1af6e6c06853ea5a483824b178c4763711e",
+    "01_effective_stress_vs_nominal.png": "f4768d95ecdc3def227cb0fa5f32add0a436d840a8e5d48ac87ee1c698199513",
+    "04_MPZ_state_vs_effective_stress.png": "557a568b99c071b7c45b8f63985651f62e90a15163ff6c41a29e7a4f1b5bc313",
+    "FEM_PD_LOCAL_TIP_BASELINE.csv": "10be4627d7ccd0643aaab95acd290c1e4d90df485b82eb810cb5785de7b8c842",
+    "FEM_PD_CONSTITUTIVE_PARITY_MATRIX.json": "a18f4ab9e0c9a261c59089eb1efa19a2e418c8e302d33aa69c64532cea43efc9",
+    "PD_EVENT_BOUNDARY_STATES.json": "8586298ac9604a8172104277ea9307d0859bf68c697a200b232d3a834f6dbb4d",
+    "00_Kt_definitions.png": "e01f71f45d234814acbc8ba594c0efa2ab37b4ff51249e2184b8ca01b6934520",
+    "03_m3_action_vs_effective.png": "cb5fd6f53ff955f8d44f2fed829408bf379a4cbd7bea26fbeb27e452c74d9cae",
+    "FEM_PD_ENDPOINT_SEMANTICS.json": "9d7cbb9d87aeb36a5cb098590904d9a66a48c95a1319593674f63c00a30915f4",
+    "PD_EVENT_BOUNDARY_STATES.csv": "d7a3869cba61d85618e9687ee4121d595db456e960e0c3628a7bb6e05c9d001c",
+    "FEM_PD_LOCAL_TIP_BASELINE_AUDIT.md": "a673cd1e46695f3f81cfa444d90f8c5af9652b50a1b4505363119442c4340b71",
+    "05_endpoint_ladder.png": "849a68ea38baa9291f192d3e7d3ca9d36b1b42cd5c1dd85f6e850034c0e915ee",
+    "FEM_PD_PHASE_TENSORS.npz": "4c886569b036ce0ab1fb4171002eb583798229c5aca82a57e16fe620c31064f7"
+  }
+}

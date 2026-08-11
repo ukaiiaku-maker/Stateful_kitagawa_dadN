@@ -25,6 +25,13 @@ class FourClassStatefulPDTests(unittest.TestCase):
             "--source-root", "/tmp/source",
         ])
         self.assertEqual(args.pd_image_policy, "none")
+        self.assertEqual(args.shared_root_internal_max_cycles, 1.0e5)
+        refined = build_four_class_parser().parse_args([
+            "--material-class", "Peak", "--sigma-a-MPa", "500",
+            "--source-root", "/tmp/source",
+            "--shared-root-internal-max-cycles", "2500",
+        ])
+        self.assertEqual(refined.shared_root_internal_max_cycles, 2500.0)
         legacy = build_pd_parser().parse_args([])
         self.assertEqual(legacy.pd_image_policy, "selected")
 

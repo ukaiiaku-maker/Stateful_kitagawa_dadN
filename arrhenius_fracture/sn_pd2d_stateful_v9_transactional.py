@@ -1118,7 +1118,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     # The versioned endpoint-consistent shared-root models have one
     # authoritative macro-transaction ceiling.  A caller's orchestration
     # partition must not alter the subsequent PD path after the global event.
-    shared_root_macro_ceiling_cycles = SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES
+    shared_root_macro_ceiling_cycles = float(getattr(
+        args, "shared_root_internal_max_cycles",
+        SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES,
+    ))
+    if not math.isfinite(shared_root_macro_ceiling_cycles) or shared_root_macro_ceiling_cycles <= 0.0:
+        raise RuntimeError("shared-root internal macro-integration ceiling must be finite and positive")
     if shared_root_mode and bool(args.pd_high_cycle):
         raise RuntimeError(
             "shared-root marked cleavage is incompatible with the legacy PD "
@@ -2622,6 +2627,12 @@ def build_parser():
     p.add_argument("--frequency-Hz", type=float, default=1000.0, dest="frequency_Hz")
     p.add_argument("--cycles-max", type=float, default=1e9, dest="cycles_max")
     p.add_argument("--block-cycles", type=float, default=1e7, dest="block_cycles")
+    p.add_argument(
+        "--shared-root-internal-max-cycles", type=float,
+        default=SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES,
+        dest="shared_root_internal_max_cycles",
+        help="internal shared-root physical integration ceiling; independent of orchestration partition",
+    )
     p.add_argument("--min-block-cycles", type=float, default=1e-6, dest="min_block_cycles")
     p.add_argument("--max-blocks", type=int, default=3000, dest="max_blocks")
     p.add_argument("--pd-high-cycle", action="store_true", dest="pd_high_cycle",

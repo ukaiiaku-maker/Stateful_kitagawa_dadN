@@ -1,0 +1,61 @@
+{
+  "schema": "V9_FEM_PD_CONSTITUTIVE_PARITY_1",
+  "source_checkpoint": "runs/sn_v9_canonical_four_class_elastic_v3/quiet_tail_checkpoints/Peak/N_100000000",
+  "generation": "generation_9b32a60a6bed4566b0d751eeb7240474",
+  "same_initial_signed_MPZ_capsule": true,
+  "same_root_tensors": true,
+  "m3_action": {
+    "canonical": 8.829782039934813e-08,
+    "shared_root": 8.829782039934813e-08,
+    "absolute_difference": 0.0
+  },
+  "m1_raw_action": {
+    "direct_signed_MPZ": 0.20263888660984583,
+    "shared_root": 0.20263888660982576,
+    "absolute_difference": 2.0067281170099704e-14,
+    "relative_difference": 9.902976425613994e-14
+  },
+  "tensor_drive": {
+    "opening_absolute_max_Pa": 0.0,
+    "signed_shear_absolute_max_Pa": 0.0
+  },
+  "state_fields": {
+    "mobile_positive": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "mobile_negative": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "retained_positive": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "retained_negative": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "accumulated_slip_positive": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "accumulated_slip_negative": {
+      "absolute_max": 0.0,
+      "relative_max": 0.0
+    },
+    "emitted_total": {
+      "absolute": 0.0,
+      "relative": 0.0
+    },
+    "tip_radius_m": {
+      "absolute": 0.0,
+      "relative": 0.0
+    },
+    "signed_active_K_shield_Pa_sqrt_m": {
+      "absolute": 0.0,
+      "relative": 0.0
+    }
+  },
+  "pass": true
+}
