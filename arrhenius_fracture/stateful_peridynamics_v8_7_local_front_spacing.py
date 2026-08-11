@@ -1516,6 +1516,33 @@ class StatefulPDPatch:
         state.stable_sites = s
         state.inactive_sites = i
 
+    def create_marked_embryo(self, state, site_id, cycle):
+        """Inject one externally clocked reversible embryo into the PD ledger.
+
+        This is the sole birth entry point for the shared-root marked-cleavage
+        model.  It intentionally draws no PD RNG and advances no legacy local
+        birth clock.
+        """
+        self._sync_site_ledger(state)
+        site = int(site_id)
+        if site < 0 or site >= len(state.site_status):
+            raise IndexError("marked embryo site is outside the realized ledger")
+        if int(state.site_status[site]) != int(_SITE_AVAILABLE):
+            raise RuntimeError("marked cleavage selected a non-available site")
+        node = int(state.site_node_index[site])
+        state.site_status[site] = _SITE_EMBRYO
+        state.site_birth_cycle[site] = float(cycle)
+        state.born_sites_cumulative[node] += 1
+        count = max(int(state.candidate_sites[node]), 1)
+        quantum = 1.0 / count
+        state.available[node] = max(float(state.available[node]) - quantum, 0.0)
+        state.embryo[node] = min(float(state.embryo[node]) + quantum, 1.0)
+        state.born_cumulative[node] += quantum
+        self._refresh_node_counts_from_site_ledger(state)
+        if state.cycles_first_embryo is None:
+            state.cycles_first_embryo = float(cycle)
+        return node
+
     def _sync_site_ledger(self, state):
         """Keep explicit site identities consistent with aggregate node counts.
 

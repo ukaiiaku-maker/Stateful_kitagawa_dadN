@@ -108,3 +108,26 @@ terminal exact audit, the packaged 12 GPa history, the site-matched
 identify both stress conditions as diagnostics rather than a physical bracket.
 The complete dimensional ledger is
 `runs/v9_pd_production/diagnostics/Peak_emission_delivery_bridge/Peak_4000MPa_executable_bridge_ledger.json`.
+
+### Accepted presentation correction after `7575a4f`
+
+The raw-cleavage comparison is now unit-consistent: the 4 GPa raw rate is
+converted from s^-1 to action per cycle at 1 kHz before comparison with the
+legacy K=2-gated birth action.  The corrected separation is 36.756 decades
+(the former 39.756 value mixed seconds and cycles).  The ledger also records
+all phase contributions to
+`integral(lambda_cleave * Q2[Lambda_delivery] dt)`, the effective duty factor,
+and a numerical closure error of 1.71e-5 for the preserved exact checkpoint.
+
+Figure 3 no longer calls `exp(-H_max)` whole-patch survival.  For this legacy
+independent-site control, patch survival is reconstructed from the realized
+available-site ledger as `exp(-sum_j H_j)`; `exp(-H_max)` remains separately
+shown as a controlling-node diagnostic.  These corrections change no saved
+trajectory or accepted physical state.
+
+The formerly unresolved spatial-state choice has since been resolved by a new,
+separately versioned production architecture:
+`v9_four_class_stateful_PD_shared_root_MPZ_marked_cleavage_v1`.  Its total
+attempt clock is global and owned by one authoritative root signed-MPZ state;
+the realized PD population supplies only a normalized spatial mark.  The
+legacy K=2 paths documented above remain controls and are not relabeled.

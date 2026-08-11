@@ -126,6 +126,11 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
     delivery_mid = 0.5 * (pre[1] + post[1])
     log_delivery_mid = np.logaddexp(pre[2], post[2]) - math.log(2.0)
     point_amp = 0.5 * (pre[7] + post[7]); bond_amp = 0.5 * (pre[8] + post[8])
+    delivery_memory0 = np.asarray(trial.delivery_memory, float).copy()
+    preview = patch.preview_rates(
+        trial, crack, sigma_mid, delivery_mid, args.T, args.frequency_Hz,
+        post[4], post[5], post[6], post[3], point_amp, bond_amp,
+    )
     log_birth0 = np.asarray(trial.log_birth_cumulative_hazard, float).copy()
     born0 = np.asarray(trial.born_cumulative, float).copy()
     healed0 = np.asarray(trial.healed_cumulative, float).copy()
@@ -162,6 +167,13 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
         "diagnostic_fields": {
             "sigma_mid_global_voigt_Pa": sigma_tensor_mid,
             "equivalent_stress_mid_global_Pa": seq_mid,
+            "legacy_delivery_rate_phase_s": np.asarray(
+                preview["_delivery_rate_phase_s"], float
+            ),
+            "legacy_nucleation_rate_phase_s": np.asarray(
+                preview["_nucleation_rate_phase_s"], float
+            ),
+            "legacy_delivery_memory_start": delivery_memory0,
         },
         "diagnostics": {"max_effective_stress_Pa": diagnostics.max_effective_stress_Pa,
                         "max_delivery_memory": diagnostics.max_delivery_memory,

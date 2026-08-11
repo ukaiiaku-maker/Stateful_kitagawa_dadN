@@ -16,17 +16,21 @@ p12 = ROOT / "packages/Peak_blunt_12000MPa_N3M_generation_0c0a2960"
 d4 = json.loads((p4 / "terminal_exact_diagnostics.json").read_text())
 h12 = pd.read_csv(p12 / "sn_stateful_pd_history.csv")
 tail = pd.read_csv(ROOT / "diagnostics/Peak_4000MPa_K2_suppressed_tail/Peak_4000MPa_K2_suppressed_tail_matched_checkpoints.csv")
+bridge = json.loads((ROOT / "diagnostics/Peak_emission_delivery_bridge/Peak_4000MPa_executable_bridge_ledger.json").read_text())
 
 def save(fig, name):
     fig.tight_layout(); fig.savefig(OUT / name, dpi=190); plt.close(fig)
 
 # 1 raw cleavage versus gated birth
 fig, ax = plt.subplots(figsize=(6.2,4.0))
-raw = [d4["raw_cleavage_rate_peak_s"], h12.pd_nucleation_rate_max_s.iloc[-1]]
+frequency = 1000.0
+raw = [d4["raw_cleavage_rate_peak_s"] / frequency,
+       h12.pd_nucleation_rate_max_s.iloc[-1] / frequency]
 gated = [d4["actual_site_birth_rate_peak_per_cycle"], h12.pd_birth_rate_max_per_cycle.iloc[-1]]
 x=np.arange(2); w=.34
-ax.bar(x-w/2,raw,w,label="raw cleavage [s$^{-1}$]");ax.bar(x+w/2,gated,w,label="gated birth [cycle$^{-1}$]")
-ax.set_yscale('log');ax.set_xticks(x,["4 GPa\nK2-suppressed","12 GPa\noverstress"]);ax.legend();ax.set_ylabel("rate (mixed units; see legend)")
+ax.bar(x-w/2,raw,w,label="raw cleavage action [cycle$^{-1}$]");ax.bar(x+w/2,gated,w,label="K=2-gated birth action [cycle$^{-1}$]")
+ax.set_yscale('log');ax.set_xticks(x,["4 GPa\nK2-suppressed","12 GPa\noverstress"]);ax.legend();ax.set_ylabel("action per cycle")
+ax.set_title(f"4 GPa suppression: {bridge['suppression_decades_raw_per_cycle_to_birth_per_cycle']:.2f} decades")
 save(fig,"01_raw_cleavage_vs_gated_birth.png")
 
 # 2 memory and completion
@@ -41,11 +45,16 @@ save(fig,"02_delivery_memory_K2_completion.png")
 
 # 3 cumulative action and no-embryo survival diagnostic
 fig,axs=plt.subplots(1,2,figsize=(9,3.8))
-mx=tail.groupby('cycles').cumulative_action.max(); n=mx.index.to_numpy(float);H=mx.to_numpy(float)
-axs[0].loglog(n,np.maximum(H,1e-320),'o-',label='4 GPa max node action')
+available = tail[tail.available.astype(bool)]
+mx=available.groupby('cycles').cumulative_action.max()
+patch_H=available.groupby('cycles').cumulative_action.sum()
+n=mx.index.to_numpy(float);Hmax=mx.to_numpy(float);Hpatch=patch_H.reindex(mx.index).to_numpy(float)
+axs[0].loglog(n,np.maximum(Hpatch,1e-320),'o-',label='4 GPa patch action, sum over sites')
+axs[0].loglog(n,np.maximum(Hmax,1e-320),'o--',label='4 GPa controlling-node action')
 axs[0].loglog(h12.cycles_total,np.maximum(h12.pd_expected_births_cumulative,1e-320),label='12 GPa expected births')
-axs[1].semilogx(n,np.exp(-H),'o-',label='4 GPa exp(-max node action)')
-axs[0].set_ylabel("cumulative diagnostic");axs[1].set_ylabel("no-embryo survival diagnostic")
+axs[1].semilogx(n,np.exp(-Hpatch),'o-',label=r'4 GPa patch $S=\exp(-\sum_j H_j)$')
+axs[1].semilogx(n,np.exp(-Hmax),'o--',label=r'controlling-node $\exp(-H_{max})$')
+axs[0].set_ylabel("cumulative action / expected births");axs[1].set_ylabel("legacy independent-site survival")
 for a in axs:a.set_xlabel("cycles N");a.grid(True,which='both',alpha=.25);a.legend(fontsize=8)
 save(fig,"03_cumulative_hazard_survival.png")
 

@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+from scipy.special import gammainc
 
 from scripts.audit_v9_pd_persistent_sites import build_context
 from arrhenius_fracture import sn_pd2d_stateful_v9_transactional as driver
@@ -73,6 +74,28 @@ def main():
     raw = float(rates["nucleation_rate_s"][node])
     Q = float(state.completion[node])
     actual = float(math.exp(log_action[node]))
+    fields = payload["diagnostic_fields"]
+    delivery_phase_all = np.asarray(fields["legacy_delivery_rate_phase_s"], float)
+    nucleation_phase_all = np.asarray(fields["legacy_nucleation_rate_phase_s"], float)
+    memory_start_all = np.asarray(fields["legacy_delivery_memory_start"], float)
+    phase_delivery = delivery_phase_all[:, node]
+    phase_nucleation = nucleation_phase_all[:, node]
+    phase_dt_s = 1.0 / (float(args.frequency_Hz) * len(phase_nucleation))
+    # Re-run the public cycle integrator one phase at a time so the ledger
+    # exposes the exact lambda_cleave*Q2 quadrature used by the legacy control.
+    memory = np.asarray([memory_start_all[node]], float)
+    phase_birth = []
+    phase_completion_max = []
+    for r_del, r_nuc in zip(phase_delivery, phase_nucleation):
+        memory, inc, phase_max = patch._advance_constant_delivery_phase(
+            memory, np.asarray([r_del]), np.asarray([r_nuc]), phase_dt_s,
+            patch.cfg.delivery_memory_s, patch.cfg.delivery_hit_count,
+        )
+        phase_birth.append(float(inc[0]))
+        phase_completion_max.append(float(
+            gammainc(patch.cfg.delivery_hit_count, max(float(phase_max[0]), 0.0))
+        ))
+    phase_birth = np.asarray(phase_birth, float)
     pd_area = float(patch.area[node])
     candidate_density = float(args.site_density_m2)
     candidate_area = 1.0 / candidate_density
@@ -105,10 +128,18 @@ def main():
         "K2_completion_Q_legacy": Q,
         "raw_cleavage_barrier_eV": float(crack.deltaG_eV(rates["effective_opening_stress_Pa"][node], 300.0)),
         "raw_cleavage_rate_s-1": raw,
+        "raw_cleavage_rate_per_cycle": raw / float(args.frequency_Hz),
         "state_shift_eV": float(rates["state_shift_eV"][node]),
         "effective_gated_birth_rate_per_cycle": actual,
         "persistent_site_birth_action_per_cycle": actual,
-        "suppression_decades_raw_s-1_to_birth_cycle-1": math.log10(raw) - math.log10(actual),
+        "birth_action_phase_integral_per_cycle": float(np.sum(phase_birth)),
+        "birth_action_phase_contributions": phase_birth.tolist(),
+        "phase_completion_Q2_max": phase_completion_max,
+        "phase_duration_s": phase_dt_s,
+        "phase_quadrature": "piecewise_constant_phase_history_with_exact_delivery_memory_interval_integral",
+        "effective_birth_duty_factor": actual / max(raw / float(args.frequency_Hz), 1e-300),
+        "phase_integral_relative_closure_error": abs(float(np.sum(phase_birth)) - actual) / max(actual, 1e-300),
+        "suppression_decades_raw_per_cycle_to_birth_per_cycle": math.log10(raw / float(args.frequency_Hz)) - math.log10(actual),
         "omitted_multiplicity_decades": math.log10(M),
         "small_Lambda_K2_birth_boost_decades_if_only_M_corrected": 2 * math.log10(M),
         "authoritative_projection_differs_from_scalar_equivalent_projection": True,
