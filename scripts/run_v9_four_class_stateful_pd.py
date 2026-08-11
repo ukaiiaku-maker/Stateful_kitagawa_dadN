@@ -15,7 +15,7 @@ from arrhenius_fracture.v9_four_class_registry import select_canonical_option
 from arrhenius_fracture.v9_four_class_signed_mpz import load_audited_modules
 
 
-MODEL_ID = "v9_four_class_stateful_PD_blunt_notch_stable_spatial_birth_v1"
+MODEL_ID = "v9_four_class_stateful_PD_shared_root_MPZ_marked_cleavage_v1"
 OPTIONS = {
     "Peak": "v913_paper_peak01_0242980_persistent_sites",
     "DBTT": "v913_paper_dbtt01_0202500_persistent_sites",
@@ -52,6 +52,10 @@ def configure_four_class(args, material_class, source_root):
     args.fatigue_model_preset_applied = False
     args.fatigue_endpoint = "stable_spatial_crack_birth"
     args.pd_image_policy = args.pd_image_policy
+    args.cleavage_clock_model = MODEL_ID
+    args.four_class_source_root = str(Path(source_root).resolve())
+    args.align_blocks_to_birth_clock = False
+    args.birth_scale = 0.0
 
     # Historical, intentionally blunt S-N geometry. These are fixed contract
     # values, not stress/life tuning parameters.
@@ -75,19 +79,15 @@ def configure_four_class(args, material_class, source_root):
     args.nu0_crack = float(cleavage.attempt_frequency_s)
     args.S_crack_kB = 0.0
 
-    # Exact audited local barrier surfaces are supplied to the existing
-    # spatial delivery/plastic chain. The PD state closure remains explicitly
-    # distinct from the authoritative signed front-local MPZ state.
+    # Local fields below are retained only for relative spatial marks and the
+    # existing stabilization/healing/topology response.  They do not multiply
+    # the conserved root-local canonical attempt intensity.
     args.audited_four_class_barriers = {
         "emission": _surface(manifest.emission),
         "peierls": _surface(manifest.peierls.as_surface(manifest.emission)),
         "taylor": _surface(manifest.taylor.as_surface(manifest.emission)),
     }
-    # The legacy PD delivery clock represents arrivals that can create a local
-    # embryo. In the audited closure, aggregate emission is the source event;
-    # Peierls/Taylor subsequently govern mobile transport. Using completed
-    # scalar flow here would squarely suppress delivery behind an unrelated
-    # serial bottleneck and is not the authoritative emission semantics.
+    # Legacy scalar delivery remains diagnostic-only in this driver mode.
     args.delivery_source = "emission"
     source_density_m2 = float(selected.row["rho_source0_m2"])
     reference_source_area_m2 = float(selected.row["reference_source_area_um2"]) * 1e-12
@@ -104,8 +104,8 @@ def configure_four_class(args, material_class, source_root):
             "attempt_frequencies",
         ],
         "parallel_spatial_PD_physics": [
-            "candidate_site_population", "finite_memory_K2_delivery",
-            "persistent_first_passage", "stabilization_healing",
+            "candidate_site_population", "normalized_spatial_mark",
+            "stabilization_healing",
             "directional_bond_damage", "local_PD_redistribution",
             "stable_seed_competition", "front_capture", "root_topology",
         ],
@@ -117,10 +117,10 @@ def configure_four_class(args, material_class, source_root):
             "multiplicity_per_system": args.delivery_source_multiplicity,
             "aggregate_rate": "multiplicity_per_system*lambda_emit_s-1",
             "candidate_site_density_applied_to_delivery": False,
-            "qualification": "blocked_spatial_signed_MPZ_allocation_ambiguity",
+            "qualification": "relative_spatial_mark_only_not_total_hazard",
         },
         "not_claimed_exact_signed_MPZ_parity": [
-            "scalar_FEM_plastic_state", "spatial_candidate_density",
+            "scalar_FEM_plastic_state", "spatial_mark_field",
             "PD_stabilization_healing", "PD_bond_growth_linkage",
             "signed_mobile_retained_populations",
         ],
@@ -144,8 +144,10 @@ def build_parser():
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--pd-seed", type=int)
+    parser.add_argument("--site-density-m2", type=float, default=5e10)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--checkpoint-every-blocks", type=int, default=25)
+    parser.add_argument("--print-every", type=int, default=10)
     parser.add_argument("--pd-image-policy", choices=("none", "event_only", "selected"), default="none")
     parser.add_argument("--resolution-profile", choices=("h15", "h10", "custom"), default="h15")
     parser.add_argument("--pd-high-cycle", action="store_true")
@@ -159,7 +161,7 @@ def main(argv=None):
     args = build_legacy_parser().parse_args([])
     for name in (
         "cycles_max", "block_cycles", "min_block_cycles", "max_blocks", "seed",
-        "pd_seed", "resume", "checkpoint_every_blocks", "pd_image_policy",
+        "pd_seed", "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",
         "pd_high_cycle", "pd_high_cycle_start_cycles", "pd_high_cycle_max_segment",
     ):
@@ -181,11 +183,7 @@ def main(argv=None):
         "registry": args.four_class_registry_audit,
     }
     (cli.out / "campaign_contract.json").write_text(json.dumps(contract, indent=2, sort_keys=True) + "\n")
-    raise RuntimeError(
-        "four-class PD production is fail-closed: audited tensor-resolved "
-        "aggregate emission is recovered, but root-local versus node-local "
-        "signed-MPZ delivery allocation to the spatial PD patch is unresolved"
-    )
+    run_sweep(args)
 
 
 if __name__ == "__main__":

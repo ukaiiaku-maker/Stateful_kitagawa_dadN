@@ -1,0 +1,5 @@
+stress_amplitude_MPa,cycles,H_attempt,S_no_attempt,action_increment_per_cycle,global_attempt_count,realized_births,realized_stable,front_capture,status,source_kind
+2000,100000000000000,0.0003395517199200718,0.9996605059212409,3.395517199200718e-18,0,0,0,false,censored,actual_v9_macro_transaction
+2150,10000000000,0.00032113240790648356,0.9996789191495862,3.2113240790648356e-14,0,0,0,false,censored,actual_v9_macro_transaction
+2150,1000000000000,0.03211324078705222,0.9683969138411537,3.211324078705222e-14,0,0,0,false,censored,actual_v9_macro_transaction
+2500,19949.04475728977,0.037363528078493934,0.9633257486835863,1.872948230284651e-06,1,1,0,false,first_marked_attempt,actual_localized_transaction

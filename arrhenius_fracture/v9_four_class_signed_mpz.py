@@ -129,7 +129,13 @@ class SignedMPZPreBirthState:
         }
 
     def copy(self):
-        return copy.deepcopy(self)
+        clone = copy.copy(self)
+        clone.state = self.state.copy()
+        clone.audit = copy.deepcopy(self.audit)
+        # Audited module objects and immutable loaded source metadata are shared
+        # by transactional clones; only the constitutive state is mutable.
+        clone.modules = self.modules
+        return clone
 
     _CAPSULE_ARRAYS = (
         "mobile_positive", "mobile_negative", "retained_positive", "retained_negative",
@@ -138,11 +144,31 @@ class SignedMPZPreBirthState:
         "wake_retained_positive", "wake_retained_negative",
         "wake_slip_positive", "wake_slip_negative",
     )
+    _CAPSULE_DIAGNOSTIC_ARRAYS = (
+        "signed_last_line_content_by_system", "signed_last_burgers_sign_by_system",
+        "_anisotropic_drive_factors", "_anisotropic_tau_signed_Pa",
+        "tip_source_activity", "persistent_site_last_drive_Pa",
+        "persistent_site_last_sigma_back_initial_Pa",
+        "persistent_site_last_sigma_effective_final_Pa",
+        "persistent_site_last_rate_initial_s", "persistent_site_last_rate_final_s",
+        "persistent_site_last_activations", "persistent_site_last_line_content",
+    )
     _CAPSULE_SCALARS = (
         "emitted_total", "escaped_total", "recovered_total", "advance_total_m",
         "wake_discarded_mobile_total", "wake_discarded_retained_total",
         "wake_discarded_slip_total", "time_s", "signed_source_activations_total",
         "signed_line_content_emitted_total",
+        "signed_last_source_activations", "signed_last_line_content",
+        "wake_length_m",
+    )
+    _NONNEGATIVE_CAPSULE_ARRAYS = (
+        "mobile_positive", "mobile_negative", "retained_positive", "retained_negative",
+        "accumulated_slip_positive", "accumulated_slip_negative",
+        "wake_mobile_positive", "wake_mobile_negative",
+        "wake_retained_positive", "wake_retained_negative",
+        "wake_slip_positive", "wake_slip_negative", "tip_source_activity",
+        "persistent_site_last_rate_initial_s", "persistent_site_last_rate_final_s",
+        "persistent_site_last_activations", "persistent_site_last_line_content",
     )
 
     def capsule(self):
@@ -150,8 +176,18 @@ class SignedMPZPreBirthState:
             "schema": "V9_SIGNED_MPZ_PREBIRTH_CAPSULE_1",
             "option_id": self.option_id,
             "audit": copy.deepcopy(self.audit),
-            "arrays": {name: np.asarray(getattr(self.state, name)).copy() for name in self._CAPSULE_ARRAYS},
+            "arrays": {name: np.asarray(getattr(self.state, name)).copy()
+                       for name in self._CAPSULE_ARRAYS + self._CAPSULE_DIAGNOSTIC_ARRAYS},
             "scalars": {name: float(getattr(self.state, name)) for name in self._CAPSULE_SCALARS},
+            "mutable_metadata": {
+                "persistent_site_last_geometry": {
+                    key: copy.deepcopy(self.state.persistent_site_last_geometry[key])
+                    for key in sorted(self.state.persistent_site_last_geometry)
+                },
+                "anisotropic_drive_reliable": bool(
+                    self.state._anisotropic_drive_reliable
+                ),
+            },
         }
 
     def restore_capsule(self, capsule):
@@ -159,17 +195,32 @@ class SignedMPZPreBirthState:
             raise RuntimeError("unsupported signed-MPZ capsule schema")
         if capsule.get("option_id") != self.option_id or capsule.get("audit") != self.audit:
             raise RuntimeError("signed-MPZ capsule provenance/request mismatch")
-        for name in self._CAPSULE_ARRAYS:
+        for name in self._CAPSULE_ARRAYS + self._CAPSULE_DIAGNOSTIC_ARRAYS:
             target = np.asarray(getattr(self.state, name))
+            if name not in capsule["arrays"]:
+                if name in self._CAPSULE_DIAGNOSTIC_ARRAYS:
+                    continue
+                raise RuntimeError(f"signed-MPZ capsule missing physical array: {name}")
             value = np.asarray(capsule["arrays"][name], float)
-            if value.shape != target.shape or np.any(~np.isfinite(value)) or np.any(value < 0.0):
+            if (value.shape != target.shape or np.any(~np.isfinite(value))
+                    or (name in self._NONNEGATIVE_CAPSULE_ARRAYS and np.any(value < 0.0))):
                 raise RuntimeError(f"invalid signed-MPZ capsule array: {name}")
-            setattr(self.state, name, value.copy())
+            # Preserve authoritative alias/view relationships installed by the
+            # signed-population closure. Replacing the ndarray object makes a
+            # restart subtly diverge even when its values initially match.
+            target[...] = value
         for name in self._CAPSULE_SCALARS:
             value = float(capsule["scalars"][name])
             if not np.isfinite(value) or value < 0.0:
                 raise RuntimeError(f"invalid signed-MPZ capsule scalar: {name}")
             setattr(self.state, name, value)
+        metadata = capsule.get("mutable_metadata", {})
+        self.state.persistent_site_last_geometry = copy.deepcopy(
+            metadata.get("persistent_site_last_geometry", {})
+        )
+        self.state._anisotropic_drive_reliable = bool(
+            metadata.get("anisotropic_drive_reliable", True)
+        )
         self.modules["signed_burgers_shared_v1025"]._sync_active(self.state)
         self.modules["signed_burgers_shared_v1025"]._sync_wake(self.state)
 

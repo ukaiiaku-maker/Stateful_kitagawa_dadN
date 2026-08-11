@@ -15,6 +15,12 @@ class FakeMPZ:
     def summary(self):
         return {"signed_active_K_shield_Pa_sqrt_m": 0.0, "tip_radius_m": 1e-4}
     def cleavage_log_rate_s(self, sigma, T): return math.log(2.0)
+    def copy(self):
+        x = FakeMPZ(); x.value = self.value; return x
+    def resolve_root_tensor(self, tensor):
+        return {"opening_stress_Pa": float(tensor[0, 0]),
+                "tau_signed_Pa": np.array([tensor[0, 1], -tensor[0, 1]])}
+    def advance(self, dt, T, opening, signed): self.value += float(dt)
 
 
 def make_clock():
@@ -62,3 +68,15 @@ def test_no_mark_support_fails_closed():
         assert "no available" in str(exc)
     else:
         raise AssertionError("missing mark support did not fail closed")
+
+
+def test_phase_block_proposal_is_transactional_and_partition_equivalent():
+    tensors = np.array([[[1., 0.], [0., 0.]], [[2., 0.], [0., 0.]]])
+    base = make_clock(); before = base.capsule()
+    whole = base.propose_phase_block(.01, 1.0, 300., tensors)["state"]
+    assert base.capsule() == before
+    half = base.propose_phase_block(.005, 1.0, 300., tensors)["state"]
+    second = half.propose_phase_block(.005, 1.0, 300., tensors)["state"]
+    np.testing.assert_allclose(whole.global_cumulative_action,
+                               second.global_cumulative_action, rtol=1e-14)
+    np.testing.assert_allclose(whole.mpz.value, second.mpz.value, rtol=0, atol=0)

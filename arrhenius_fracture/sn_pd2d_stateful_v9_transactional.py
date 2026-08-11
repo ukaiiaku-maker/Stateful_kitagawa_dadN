@@ -60,6 +60,9 @@ from .v9_array_codec import AtomicArrayGenerationStore
 from .v9_cached_fem import CachedIntactFEM
 from .v9_pd_high_cycle import DormantPDHighCycleEngine, HighCycleConfig
 from .v9_pd_high_cycle_adapter import SpatialPDDormantAdapter
+from .v9_pd_shared_root_marked_cleavage import (
+    MODEL_ID as SHARED_ROOT_MODEL_ID, SharedRootMarkedCleavageState,
+)
 
 
 MODEL_ID = "SN_2D_intact_FEM_stateful_local_peridynamics_v9_transactional_log_domain"
@@ -738,6 +741,7 @@ def _save_case_checkpoint(
     pd_state,
     patch,
     rows,
+    shared_clock=None,
 ):
     """Atomically save all evolving state needed for exact continuation."""
     path = Path(path)
@@ -773,6 +777,9 @@ def _save_case_checkpoint(
         "candidate_rng_state": _json_safe(patch._candidate_rng.bit_generator.state),
         "event_rng_state": _json_safe(patch._event_rng.bit_generator.state),
         "rows": _json_safe(rows),
+        "shared_root_marked_clock_capsule": (
+            _json_safe(shared_clock.capsule()) if shared_clock is not None else None
+        ),
     }
     arrays["metadata_json"] = np.asarray(json.dumps(metadata, allow_nan=True))
     tmp = path.with_name(path.name + ".tmp")
@@ -860,6 +867,9 @@ def _load_case_checkpoint(
         "u": np.asarray(data["u"], float).copy(),
         "last_residual": np.asarray(data["last_residual"], float).copy(),
         "pd_state": state, "rows": list(metadata.get("rows", [])),
+        "shared_root_marked_clock_capsule": metadata.get(
+            "shared_root_marked_clock_capsule"
+        ),
     }
     return restored
 
@@ -1070,6 +1080,9 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     feature_nodes = identify_feature_surface_nodes(mesh, geom)
     root_xy = local_root_xy(mesh, feature_nodes)
     root_radius0 = local_root_radius(mesh, feature_nodes)
+    root_global_node = int(np.argmin(np.linalg.norm(
+        mesh.nodes - np.asarray(root_xy, float)[None, :], axis=1
+    )))
     initial_min_area = float(np.min(mesh.area_e))
     fixed_mesh_nodes = np.unique(np.r_[bnd.top_nodes, bnd.bot_nodes])
 
@@ -1080,6 +1093,24 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         mesh, geom, root_xy, mat, pd_cfg,
         feature_surface_global_nodes=feature_nodes,
     )
+    shared_root_mode = str(getattr(args, "cleavage_clock_model", "legacy_per_site_K2")) == SHARED_ROOT_MODEL_ID
+    shared_clock = None
+    if shared_root_mode:
+        source_root = getattr(args, "four_class_source_root", None)
+        option_id = getattr(args, "four_class_option_id", None)
+        if not source_root or not option_id:
+            raise RuntimeError("shared-root marked cleavage requires audited source root and option ID")
+        shared_clock = SharedRootMarkedCleavageState(
+            option_id, source_root,
+            shear_modulus_Pa=mat.E / (2.0 * (1.0 + mat.nu)),
+            poisson=mat.nu, burgers_m=mat.b,
+            initial_tip_radius_m=float(args.notch_root_radius_m or 600e-6),
+            hazard_seed=int(getattr(args, "global_cleavage_seed", args.seed)),
+            mark_seed=int(getattr(args, "spatial_mark_seed", args.seed + 1000003)),
+        )
+        # Birth is external/global in this mode. Stabilization, healing and
+        # topology remain the existing PD transition engine.
+        patch.cfg.birth_scale = 0.0
     preflight_audit = patch.production_preflight_audit()
     print(
         "STATEFUL_PD_V8_7 resolution audit: "
@@ -1159,6 +1190,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         u = restored["u"]
         last_residual = restored["last_residual"]
         pd_state = restored["pd_state"]
+        if shared_root_mode:
+            capsule = restored.get("shared_root_marked_clock_capsule")
+            if capsule is None:
+                raise RuntimeError("shared-root stress-step checkpoint lacks global clock capsule")
+            shared_clock.restore_capsule(capsule)
         rows = restored["rows"]
         controller_next_block_cycles = restored["controller_next_block_cycles"]
         resumed = True
@@ -1189,6 +1225,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         u = restored["u"]
         last_residual = restored["last_residual"]
         pd_state = restored["pd_state"]
+        if shared_root_mode:
+            capsule = restored.get("shared_root_marked_clock_capsule")
+            if capsule is None:
+                raise RuntimeError("shared-root restart checkpoint lacks global clock capsule")
+            shared_clock.restore_capsule(capsule)
         rows = restored["rows"]
         controller_next_block_cycles = restored["controller_next_block_cycles"]
         resumed = True
@@ -1419,7 +1460,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
 
         next_birth_wait = float("inf")
         block_limited_by_birth_clock = False
-        if args.align_blocks_to_birth_clock:
+        if args.align_blocks_to_birth_clock and not shared_root_mode:
             next_birth_wait = patch.next_birth_wait_cycles(
                 pd_state, pre_rates["mu_birth_bound"]
             )
@@ -1602,23 +1643,79 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         log_delivery_combined = np.logaddexp(log_delivery_pre, log_delivery_post) - math.log(2.0)
         point_amp = 0.5 * (point_amp_pre + point_amp_post)
         bond_amp = 0.5 * (bond_amp_pre + bond_amp_post)
-        diag = patch.update(
-            pd_state,
-            crack,
-            sigma_combined,
-            delivery_combined,
-            args.T,
-            args.frequency_Hz,
-            dN,
-            cycles,
-            state_shift,
-            sigma_back,
-            chi,
-            P,
-            point_amp,
-            bond_amp,
-            log_delivery_rate_phase_global=log_delivery_combined,
+        marked_event = None
+        shared_action_increment = 0.0
+        shared_action_before = (
+            shared_clock.global_cumulative_action if shared_root_mode else np.nan
         )
+        if shared_root_mode:
+            voigt = np.asarray(sigma_combined[:, :, root_global_node], float)
+            root_tensors = np.empty((len(voigt), 2, 2), float)
+            root_tensors[:, 0, 0] = voigt[:, 0]
+            root_tensors[:, 1, 1] = voigt[:, 1]
+            root_tensors[:, 0, 1] = root_tensors[:, 1, 0] = voigt[:, 2]
+            clock_proposal = shared_clock.propose_phase_block(
+                dN, args.frequency_Hz, args.T, root_tensors
+            )
+            consumed = float(clock_proposal["cycles_consumed"])
+            representable = max(float(np.nextafter(cycles, math.inf) - cycles), 1e-12)
+            if clock_proposal["crossed"] and consumed < dN - representable:
+                # Reject the entire coupled proposal and retry at the exactly
+                # localized first-crossing boundary. No physical or RNG state
+                # has been committed at this point.
+                ep_gp = fem_initial.ep_gp.copy(); rho_gp = fem_initial.rho_gp.copy()
+                epsp_acc_gp = fem_initial.epsp_acc_gp.copy(); u = fem_initial.u.copy()
+                Wp_total = float(fem_initial.plastic_work_J_per_m)
+                controller_next_block_cycles = max(consumed, representable)
+                continue
+            pd_trial = deepcopy(pd_state)
+            clock_trial = clock_proposal["state"]
+            event_rng_before = deepcopy(patch._event_rng.bit_generator.state)
+            try:
+                if clock_proposal["crossed"]:
+                    local_raw = np.maximum(
+                        np.max(pre_rates["_nucleation_rate_phase_s"], axis=0), 1e-300
+                    )
+                    available = np.asarray(pd_trial.site_status, np.uint8) == 0
+                    phase_index = int(clock_proposal["phase_index"])
+                    marked_event = clock_trial.select_mark(
+                        pd_trial.site_node_index, available, np.log(local_raw),
+                        patch.initiation_weight, cycle=cycles + dN,
+                        phase_index=phase_index,
+                        local_fields={"root_global_node": root_global_node},
+                    )
+                    selected_node = int(marked_event["pd_node_id"])
+                    marked_event["local_fields"].update({
+                        "effective_opening_stress_Pa": float(
+                            pre_rates["effective_opening_stress_Pa"][selected_node]
+                        ),
+                        "local_raw_cleavage_propensity_s": float(local_raw[selected_node]),
+                        "initiation_weight": float(patch.initiation_weight[selected_node]),
+                    })
+                    patch.create_marked_embryo(
+                        pd_trial, marked_event["site_id"], cycles + dN
+                    )
+                diag = patch.update(
+                    pd_trial, crack, sigma_combined, delivery_combined, args.T,
+                    args.frequency_Hz, dN, cycles, state_shift, sigma_back, chi,
+                    P, point_amp, bond_amp,
+                    log_delivery_rate_phase_global=log_delivery_combined,
+                )
+            except Exception:
+                patch._event_rng.bit_generator.state = event_rng_before
+                raise
+            shared_action_increment = float(
+                clock_proposal["detail"]["action_increment"]
+            )
+            pd_state = pd_trial
+            shared_clock = clock_trial
+        else:
+            diag = patch.update(
+                pd_state, crack, sigma_combined, delivery_combined, args.T,
+                args.frequency_Hz, dN, cycles, state_shift, sigma_back, chi, P,
+                point_amp, bond_amp,
+                log_delivery_rate_phase_global=log_delivery_combined,
+            )
         cycles += dN
         last_hist = hist_post
         last_diag = diag
@@ -1641,6 +1738,21 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "cycles_target": float(args.cycles_max),
         "max_blocks_requested": int(args.max_blocks),
             "dN": dN,
+            "cleavage_clock_model": getattr(args, "cleavage_clock_model", "legacy_per_site_K2"),
+            "H_attempt": (shared_clock.global_cumulative_action if shared_root_mode else np.nan),
+            "S_no_attempt": (math.exp(-shared_clock.global_cumulative_action) if shared_root_mode else np.nan),
+            "global_threshold_action": (shared_clock.global_threshold_action if shared_root_mode else np.nan),
+            "global_action_increment": (shared_action_increment if shared_root_mode else np.nan),
+            "global_action_increment_per_cycle": (shared_action_increment / max(dN, 1e-300) if shared_root_mode else np.nan),
+            "global_attempt_count": (shared_clock.attempt_count if shared_root_mode else np.nan),
+            "global_action_ledger_closure_error": (
+                abs((shared_action_before + shared_action_increment)
+                    - shared_clock.global_cumulative_action)
+                if shared_root_mode else np.nan
+            ),
+            "marked_attempt_site_id": (marked_event["site_id"] if marked_event is not None else np.nan),
+            "marked_attempt_pd_node_id": (marked_event["pd_node_id"] if marked_event is not None else np.nan),
+            "marked_attempt_probability": (marked_event["mark_probability"] if marked_event is not None else np.nan),
             "v9_fem_embedded_error": fem_proposal.normalized_error,
             "v9_fem_error_ep_gp": fem_proposal.component_errors.get("ep_gp", np.nan),
             "v9_fem_error_rho_gp": fem_proposal.component_errors.get("rho_gp", np.nan),
@@ -1840,6 +1952,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 pd_state=pd_state,
                 patch=patch,
                 rows=rows,
+                shared_clock=shared_clock,
             )
 
     _write_csv(outdir / "sn_stateful_pd_history.csv", rows)
@@ -1863,6 +1976,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             pd_state=pd_state,
             patch=patch,
             rows=rows,
+            shared_clock=shared_clock,
         )
     image_policy = getattr(args, "pd_image_policy", "selected")
     save_terminal_image = image_policy == "selected" or (
@@ -2023,6 +2137,17 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "four_class_option_id": getattr(args, "four_class_option_id", None),
         "four_class_registry_audit": getattr(args, "four_class_registry_audit", None),
         "four_class_transfer_contract": getattr(args, "four_class_transfer_contract", None),
+        "cleavage_clock_model": getattr(args, "cleavage_clock_model", "legacy_per_site_K2"),
+        "H_attempt_final": (shared_clock.global_cumulative_action if shared_root_mode else None),
+        "S_no_attempt_final": (math.exp(-shared_clock.global_cumulative_action) if shared_root_mode else None),
+        "global_threshold_action_final": (shared_clock.global_threshold_action if shared_root_mode else None),
+        "global_remaining_threshold_action_final": (
+            shared_clock.global_threshold_action - shared_clock.global_cumulative_action
+            if shared_root_mode else None
+        ),
+        "global_attempt_count_final": (shared_clock.attempt_count if shared_root_mode else None),
+        "last_marked_attempt": (shared_clock.last_attempt if shared_root_mode else None),
+        "signed_mpz_state_final": (_json_safe(shared_clock.mpz.summary()) if shared_root_mode else None),
         "fatigue_model": args.fatigue_model,
         "fatigue_model_preset_applied": bool(args.fatigue_model_preset_applied),
         "fatigue_model_role": (
@@ -2475,6 +2600,15 @@ def build_parser():
     p.add_argument("--pd-amplification-damage-scale", type=float, default=0.05, dest="pd_amplification_damage_scale")
     p.add_argument("--pd-seed", type=int, default=None, dest="pd_seed",
                    help="seed for the discrete candidate-site realization; defaults to --seed")
+    p.add_argument(
+        "--cleavage-clock-model",
+        choices=("legacy_per_site_K2", SHARED_ROOT_MODEL_ID),
+        default="legacy_per_site_K2", dest="cleavage_clock_model",
+    )
+    p.add_argument("--global-cleavage-seed", type=int, default=42017,
+                   dest="global_cleavage_seed")
+    p.add_argument("--spatial-mark-seed", type=int, default=42018,
+                   dest="spatial_mark_seed")
     p.add_argument("--site-density-m2", type=float, default=5e10, dest="site_density_m2")
     p.add_argument(
         "--delivery-source",

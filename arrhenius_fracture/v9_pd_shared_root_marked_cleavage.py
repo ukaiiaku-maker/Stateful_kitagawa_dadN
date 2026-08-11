@@ -109,7 +109,19 @@ class SharedRootMarkedCleavageState:
         return max(float(self._hazard_rng.exponential(1.0)), self.minimum_threshold)
 
     def copy(self):
-        return copy.deepcopy(self)
+        clone = copy.copy(self)
+        clone.mpz = self.mpz.copy()
+        clone.audit = copy.deepcopy(self.audit)
+        clone.last_attempt = copy.deepcopy(self.last_attempt)
+        clone._hazard_rng = np.random.default_rng()
+        clone._hazard_rng.bit_generator.state = copy.deepcopy(
+            self._hazard_rng.bit_generator.state
+        )
+        clone._mark_rng = np.random.default_rng()
+        clone._mark_rng.bit_generator.state = copy.deepcopy(
+            self._mark_rng.bit_generator.state
+        )
+        return clone
 
     def capsule(self):
         return {
@@ -160,6 +172,74 @@ class SharedRootMarkedCleavageState:
     def threshold_crossed(self):
         return self.log_global_cumulative_action >= math.log(self.global_threshold_action)
 
+    def _advance_phase_block_exact(self, cycles, frequency_Hz, T_K, root_tensors):
+        """Advance the authoritative MPZ/action using only root FEM tensors."""
+        tensors = np.asarray(root_tensors, float)
+        if tensors.ndim != 3 or tensors.shape[1:] != (2, 2) or len(tensors) < 1:
+            raise ValueError("root phase tensors must have shape (n_phase,2,2)")
+        cycles = max(float(cycles), 0.0)
+        frequency = float(frequency_Hz)
+        if frequency <= 0.0:
+            raise ValueError("frequency must be positive")
+        drives = [self.mpz.resolve_root_tensor(tensor) for tensor in tensors]
+        opening = float(np.mean([d["opening_stress_Pa"] for d in drives]))
+        signed = np.mean(np.stack([d["tau_signed_Pa"] for d in drives]), axis=0)
+        dt = cycles / frequency
+        self.mpz.advance(0.5 * dt, T_K, opening, signed)
+        logs = np.asarray([
+            self.cleavage_log_rate_s(d["opening_stress_Pa"], T_K) for d in drives
+        ], float)
+        log_average = float(logsumexp(logs) - math.log(len(logs)))
+        log_increment = log_average + math.log(dt) if dt > 0.0 else -math.inf
+        self.add_log_action(log_increment)
+        self.mpz.advance(0.5 * dt, T_K, opening, signed)
+        self.time_s += dt
+        phase_action_fraction = np.exp(logs - float(logsumexp(logs)))
+        return {
+            "log_action_increment": log_increment,
+            "action_increment": math.exp(log_increment) if log_increment > -745 else 0.0,
+            "phase_log_rate_s": logs,
+            "phase_action_fraction": phase_action_fraction,
+            "phase_average_opening_stress_Pa": opening,
+            "phase_average_signed_shear_Pa": signed,
+        }
+
+    def propose_phase_block(self, cycles, frequency_Hz, T_K, root_tensors,
+                            *, localization_relative_tolerance=1e-12):
+        """Side-effect-free proposal localized at at most the first crossing."""
+        requested = max(float(cycles), 0.0)
+        start = self.copy()
+        trial = start.copy()
+        detail = trial._advance_phase_block_exact(
+            requested, frequency_Hz, T_K, root_tensors
+        )
+        if not trial.threshold_crossed():
+            return {"state": trial, "cycles_consumed": requested,
+                    "cycles_unused": 0.0, "crossed": False, "detail": detail}
+        lo, hi = 0.0, requested
+        tolerance = max(requested * float(localization_relative_tolerance), 1e-12)
+        while hi - lo > tolerance:
+            mid = 0.5 * (lo + hi)
+            probe = start.copy()
+            probe._advance_phase_block_exact(mid, frequency_Hz, T_K, root_tensors)
+            if probe.threshold_crossed(): hi = mid
+            else: lo = mid
+        final = start.copy()
+        detail = final._advance_phase_block_exact(hi, frequency_Hz, T_K, root_tensors)
+        final.global_cumulative_action = final.global_threshold_action
+        final.log_global_cumulative_action = math.log(final.global_threshold_action)
+        fractions = np.asarray(detail["phase_action_fraction"], float)
+        within_cycle = hi - math.floor(hi)
+        if hi > 0.0 and within_cycle <= 1e-14:
+            within_cycle = 1.0
+        phase = int(np.searchsorted(np.cumsum(fractions),
+                                   np.clip(within_cycle, 0.0, 1.0),
+                                   side="right"))
+        phase = min(phase, len(fractions) - 1)
+        return {"state": final, "cycles_consumed": hi,
+                "cycles_unused": requested - hi, "crossed": True,
+                "phase_index": phase, "detail": detail}
+
     def select_mark(self, site_node_index, site_available, node_log_propensity,
                     node_initiation_weight, *, cycle, phase_index,
                     local_fields=None):
@@ -190,4 +270,3 @@ class SharedRootMarkedCleavageState:
             self.global_cumulative_action + self._draw_threshold()
         )
         return event
-
