@@ -157,6 +157,11 @@ def build_parser():
     parser.add_argument("--shared-root-poststable-max-cycles", type=float, default=1.0e5)
     parser.add_argument("--shared-root-survival-threshold-action", type=float, default=None)
     parser.add_argument("--shared-root-stop-at-analysis-action-boundary", action="store_true")
+    parser.add_argument("--conditioned-premark-dir", type=Path)
+    parser.add_argument("--conditioned-branch-id", default="")
+    parser.add_argument("--conditioned-mark-stream-id", default="")
+    parser.add_argument("--conditioned-transition-stream-id", default="")
+    parser.add_argument("--conditioned-renewal-stream-id", default="")
     parser.add_argument("--min-block-cycles", type=float, default=1.0e-6)
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
@@ -188,8 +193,11 @@ def main(argv=None):
         "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",
         "pd_high_cycle", "pd_high_cycle_start_cycles", "pd_high_cycle_max_segment",
+        "conditioned_branch_id", "conditioned_mark_stream_id",
+        "conditioned_transition_stream_id", "conditioned_renewal_stream_id",
     ):
         setattr(args, name, getattr(cli, name))
+    args.conditioned_premark_dir = str(cli.conditioned_premark_dir or "")
     args.sigma_a_MPa = [float(cli.sigma_a_MPa)]
     args.out = str(cli.out / cli.material_class)
     configure_four_class(args, cli.material_class, cli.source_root,

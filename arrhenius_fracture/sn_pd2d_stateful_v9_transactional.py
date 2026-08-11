@@ -65,6 +65,10 @@ from .v9_pd_shared_root_marked_cleavage import (
     M3_PARITY_MODEL_ID, SHARED_ROOT_MODEL_IDS, SharedRootMarkedCleavageState,
     normalized_available_site_marks,
 )
+from .v9_conditioned_premark import (
+    ConditionedBranchStreams, commit_conditioned_attempt,
+    json_branch_summary, load_verified_conditioned_capsule,
+)
 
 SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES = 1.0e5
 
@@ -709,6 +713,9 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "fatigue_endpoint",
     "stress_step_source_checkpoint", "stress_step_source_generation",
     "stress_step_source_sigma_a_MPa", "protocol_label",
+    "conditioned_premark_dir", "conditioned_branch_id",
+    "conditioned_mark_stream_id", "conditioned_transition_stream_id",
+    "conditioned_renewal_stream_id",
 }
 
 
@@ -837,7 +844,9 @@ def _save_case_checkpoint(
         "shared_root_marked_clock_capsule": (
             _json_safe(shared_clock.capsule()) if shared_clock is not None else None
         ),
-        "conditional_survival_protocol":_conditional_survival_protocol(args),
+        "conditional_survival_protocol":getattr(
+            args, "conditioned_branch_metadata", _conditional_survival_protocol(args)
+        ),
     }
     arrays["metadata_json"] = np.asarray(json.dumps(metadata, allow_nan=True))
     tmp = path.with_name(path.name + ".tmp")
@@ -871,7 +880,7 @@ def _load_case_checkpoint(
     sigma_a_MPa,
     mesh,
     patch,
-    generation=None,
+    generation=None, allow_analysis_source=False,
 ):
     """Restore the newest hash-verified atomic v9 array generation."""
     path = Path(path)
@@ -880,9 +889,11 @@ def _load_case_checkpoint(
     metadata = _restore_nonfinite_tags(encoded_metadata)
     stored_protocol=metadata.get("conditional_survival_protocol",{})
     requested_protocol=_conditional_survival_protocol(args)
-    if stored_protocol.get("analysis_only",False) and not requested_protocol["analysis_only"]:
+    if (stored_protocol.get("analysis_only",False) and not requested_protocol["analysis_only"]
+            and not allow_analysis_source):
         raise RuntimeError("analysis-only conditional checkpoint cannot resume through physical mark/embryo path")
-    if stored_protocol.get("analysis_only",False) and requested_protocol["topology_continuation_permitted"]:
+    if (stored_protocol.get("analysis_only",False) and requested_protocol["topology_continuation_permitted"]
+            and not allow_analysis_source):
         raise RuntimeError("conditional checkpoint forbids topology continuation")
     if metadata.get("checkpoint_version") != _CHECKPOINT_VERSION:
         raise RuntimeError("unsupported STATEFUL_PD_V9 checkpoint version")
@@ -892,12 +903,15 @@ def _load_case_checkpoint(
     if (
         checkpoint_sources != SOURCE_SHA256
         and checkpoint_sources not in VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES
+        and not allow_analysis_source
     ):
         raise RuntimeError("checkpoint source hashes do not match active or verified-compatible v9 code")
     expected = _checkpoint_signature(args, case_name, sigma_a_MPa)
     checkpoint_signature={k:v for k,v in metadata.get("signature",{}).items() if k not in _CHECKPOINT_EXCLUDED_ARGS}
     if checkpoint_signature != expected:
-        raise RuntimeError("checkpoint arguments do not match this case")
+        differing = sorted(k for k in set(checkpoint_signature) | set(expected)
+                           if checkpoint_signature.get(k) != expected.get(k))
+        raise RuntimeError("checkpoint arguments do not match this case: " + ", ".join(differing))
     if float(summary.get("cycles", -1.0)) != float(metadata["cycles"]):
         raise RuntimeError("generation summary/capsule cycle mismatch")
     mesh.nodes[:] = np.asarray(data["mesh_nodes"], float)
@@ -1260,10 +1274,87 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     geometry_invalid_reason = None
     analysis_action_boundary_reached = False
     analysis_boundary_localization = None
+    conditioned_dir = str(getattr(args, "conditioned_premark_dir", "") or "")
+    conditioned_branch_summary = None
     geometry_audit = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
-    if stress_step_source:
+    if conditioned_dir:
+        if not shared_root_m1:
+            raise RuntimeError("conditioned physical branches require shared-root m1 mode")
+        capsule, conditioned_manifest, _, replay_checkpoint = load_verified_conditioned_capsule(conditioned_dir)
+        source_args = deepcopy(args)
+        source_args.shared_root_survival_threshold_action = float(capsule["conditioned_action"])
+        source_args.shared_root_stop_at_analysis_action_boundary = True
+        restored = _load_case_checkpoint(
+            replay_checkpoint, args=source_args, case_name=case_name,
+            sigma_a_MPa=sigma_a_MPa, mesh=mesh, patch=patch,
+            generation=capsule["replay_generation"], allow_analysis_source=True,
+        )
+        start_block = restored["next_block"]
+        cycles = restored["cycles"]
+        Wp_total = restored["Wp_total"]
+        root_xy = restored["root_xy"]
+        ep_gp = restored["ep_gp"]
+        rho_gp = restored["rho_gp"]
+        epsp_acc_gp = restored["epsp_acc_gp"]
+        u = restored["u"]
+        last_residual = restored["last_residual"]
+        pd_state = restored["pd_state"]
+        shared_clock.restore_capsule(restored["shared_root_marked_clock_capsule"])
+        rows = restored["rows"]
+        controller_next_block_cycles = restored["controller_next_block_cycles"]
+        branch_id = str(getattr(args, "conditioned_branch_id", "") or "")
+        if not branch_id:
+            raise RuntimeError("conditioned physical branch requires a branch ID")
+        streams = ConditionedBranchStreams(
+            branch_id,
+            str(getattr(args, "conditioned_mark_stream_id", "") or branch_id),
+            str(getattr(args, "conditioned_transition_stream_id", "") or branch_id),
+            str(getattr(args, "conditioned_renewal_stream_id", "") or branch_id),
+        )
+        transaction = commit_conditioned_attempt(shared_clock, patch, pd_state, capsule, streams)
+        shared_clock = transaction["clock"]
+        pd_state = transaction["pd_state"]
+        patch._event_rng.bit_generator.state = deepcopy(transaction["transition_rng_state"])
+        conditioned_branch_summary = json_branch_summary(transaction)
+        args.conditioned_branch_metadata = {
+            "protocol": "conditioned_physical_attempt_branch",
+            "source_conditioned_capsule_sha256": conditioned_manifest["capsule_sha256"],
+            "source_analysis_generation": capsule["source_generation"],
+            "source_replay_generation": capsule["replay_generation"],
+            "branch_id": branch_id, "stream_ids": transaction["stream_ids"],
+            "conditioned_attempt_committed": True,
+            "conditioned_first_attempt_pending": False,
+            "analysis_only": False, "topology_continuation_permitted": True,
+            "renewed_global_threshold": shared_clock.global_threshold_action,
+        }
+        branch_manifest_path = outdir / "conditioned_branch_manifest.json"
+        proposed_manifest = _strict_json_safe(args.conditioned_branch_metadata | {
+            "schema": "V9_CONDITIONED_PHYSICAL_ATTEMPT_BRANCH_MANIFEST_1",
+            "branch_summary": conditioned_branch_summary,
+        })
+        if branch_manifest_path.exists():
+            if json.loads(branch_manifest_path.read_text()) != proposed_manifest:
+                raise RuntimeError("conditioned branch ID/output already exists with different provenance")
+        else:
+            temporary_manifest = branch_manifest_path.with_suffix(".json.tmp")
+            temporary_manifest.write_text(json.dumps(proposed_manifest, indent=2, sort_keys=True) + "\n")
+            os.replace(temporary_manifest, branch_manifest_path)
+        # Persist the zero-age embryo boundary before granting any transition,
+        # healing, stabilization, softening, or topology exposure.
+        _save_case_checkpoint(
+            checkpoint_path, args=args, case_name=case_name,
+            sigma_a_MPa=sigma_a_MPa, next_block=start_block,
+            controller_next_block_cycles=controller_next_block_cycles,
+            cycles=cycles, Wp_total=Wp_total, mesh=mesh, root_xy=root_xy,
+            ep_gp=ep_gp, rho_gp=rho_gp, epsp_acc_gp=epsp_acc_gp, u=u,
+            last_residual=last_residual, pd_state=pd_state, patch=patch,
+            rows=rows, shared_clock=shared_clock,
+        )
+        resumed = True
+        print(f"STATEFUL_PD_V9 conditioned branch {branch_id} restored at N={cycles:.12g}")
+    elif stress_step_source:
         source_sigma = getattr(args, "stress_step_source_sigma_a_MPa", None)
         source_generation = str(getattr(args, "stress_step_source_generation", "") or "") or None
         if source_sigma is None:
@@ -1362,7 +1453,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 "stress_step_source_checkpoint": stress_step_source,
                 "stress_step_source_generation": str(getattr(args, "stress_step_source_generation", "") or ""),
                 "stress_step_source_sigma_a_MPa": getattr(args, "stress_step_source_sigma_a_MPa", None),
-                "conditional_survival_protocol":_conditional_survival_protocol(args),
+                "conditional_survival_protocol":getattr(
+                    args, "conditioned_branch_metadata", _conditional_survival_protocol(args)
+                ),
+                "conditioned_branch_summary": conditioned_branch_summary,
             },
             f,
             indent=2,
@@ -2522,7 +2616,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         "cycles_connected": pd_state.cycles_connected,
         "status": status,
         "resumed_from_checkpoint": bool(resumed),
-        "conditional_survival_protocol":_conditional_survival_protocol(args),
+        "conditional_survival_protocol":getattr(
+            args, "conditioned_branch_metadata", _conditional_survival_protocol(args)
+        ),
+        "conditioned_branch_summary": conditioned_branch_summary,
         "analysis_action_boundary_reached":bool(analysis_action_boundary_reached),
         "analysis_boundary_localization":analysis_boundary_localization,
         "checkpoint_path": str(checkpoint_path),
@@ -2937,6 +3034,11 @@ def build_parser():
                    help="conditional no-event threshold used to record H(N) without realizing a mark")
     p.add_argument("--shared-root-stop-at-analysis-action-boundary", action="store_true",
                    help="stop at the exact conditional action crossing without mark or threshold renewal")
+    p.add_argument("--conditioned-premark-dir", default="", dest="conditioned_premark_dir")
+    p.add_argument("--conditioned-branch-id", default="", dest="conditioned_branch_id")
+    p.add_argument("--conditioned-mark-stream-id", default="", dest="conditioned_mark_stream_id")
+    p.add_argument("--conditioned-transition-stream-id", default="", dest="conditioned_transition_stream_id")
+    p.add_argument("--conditioned-renewal-stream-id", default="", dest="conditioned_renewal_stream_id")
     p.add_argument("--site-density-m2", type=float, default=5e10, dest="site_density_m2")
     p.add_argument(
         "--delivery-source",
