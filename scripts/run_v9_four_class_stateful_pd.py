@@ -158,6 +158,7 @@ def build_parser():
     parser.add_argument("--shared-root-survival-threshold-action", type=float, default=None)
     parser.add_argument("--shared-root-stop-at-analysis-action-boundary", action="store_true")
     parser.add_argument("--conditioned-premark-dir", type=Path)
+    parser.add_argument("--conditioned-operation", choices=("create_conditioned_branch", "resume_existing_branch"), default="")
     parser.add_argument("--conditioned-branch-id", default="")
     parser.add_argument("--conditioned-mark-stream-id", default="")
     parser.add_argument("--conditioned-transition-stream-id", default="")
@@ -195,6 +196,7 @@ def main(argv=None):
         "pd_high_cycle", "pd_high_cycle_start_cycles", "pd_high_cycle_max_segment",
         "conditioned_branch_id", "conditioned_mark_stream_id",
         "conditioned_transition_stream_id", "conditioned_renewal_stream_id",
+        "conditioned_operation",
     ):
         setattr(args, name, getattr(cli, name))
     args.conditioned_premark_dir = str(cli.conditioned_premark_dir or "")

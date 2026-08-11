@@ -26,6 +26,11 @@ class Patch:
     initiation_weight=np.array([1.,2.])
     xy=np.array([[0.,0.],[1.,0.]])
     def create_marked_embryo(self,s,site,cycle): s.site_status[site]=1;s.birth.append((site,cycle))
+    def create_external_marked_embryo(self,s,site,cycle,*,rng=None):
+        self.create_marked_embryo(s,site,cycle)
+        s.site_transition_threshold[site]=float(rng.exponential())
+        s.site_transition_cumulative_hazard[site]=0.
+        s.site_transition_outcome_uniform[site]=float(rng.random())
 
 def capsule():
     from arrhenius_fracture.v9_pd_shared_root_marked_cleavage import normalized_available_site_marks

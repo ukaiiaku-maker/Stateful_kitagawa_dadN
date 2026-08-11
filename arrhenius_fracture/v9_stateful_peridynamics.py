@@ -32,6 +32,46 @@ class V9StatefulPDPatch(StatefulPDPatch):
         state.log_birth_cumulative_hazard = np.full(len(self.xy), -math.inf)
         return state
 
+    def create_external_marked_embryo(self, state, site_id, cycle, *, rng=None):
+        """Atomically enter every externally marked embryo with a fresh clock.
+
+        Latent transition draws from the common candidate realization are not
+        authoritative for externally marked embryos.  First and renewed global
+        attempts both enter through this operation.
+        """
+        generator = self._event_rng if rng is None else rng
+        site = int(site_id)
+        snapshot = {
+            "status": np.asarray(state.site_status).copy(),
+            "birth_cycle": np.asarray(state.site_birth_cycle).copy(),
+            "born_sites": np.asarray(state.born_sites_cumulative).copy(),
+            "available": np.asarray(state.available).copy(),
+            "embryo": np.asarray(state.embryo).copy(),
+            "born": np.asarray(state.born_cumulative).copy(),
+            "available_sites": np.asarray(state.available_sites).copy(),
+            "embryo_sites": np.asarray(state.embryo_sites).copy(),
+            "first_embryo": state.cycles_first_embryo,
+        }
+        rng_before = generator.bit_generator.state.copy()
+        try:
+            node = self.create_marked_embryo(state, site, cycle)
+            state.site_transition_threshold[site] = float(generator.exponential(1.0))
+            state.site_transition_cumulative_hazard[site] = 0.0
+            state.site_transition_outcome_uniform[site] = float(generator.random())
+            return node
+        except Exception:
+            state.site_status[:] = snapshot["status"]
+            state.site_birth_cycle[:] = snapshot["birth_cycle"]
+            state.born_sites_cumulative[:] = snapshot["born_sites"]
+            state.available[:] = snapshot["available"]
+            state.embryo[:] = snapshot["embryo"]
+            state.born_cumulative[:] = snapshot["born"]
+            state.available_sites[:] = snapshot["available_sites"]
+            state.embryo_sites[:] = snapshot["embryo_sites"]
+            state.cycles_first_embryo = snapshot["first_embryo"]
+            generator.bit_generator.state = rng_before
+            raise
+
     @staticmethod
     def v9_extra_state_arrays(state):
         required = (

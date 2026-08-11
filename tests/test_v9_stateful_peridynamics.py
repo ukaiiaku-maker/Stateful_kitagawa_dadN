@@ -23,6 +23,11 @@ class _TransitionHarness(V9StatefulPDPatch):
     def _refresh_node_counts_from_site_ledger(self, state):
         return None
 
+    def create_marked_embryo(self, state, site, cycle):
+        state.site_status[site] = _SITE_EMBRYO
+        state.site_birth_cycle[site] = cycle
+        return int(state.site_node_index[site])
+
 
 class _State:
     pass
@@ -42,10 +47,31 @@ def make_state():
     state.healed_sites_cumulative = np.array([0])
     state.birth_cumulative_hazard = np.array([0.0])
     state.site_birth_threshold = np.array([1.0])
+    state.born_sites_cumulative = np.array([0])
+    state.available = np.array([1.0])
+    state.embryo = np.array([0.0])
+    state.born_cumulative = np.array([0.0])
+    state.available_sites = np.array([1])
+    state.embryo_sites = np.array([0])
+    state.cycles_first_embryo = None
     return state
 
 
 class V9StatefulPDTests(unittest.TestCase):
+    def test_every_external_embryo_gets_next_persistent_transition_draw(self):
+        patch=_TransitionHarness(); state=make_state(); state.site_status[0]=0
+        rng=np.random.default_rng(991); expected=np.random.default_rng(991)
+        first=(float(expected.exponential()),float(expected.random()))
+        patch.create_external_marked_embryo(state,0,10.,rng=rng)
+        self.assertEqual(state.site_transition_threshold[0],first[0]);self.assertEqual(state.site_transition_outcome_uniform[0],first[1])
+        self.assertEqual(state.site_transition_cumulative_hazard[0],0.)
+        state.site_status[0]=0
+        second=(float(expected.exponential()),float(expected.random()))
+        saved=rng.bit_generator.state
+        patch.create_external_marked_embryo(state,0,20.,rng=rng)
+        self.assertEqual(state.site_transition_threshold[0],second[0]);self.assertEqual(state.site_transition_outcome_uniform[0],second[1])
+        replay=np.random.default_rng();replay.bit_generator.state=saved
+        self.assertEqual(float(replay.exponential()),second[0]);self.assertEqual(float(replay.random()),second[1])
     def test_transition_crossing_is_partition_invariant(self):
         patch = _TransitionHarness()
         whole = make_state()

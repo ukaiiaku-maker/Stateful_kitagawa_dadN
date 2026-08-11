@@ -258,6 +258,21 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Standardized conditioned Peak pilot generations at 999d8c8.  The
+        # follow-on repair changes only branch dispatch and ensures future
+        # externally marked embryos receive fresh persistent transition draws;
+        # stored physical state and its continuation are representation-compatible.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "418fdfb684106aad050ee0346f3efe2381829320523dc3cbaa1f9313f8072688",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Fine transition generations created immediately before exposing
         # separate pre-transition/post-stable ceiling selectors. The selector
         # changes future step choice only; checkpoint state representation and
@@ -717,6 +732,7 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "conditioned_mark_stream_id", "conditioned_transition_stream_id",
     "conditioned_renewal_stream_id",
     "conditioned_branch_metadata",
+    "conditioned_operation",
 }
 
 
@@ -784,6 +800,25 @@ def _conditional_survival_protocol(args):
         "threshold_override_action":float(threshold) if conditional else None,
         "stop_at_exact_action_boundary":bool(getattr(args,"shared_root_stop_at_analysis_action_boundary",False)),
     }
+
+
+def _resolve_conditioned_operation(*, operation, source_supplied, resume,
+                                   branch_generation_exists, branch_manifest_exists):
+    """Fail-closed operational state machine for conditioned branches."""
+    operation = str(operation or "")
+    if source_supplied and not operation and not resume:
+        raise RuntimeError("conditioned source arguments require an explicit create/resume operation")
+    if branch_manifest_exists or branch_generation_exists:
+        if not resume and operation != "resume_existing_branch":
+            raise RuntimeError("existing conditioned physical branch requires explicit resume")
+        if operation == "create_conditioned_branch":
+            raise RuntimeError("duplicate conditioned branch creation is forbidden")
+        return "resume_existing_branch"
+    if resume or operation == "resume_existing_branch":
+        raise RuntimeError("conditioned resume requested but no physical branch generation exists")
+    if operation != "create_conditioned_branch" or not source_supplied:
+        raise RuntimeError("new conditioned branch requires explicit creation and a source capsule")
+    return "create_conditioned_branch"
 
 
 def _save_case_checkpoint(
@@ -950,6 +985,7 @@ def _load_case_checkpoint(
         "shared_root_marked_clock_capsule": metadata.get(
             "shared_root_marked_clock_capsule"
         ),
+        "conditional_survival_protocol": stored_protocol,
     }
     return restored
 
@@ -1276,11 +1312,23 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     analysis_action_boundary_reached = False
     analysis_boundary_localization = None
     conditioned_dir = str(getattr(args, "conditioned_premark_dir", "") or "")
+    conditioned_operation = str(getattr(args, "conditioned_operation", "") or "")
     conditioned_branch_summary = None
     geometry_audit = _geometry_resolution_audit(
         mesh, feature_nodes, patch.point_spacing_m, initial_min_area, args
     )
-    if conditioned_dir:
+    branch_active = checkpoint_path.parent / "v9_generations" / "ACTIVE.json"
+    branch_manifest_existing = outdir / "conditioned_branch_manifest.json"
+    if conditioned_dir or branch_manifest_existing.exists():
+        conditioned_operation = _resolve_conditioned_operation(
+            operation=conditioned_operation, source_supplied=bool(conditioned_dir),
+            resume=bool(args.resume), branch_generation_exists=branch_active.exists(),
+            branch_manifest_exists=branch_manifest_existing.exists(),
+        )
+    if conditioned_operation == "resume_existing_branch":
+        args.resume = True
+
+    if conditioned_dir and conditioned_operation == "create_conditioned_branch":
         if not shared_root_m1:
             raise RuntimeError("conditioned physical branches require shared-root m1 mode")
         capsule, conditioned_manifest, _, replay_checkpoint = load_verified_conditioned_capsule(conditioned_dir)
@@ -1419,6 +1467,22 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             if capsule is None:
                 raise RuntimeError("shared-root restart checkpoint lacks global clock capsule")
             shared_clock.restore_capsule(capsule)
+        if conditioned_dir:
+            source_capsule, source_manifest, _, _ = load_verified_conditioned_capsule(conditioned_dir)
+            stored = restored.get("conditional_survival_protocol", {})
+            expected_ids = {
+                "mark_stream_id": str(getattr(args, "conditioned_mark_stream_id", "") or getattr(args, "conditioned_branch_id", "")),
+                "transition_stream_id": str(getattr(args, "conditioned_transition_stream_id", "") or getattr(args, "conditioned_branch_id", "")),
+                "renewal_stream_id": str(getattr(args, "conditioned_renewal_stream_id", "") or getattr(args, "conditioned_branch_id", "")),
+            }
+            if stored.get("protocol") != "conditioned_physical_attempt_branch":
+                raise RuntimeError("conditioned resume source is not a physical attempt branch")
+            if stored.get("source_conditioned_capsule_sha256") != source_manifest["capsule_sha256"]:
+                raise RuntimeError("conditioned resume capsule hash mismatch")
+            if stored.get("branch_id") != str(getattr(args, "conditioned_branch_id", "")):
+                raise RuntimeError("conditioned resume branch ID mismatch")
+            if stored.get("stream_ids") != expected_ids:
+                raise RuntimeError("conditioned resume stream identity mismatch")
         rows = restored["rows"]
         controller_next_block_cycles = restored["controller_next_block_cycles"]
         resumed = True
@@ -2079,7 +2143,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                             "initiation_weight": float(patch.initiation_weight[selected_node]),
                             "available_site_count": int(np.count_nonzero(available)),
                         })
-                        patch.create_marked_embryo(
+                        patch.create_external_marked_embryo(
                             pd_trial, marked_event["site_id"],
                             cycles + float(clock_proposal["cycles_consumed"])
                         )
@@ -3036,6 +3100,7 @@ def build_parser():
     p.add_argument("--shared-root-stop-at-analysis-action-boundary", action="store_true",
                    help="stop at the exact conditional action crossing without mark or threshold renewal")
     p.add_argument("--conditioned-premark-dir", default="", dest="conditioned_premark_dir")
+    p.add_argument("--conditioned-operation", choices=("create_conditioned_branch", "resume_existing_branch"), default="", dest="conditioned_operation")
     p.add_argument("--conditioned-branch-id", default="", dest="conditioned_branch_id")
     p.add_argument("--conditioned-mark-stream-id", default="", dest="conditioned_mark_stream_id")
     p.add_argument("--conditioned-transition-stream-id", default="", dest="conditioned_transition_stream_id")

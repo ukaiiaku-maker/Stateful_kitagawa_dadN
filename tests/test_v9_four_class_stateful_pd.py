@@ -8,6 +8,7 @@ from arrhenius_fracture.sn_arrhenius_chain import AuditedExpFloorBarrier
 from arrhenius_fracture.sn_feature_geometry_v8_7 import BluntNotchGeometry
 from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
     ScratchExpFloorBarrier, _checkpoint_signature, _conditional_survival_protocol,
+    _resolve_conditioned_operation,
     build_parser as build_pd_parser,
 )
 from scripts.run_v9_four_class_stateful_pd import build_parser as build_four_class_parser
@@ -58,6 +59,22 @@ class FourClassStatefulPDTests(unittest.TestCase):
         self.assertFalse(protocol["topology_continuation_permitted"])
         self.assertEqual(protocol["threshold_override_action"],1e100)
         self.assertFalse(protocol["stop_at_exact_action_boundary"])
+
+    def test_conditioned_creation_and_resume_modes_fail_closed(self):
+        self.assertEqual(_resolve_conditioned_operation(operation="create_conditioned_branch",
+          source_supplied=True,resume=False,branch_generation_exists=False,branch_manifest_exists=False),
+          "create_conditioned_branch")
+        self.assertEqual(_resolve_conditioned_operation(operation="resume_existing_branch",
+          source_supplied=True,resume=True,branch_generation_exists=True,branch_manifest_exists=True),
+          "resume_existing_branch")
+        self.assertEqual(_resolve_conditioned_operation(operation="",source_supplied=False,resume=True,
+          branch_generation_exists=True,branch_manifest_exists=True),"resume_existing_branch")
+        for kwargs in (
+          dict(operation="create_conditioned_branch",source_supplied=True,resume=False,branch_generation_exists=True,branch_manifest_exists=True),
+          dict(operation="",source_supplied=True,resume=False,branch_generation_exists=False,branch_manifest_exists=False),
+          dict(operation="resume_existing_branch",source_supplied=True,resume=True,branch_generation_exists=False,branch_manifest_exists=False),
+        ):
+            with self.assertRaises(RuntimeError): _resolve_conditioned_operation(**kwargs)
 
     def test_audited_exp_floor_matches_definition(self):
         barrier = AuditedExpFloorBarrier(

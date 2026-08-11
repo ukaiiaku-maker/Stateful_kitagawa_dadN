@@ -136,13 +136,12 @@ def commit_conditioned_attempt(clock, patch, pd_state, capsule, branch):
         local_fields={"phase_fraction": float(loc["phase_fraction"]),
                       "conditioned_action": target},
     )
-    patch.create_marked_embryo(trial_state, event["site_id"], float(loc["crossing_cycle"]))
     selected_site = int(event["site_id"])
-    transition_threshold = float(patch_trial_rng.exponential(1.0))
-    transition_outcome = float(patch_trial_rng.random())
-    trial_state.site_transition_threshold[selected_site] = transition_threshold
-    trial_state.site_transition_cumulative_hazard[selected_site] = 0.0
-    trial_state.site_transition_outcome_uniform[selected_site] = transition_outcome
+    patch.create_external_marked_embryo(
+        trial_state, selected_site, float(loc["crossing_cycle"]), rng=patch_trial_rng
+    )
+    transition_threshold = float(trial_state.site_transition_threshold[selected_site])
+    transition_outcome = float(trial_state.site_transition_outcome_uniform[selected_site])
     node = int(event["pd_node_id"])
     event["local_fields"].update({
         "effective_opening_stress_Pa": float(loc["local_opening_stress_Pa"][node]),
