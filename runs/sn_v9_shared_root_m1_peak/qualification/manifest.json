@@ -35,11 +35,18 @@
       "checkpoint_sha256": "e6b9c003e3787040e27ce12153f365f6528d8a9c3dcaf1e7a0222427a7da754f",
       "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
       "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_1500_seed46_rate_separated": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed46_rate_separated/Peak/shielded/sigmaA_1500MPa",
+      "summary_sha256": "44fb6230b27d2e5652d76dee7efea4d57166fe9bb2e915b305f993234d51e01a",
+      "checkpoint_sha256": "6fa19954256f4edc9b4caaece08b864251f00391c364f0c4c228cb903c26d409",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
     }
   },
   "generated": {
-    "endpoint_results.csv": "af4c5ded51fa47ac504b7d98e20ffc7998d00009b5fddf04512f0e1c33c1423d",
-    "seed_ensemble.json": "1cb687464e7328579bd9d2845327f927f432d0c77527c78d2bfda11497ff9285",
+    "endpoint_results.csv": "80e32b921c3ae4146620d8cc83cc637e03801a5d01eebc4723f39cdc79838105",
+    "seed_ensemble.json": "339a3e37b4fad07f62412a07beb3c7c1c6397d9c96b6b6a08e7a33ba685bf1e9",
     "trajectory_equivalence.json": "3f4417a255357bfaab6cb81e2ca5de1de31d75c600778fa258cb1de3cbd1087b"
   }
 }

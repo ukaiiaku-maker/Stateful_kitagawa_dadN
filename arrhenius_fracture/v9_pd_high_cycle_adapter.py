@@ -273,6 +273,8 @@ class SpatialPDDormantAdapter:
         # 48x96 private-map wall time without adding isolation.
         clone = copy(self)
         clone.pd_state = deepcopy(self.pd_state)
+        if hasattr(self, "shared_clock"):
+            clone.shared_clock = self.shared_clock.copy()
         clone.ep_gp = self.ep_gp.copy(); clone.rho_gp = self.rho_gp.copy()
         clone.epsp_acc_gp = self.epsp_acc_gp.copy(); clone.u = self.u.copy()
         clone.external_ledgers = deepcopy(self.external_ledgers)
@@ -363,5 +365,53 @@ class SpatialPDDormantAdapter:
     def set_physical_cycles(self, cycles): self.cycles = float(cycles)
 
 
-__all__ = ["SpatialPDDormantAdapter", "ACTIVE_NAMES", "FIELD_RULES", "LEDGER_NAMES",
+class SharedRootSpatialPDDormantAdapter(SpatialPDDormantAdapter):
+    """Adapter with signed MPZ active and global clock/RNG state protected."""
+    def __init__(self, *, shared_clock, **kwargs):
+        super().__init__(**kwargs); self.shared_clock=shared_clock.copy()
+        cap=self.shared_clock.mpz.capsule()
+        # Only authoritative constitutive arrays are projected. Diagnostic
+        # arrays are recomputed by the next exact MPZ advance and some have
+        # bounded/count semantics inappropriate for tangent projection.
+        self._mpz_array_names=tuple(self.shared_clock.mpz._CAPSULE_ARRAYS)
+        self._mpz_scalar_names=tuple(sorted(k for k,v in cap["scalars"].items() if not k.startswith("signed_last_") and isinstance(v,(int,float,np.number)) and math.isfinite(float(v))))
+        self._mpz_scales={}
+        for k in self._mpz_array_names:self._mpz_scales[("array",k)]=max(float(np.max(np.abs(cap["arrays"][k]))),1e-30)
+        for k in self._mpz_scalar_names:self._mpz_scales[("scalar",k)]=max(abs(float(cap["scalars"][k])),1e-30)
+
+    def active_state(self):
+        base=super().active_state();cap=self.shared_clock.mpz.capsule();values=[base.vector];spec=list(base.specification)
+        for k in self._mpz_array_names:
+            a=np.asarray(cap["arrays"][k],float);values.append((a/self._mpz_scales[("array",k)]).ravel());spec.append((f"shared_mpz_array:{k}",a.shape,str(a.dtype)))
+        for k in self._mpz_scalar_names:
+            values.append(np.asarray([float(cap["scalars"][k])/self._mpz_scales[("scalar",k)]]));spec.append((f"shared_mpz_scalar:{k}",(1,),"float64"))
+        return ActiveState(np.concatenate(values),tuple(spec))
+
+    def restore_active_state(self,snapshot,vector):
+        base_spec=tuple(x for x in snapshot.specification if not x[0].startswith("shared_mpz_"));n=sum(int(np.prod(x[1])) for x in base_spec);v=np.asarray(vector,float)
+        super().restore_active_state(ActiveState(v[:n],base_spec),v[:n]);cap=self.shared_clock.mpz.capsule();offset=n
+        for name,shape,_ in snapshot.specification[len(base_spec):]:
+            size=int(np.prod(shape));value=v[offset:offset+size].reshape(shape);offset+=size;kind,key=name.split(":",1)
+            if kind=="shared_mpz_array":cap["arrays"][key]=value*self._mpz_scales[("array",key)]
+            else:cap["scalars"][key]=float(value[0]*self._mpz_scales[("scalar",key)])
+        self.shared_clock.mpz.restore_capsule(cap)
+
+    def protected_signatures(self):
+        p=super().protected_signatures();c=self.shared_clock
+        ledgers={"base":p.ledgers,"global_action":c.global_cumulative_action,"log_global_action":c.log_global_cumulative_action,"attempt_count":c.attempt_count}
+        stochastic={"base":p.stochastic,"global_threshold":c.global_threshold_action,"hazard_rng":c._hazard_rng.bit_generator.state,"mark_rng":c._mark_rng.bit_generator.state,"last_attempt":c.last_attempt}
+        return ProtectedSignatures(_digest(ledgers),_digest(stochastic),p.topology)
+
+    def remaining_birth_actions(self):
+        return np.asarray([max(self.shared_clock.global_threshold_action-self.shared_clock.global_cumulative_action,0.)])
+
+    def commit_birth_action(self,increment,cycles):
+        inc=float(np.asarray(increment).reshape(-1)[0])
+        if inc>0:self.shared_clock.add_log_action(math.log(inc))
+
+    def commit_log_birth_action(self,log_increment,cycles):
+        self.shared_clock.add_log_action(float(np.asarray(log_increment).reshape(-1)[0]))
+
+
+__all__ = ["SpatialPDDormantAdapter", "SharedRootSpatialPDDormantAdapter", "ACTIVE_NAMES", "FIELD_RULES", "LEDGER_NAMES",
            "STOCHASTIC_NAMES", "TOPOLOGY_NAMES"]

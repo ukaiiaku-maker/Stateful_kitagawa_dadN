@@ -10,7 +10,8 @@ from arrhenius_fracture.v9_pd_high_cycle import (
     ActiveState, CycleEvaluation, DormantPDHighCycleEngine, HighCycleConfig,
     ProtectedSignatures, _digest, private_cycle,
 )
-from arrhenius_fracture.v9_pd_high_cycle_adapter import SpatialPDDormantAdapter
+from arrhenius_fracture.v9_pd_high_cycle_adapter import SpatialPDDormantAdapter, SharedRootSpatialPDDormantAdapter
+from arrhenius_fracture.v9_pd_shared_root_marked_cleavage import SharedRootMarkedCleavageState
 
 
 class SyntheticDormantPD:
@@ -63,6 +64,28 @@ def cfg(**kwargs):
                 exact_retry_cycles=2, event_guard_cycles=2.0)
     base.update(kwargs)
     return HighCycleConfig(**base)
+
+
+def test_shared_root_adapter_carries_mpz_and_protects_threshold_and_rng():
+    class MPZ:
+        _CAPSULE_ARRAYS=("mobile",)
+        audit={}
+        def __init__(self):self.mobile=np.array([2.]);self.time=0.
+        def capsule(self):return {"arrays":{"mobile":self.mobile.copy(),"diagnostic":np.array([0.])},"scalars":{"time_s":self.time,"signed_last_source_activations":0.},"schema":"test"}
+        def restore_capsule(self,c):self.mobile=np.asarray(c["arrays"]["mobile"]).copy();self.time=float(c["scalars"]["time_s"])
+        def copy(self):x=MPZ();x.mobile=self.mobile.copy();x.time=self.time;return x
+        def summary(self):return {"signed_active_K_shield_Pa_sqrt_m":0.,"tip_radius_m":1e-4}
+    clock=SharedRootMarkedCleavageState("x",".",shear_modulus_Pa=1.,poisson=.3,burgers_m=1e-10,initial_tip_radius_m=1e-4,hazard_seed=2,mark_seed=3,mpz=MPZ(),m_hits=1.)
+    n=2;s=SimpleNamespace(log_delivery_memory=np.zeros(n),delivery_memory=np.ones(n),available=np.ones(n),embryo=np.zeros(n),stable=np.zeros(n),inactive=np.zeros(n),completion=np.zeros(n),born_cumulative=np.zeros(n),healed_cumulative=np.zeros(n),born_sites_cumulative=np.zeros(n),healed_sites_cumulative=np.zeros(n),log_birth_cumulative_hazard=np.full(n,-math.inf),site_birth_threshold=np.ones(n),birth_cumulative_hazard=np.zeros(n),site_transition_threshold=np.ones(n),site_transition_cumulative_hazard=np.zeros(n),site_transition_outcome_uniform=np.zeros(n),site_status=np.zeros(n,dtype=np.uint8),bond_damage=np.zeros(1),primary_seed_node=-1,active_front=False,active_front_bonds=np.zeros(1,dtype=bool),front_backbone_bonds=np.zeros(1,dtype=bool),front_wake_bonds=np.zeros(1,dtype=bool),front_process_bonds=np.zeros(1,dtype=bool),active_front_path_xy=np.empty((0,2)))
+    patch=SimpleNamespace(_candidate_rng=np.random.default_rng(1),_event_rng=np.random.default_rng(2),bonds=np.array([[0,1]]))
+    mesh=SimpleNamespace(nodes=np.zeros((2,2)))
+    adapter=SharedRootSpatialPDDormantAdapter(shared_clock=clock,patch=patch,pd_state=s,mesh=mesh,ep_gp=np.zeros((3,1)),rho_gp=np.full(1,1e12),epsp_acc_gp=np.zeros(1),u=np.zeros(4),cycles=0.,plastic_work=0.,cycle_evaluator=lambda _: {})
+    snap=adapter.active_state();threshold=adapter.shared_clock.global_threshold_action;hrng=deepcopy(adapter.shared_clock._hazard_rng.bit_generator.state);mrng=deepcopy(adapter.shared_clock._mark_rng.bit_generator.state)
+    adapter.restore_active_state(snap,snap.vector);adapter.commit_log_birth_action(np.array([math.log(.1)]),10.)
+    assert math.isclose(adapter.shared_clock.global_cumulative_action,.1,rel_tol=2e-16)
+    assert adapter.shared_clock.global_threshold_action==threshold
+    assert adapter.shared_clock._hazard_rng.bit_generator.state==hrng
+    assert adapter.shared_clock._mark_rng.bit_generator.state==mrng
 
 
 def test_private_cycle_preserves_clocks_rng_ledgers_topology_and_time():

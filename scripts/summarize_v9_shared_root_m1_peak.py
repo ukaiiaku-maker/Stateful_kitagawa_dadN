@@ -19,6 +19,7 @@ CASES = {
     "m1_1500_seed43": "Peak_1500_seed43/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed44": "Peak_1500_seed44/Peak/shielded/sigmaA_1500MPa",
     "m1_1500_seed45": "Peak_1500_seed45/Peak/shielded/sigmaA_1500MPa",
+    "m1_1500_seed46_rate_separated": "Peak_1500_seed46_rate_separated/Peak/shielded/sigmaA_1500MPa",
 }
 
 
@@ -99,14 +100,15 @@ def main(argv=None):
     ensemble = {
         "schema": "V9_SHARED_ROOT_M1_PEAK_MARK_TRANSITION_ENSEMBLE_1",
         "stress_MPa": 1500.0,
-        "observation_horizon_cycles": 3.0e8,
+        "observation_horizon_cycles_by_seed": {row["condition"]:row["cycles_total"] for row in seed_rows},
+        "post_stable_exposure_cycles_by_seed": {row["condition"]:row["cycles_total"]-row["N_stable_seed"] for row in seed_rows},
         "n": n,
         "stabilized": stabilized,
         "front_captured": captured,
         "P_stabilize_given_realized_attempt_empirical": stabilized / n,
         "P_front_capture_given_stabilized_seed_empirical": captured / stabilized,
         "stable_front_survival_empirical": 1.0 - captured / n,
-        "qualification": "small diagnostic ensemble; not a converged survival estimate",
+        "qualification": "small diagnostic ensemble with unequal censor horizons; not a converged survival estimate",
         "attempt_survival_semantics": "S_no_attempt=exp(-H_attempt), distinct from stable-front survival",
     }
     (out / "seed_ensemble.json").write_text(json.dumps(ensemble, indent=2) + "\n")

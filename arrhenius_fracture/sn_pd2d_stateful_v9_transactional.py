@@ -59,7 +59,7 @@ from .v9_physical_integrator import plastic_chain_log_rates
 from .v9_array_codec import AtomicArrayGenerationStore
 from .v9_cached_fem import CachedIntactFEM
 from .v9_pd_high_cycle import DormantPDHighCycleEngine, HighCycleConfig
-from .v9_pd_high_cycle_adapter import SpatialPDDormantAdapter
+from .v9_pd_high_cycle_adapter import SpatialPDDormantAdapter, SharedRootSpatialPDDormantAdapter
 from .v9_pd_shared_root_marked_cleavage import (
     MODEL_ID as SHARED_ROOT_MODEL_ID, M1_PRODUCTION_MODEL_ID,
     M3_PARITY_MODEL_ID, SHARED_ROOT_MODEL_IDS, SharedRootMarkedCleavageState,
@@ -82,7 +82,8 @@ def _logdiffexp(log_total, log_old):
 
 def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crack,
         plast_chain, cached_fem, fem_transaction, sigma_max, sigma_min,
-        ep_gp, rho_gp, epsp_acc_gp, u, plastic_work, cycles, dN=1.0):
+        ep_gp, rho_gp, epsp_acc_gp, u, plastic_work, cycles, dN=1.0,
+        root_global_node=None):
     """Authoritative private exact/macro-cycle operation extracted from the block loop.
 
     The same cached FEM, pre/post midpoint construction, PD equilibrium, and
@@ -160,6 +161,11 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
     sigma_tensor_mid = 0.5 * (pre[0]["sigma_node"] + post[0]["sigma_node"])
     seq_mid = 0.5 * (pre[0]["seq_node"] + post[0]["seq_node"])
     iph, inode = np.unravel_index(int(np.argmax(s1_mid)), s1_mid.shape)
+    clock_node = int(inode if root_global_node is None else root_global_node)
+    root_voigt = sigma_tensor_mid[:, :, clock_node]
+    root_tensors = np.empty((len(root_voigt), 2, 2), float)
+    root_tensors[:,0,0]=root_voigt[:,0];root_tensors[:,1,1]=root_voigt[:,1]
+    root_tensors[:,0,1]=root_tensors[:,1,0]=root_voigt[:,2]
     return {
         "ep_gp": np.asarray(state1.ep_gp).copy(), "rho_gp": np.asarray(state1.rho_gp).copy(),
         "epsp_acc_gp": np.asarray(state1.epsp_acc_gp).copy(), "u": np.asarray(post[0]["u_end"]).copy(),
@@ -212,6 +218,7 @@ def evaluate_dormant_exact_cycle(*, args, shield_on, mesh, patch, pd_state, crac
                             0.5 * (pre[0]["seq_node"] + post[0]["seq_node"]), axis=0
                         )[patch.global_nodes]},
         "transition_signature": "dormant_fixed_topology",
+        "root_phase_tensors_Pa": root_tensors,
     }
 
 
@@ -245,6 +252,21 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Fine transition generations created immediately before exposing
+        # separate pre-transition/post-stable ceiling selectors. The selector
+        # changes future step choice only; checkpoint state representation and
+        # every constitutive/event update are unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "55ff24a16ec1a6e39acb5230e1daf5c9f5ac173baf22d55d3bb2f583c3f200ae",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "b7a7f82f50d19b758a480af34ad999f1a4fda09a116c44659ec9a57981038b0b",
+        "pd_high_cycle_engine": "7af93b75ae0df2594c1dd9455ed989cf9600cd31ba27c0de0c2209a15e9af2e5",
+        "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # Endpoint-consistent shared-root m=1 Peak generations produced just
         # before making the already-used 1e5-cycle macro ceiling independent
@@ -682,6 +704,8 @@ _CHECKPOINT_EXCLUDED_ARGS = {
     "cycles_max",
     "pd_high_cycle", "pd_high_cycle_max_segment", "pd_high_cycle_checkpoint_decades",
     "pd_high_cycle_start_cycles",
+    "shared_root_transition_max_cycles", "shared_root_poststable_max_cycles",
+    "fatigue_endpoint",
     "stress_step_source_checkpoint", "stress_step_source_generation",
     "stress_step_source_sigma_a_MPa", "protocol_label",
 }
@@ -849,7 +873,8 @@ def _load_case_checkpoint(
     ):
         raise RuntimeError("checkpoint source hashes do not match active or verified-compatible v9 code")
     expected = _checkpoint_signature(args, case_name, sigma_a_MPa)
-    if metadata.get("signature") != expected:
+    checkpoint_signature={k:v for k,v in metadata.get("signature",{}).items() if k not in _CHECKPOINT_EXCLUDED_ARGS}
+    if checkpoint_signature != expected:
         raise RuntimeError("checkpoint arguments do not match this case")
     if float(summary.get("cycles", -1.0)) != float(metadata["cycles"]):
         raise RuntimeError("generation summary/capsule cycle mismatch")
@@ -1124,12 +1149,10 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
     ))
     if not math.isfinite(shared_root_macro_ceiling_cycles) or shared_root_macro_ceiling_cycles <= 0.0:
         raise RuntimeError("shared-root internal macro-integration ceiling must be finite and positive")
-    if shared_root_mode and bool(args.pd_high_cycle):
-        raise RuntimeError(
-            "shared-root marked cleavage is incompatible with the legacy PD "
-            "high-cycle adapter: signed MPZ/global clock/threshold/hazard RNG/mark RNG "
-            "are not in its active and protected state inventory"
-        )
+    shared_root_transition_ceiling_cycles=float(getattr(args,"shared_root_transition_max_cycles",shared_root_macro_ceiling_cycles))
+    shared_root_poststable_ceiling_cycles=float(getattr(args,"shared_root_poststable_max_cycles",shared_root_macro_ceiling_cycles))
+    if min(shared_root_transition_ceiling_cycles,shared_root_poststable_ceiling_cycles)<=0 or not all(map(math.isfinite,(shared_root_transition_ceiling_cycles,shared_root_poststable_ceiling_cycles))):
+        raise RuntimeError("shared-root transition/post-stable ceilings must be finite and positive")
     shared_clock = None
     if shared_root_mode:
         source_root = getattr(args, "four_class_source_root", None)
@@ -1340,6 +1363,7 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 sigma_max=sigma_max, sigma_min=sigma_min, ep_gp=adapter.ep_gp,
                 rho_gp=adapter.rho_gp, epsp_acc_gp=adapter.epsp_acc_gp, u=adapter.u,
                 plastic_work=adapter.plastic_work, cycles=adapter.cycles, dN=dN,
+                root_global_node=root_global_node,
             )
             adapter.ep_gp = payload.pop("ep_gp"); adapter.rho_gp = payload.pop("rho_gp")
             adapter.epsp_acc_gp = payload.pop("epsp_acc_gp"); adapter.u = payload.pop("u")
@@ -1348,12 +1372,23 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 np.exp(np.minimum(adapter.pd_state.log_delivery_memory,709.0)),0.0)
             for field in ("available","embryo","stable","inactive","completion"):
                 setattr(adapter.pd_state,field,payload.pop(field))
+            root_tensors=payload.pop("root_phase_tensors_Pa")
+            if shared_root_mode:
+                trial=adapter.shared_clock.copy();trial.global_threshold_action=1e300
+                proposed=trial.propose_phase_block(dN,args.frequency_Hz,args.T,root_tensors)
+                adapter.shared_clock.mpz=proposed["state"].mpz.copy()
+                payload["log_birth_action"]=np.asarray([proposed["detail"]["log_action_increment"]])
+                payload["phase_log_birth_rate"]=np.asarray(proposed["detail"]["phase_log_rate_s"])
+                payload["diagnostics"]["shared_root_log_action_increment"]=proposed["detail"]["log_action_increment"]
             return payload
-        return SpatialPDDormantAdapter(
+        adapter_type=SharedRootSpatialPDDormantAdapter if shared_root_mode else SpatialPDDormantAdapter
+        adapter_kwargs=dict(
             patch=patch, pd_state=pd_state, mesh=mesh, ep_gp=ep_gp, rho_gp=rho_gp,
             epsp_acc_gp=epsp_acc_gp, u=u, cycles=cycles, plastic_work=Wp_total,
             cycle_evaluator=evaluator, window_evaluator=evaluator,
         )
+        if shared_root_mode:adapter_kwargs["shared_clock"]=shared_clock
+        return adapter_type(**adapter_kwargs)
 
     for ib in range(start_block, args.max_blocks):
         if (
@@ -1380,6 +1415,8 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                               max(decade - cycles, 1.0))
                 engine = DormantPDHighCycleEngine(adapter, HighCycleConfig(
                     projective_max_cycles=max(int(args.pd_high_cycle_max_segment), 2),
+                    private_window_initial_cycles=max(2,min(int(segment),int(args.pd_high_cycle_max_segment))),
+                    private_window_max_cycles=max(2,int(args.pd_high_cycle_max_segment)),
                     exact_retry_cycles=0,
                     minimum_projected_cycles_per_exact_map=16.0))
                 hc = engine.advance(segment)
@@ -1393,11 +1430,22 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 tmp_mode = mode_path.with_name(mode_path.name + ".tmp")
                 tmp_mode.write_text(json.dumps(high_cycle_mode_rows, indent=2, default=_json_safe) + "\n")
                 os.replace(tmp_mode, mode_path)
-                engine.write_atomic_mode_checkpoint(outdir / "v9_pd_high_cycle_controller.json")
+                controller_path=outdir/"v9_pd_high_cycle_controller.json"
+                engine.write_atomic_mode_checkpoint(controller_path)
+                controller=json.loads(controller_path.read_text())
+                controller["campaign_accepted_projected_cycles"]=float(sum(
+                    row["accepted_cycles"] for row in high_cycle_mode_rows
+                    if row["accepted"] and row["mode"] in {"exact_private_window","projective","stationary"}
+                ))
+                controller["campaign_exact_map_evaluations"]=int(sum(row["exact_map_evaluations"] for row in high_cycle_mode_rows))
+                tmp_controller=controller_path.with_name(controller_path.name+".tmp")
+                tmp_controller.write_text(json.dumps(controller,indent=2,default=_json_safe)+"\n");os.replace(tmp_controller,controller_path)
                 if hc.cycles_consumed > 0.0:
                     ep_gp = adapter.ep_gp.copy(); rho_gp = adapter.rho_gp.copy()
                     epsp_acc_gp = adapter.epsp_acc_gp.copy(); u = adapter.u.copy()
                     Wp_total = adapter.plastic_work; cycles = adapter.cycles
+                    if shared_root_mode:
+                        shared_clock = adapter.shared_clock.copy()
                     _, _, u_zero_hc, _, _ = cached_fem.affine(ep_gp, sigma_max, sigma_min, u)
                     _, _, s1_res_hc, _ = stress_state_intact(mesh, u_zero_hc, ep_gp, Dmat, mat)
                     last_residual = project_gp_to_nodes(mesh, s1_res_hc)
@@ -1488,8 +1536,11 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
             and not (args.freeze_ale_after_front_capture and pd_state.active_front)
         )
         remaining = args.cycles_max - cycles
+        shared_ceiling=shared_root_macro_ceiling_cycles
+        if shared_root_mode and np.any(np.asarray(pd_state.site_status)==1):shared_ceiling=shared_root_transition_ceiling_cycles
+        elif shared_root_mode and (pd_state.cycles_first_stable is not None or np.any(np.asarray(pd_state.site_status)==2)):shared_ceiling=shared_root_poststable_ceiling_cycles
         dN = min(
-            shared_root_macro_ceiling_cycles
+            shared_ceiling
             if (shared_root_m1 or shared_root_m3_parity)
             else args.block_cycles,
             remaining,
@@ -2620,6 +2671,8 @@ def build_parser():
         dest="fatigue_model",
         help="one of the six prior representative fatigue barrier sets",
     )
+    p.add_argument("--shared-root-transition-max-cycles",type=float,default=SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES,dest="shared_root_transition_max_cycles")
+    p.add_argument("--shared-root-poststable-max-cycles",type=float,default=SHARED_ROOT_AUTHORITATIVE_MACRO_CEILING_CYCLES,dest="shared_root_poststable_max_cycles")
     p.add_argument("--cases", nargs="+", choices=["no_shield", "shielded"], default=["no_shield", "shielded"])
     p.add_argument("--T", type=float, default=300.0)
     p.add_argument("--sigma-a-MPa", nargs="+", type=float, default=[500, 600, 700], dest="sigma_a_MPa")

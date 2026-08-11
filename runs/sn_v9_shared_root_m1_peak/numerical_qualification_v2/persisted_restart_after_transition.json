@@ -1,0 +1,32 @@
+{
+  "schema": "V9_M1_PERSISTED_RESTART_AFTER_TRANSITION_1",
+  "source_generation": "generation_9f2e88cb61d74708bec307a2dc5ea432",
+  "source_boundary_cycles": 568.7777746616391,
+  "endpoint_deltas": {
+    "cycles_first_embryo": 0.0,
+    "cycles_first_stable": 0.0,
+    "cycles_first_softening": 0.0,
+    "cycles_root_connected": 0.0,
+    "cycles_front_capture": 0.0,
+    "H_attempt_final": 0.0
+  },
+  "endpoint_identity": true,
+  "selected_site_identity": true,
+  "global_action_identity": true,
+  "global_threshold_identity": true,
+  "maximum_array_absolute_difference": 1.7857360035122838e-10,
+  "array_differences_nonzero": {
+    "pd__bond_damage": 5.228040222959862e-13,
+    "pd__healed_cumulative": 2.6411851967704696e-26,
+    "pd__delivery_memory": 7.034617818501796e-27,
+    "pd__completion": 4.2365193728470134e-42,
+    "pd_v9__log_birth_cumulative_hazard": 1.7857360035122838e-10,
+    "pd_v9__log_delivery_memory": 2.3078428057488054e-11,
+    "last_residual": 3.194255801179739e-18,
+    "u": 5.675120746603812e-20,
+    "ep_gp": 6.8358250268679095e-31,
+    "epsp_acc_gp": 5.556608816110986e-31,
+    "pd__inactive": 2.6413035259062528e-27
+  },
+  "qualification": "endpoint/action/threshold identity; floating reconstruction tolerance for fields"
+}

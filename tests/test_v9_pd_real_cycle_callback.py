@@ -50,6 +50,7 @@ def test_real_callback_uses_fem_pd_path_without_consuming_physical_state():
         sigma_max=sigma_max,sigma_min=sigma_min,ep_gp=ep,rho_gp=rho,epsp_acc_gp=eps,u=u,
         plastic_work=0.0,cycles=0.0)
     assert result["ep_gp"].shape==ep.shape and result["log_birth_action"].shape==state.birth_cumulative_hazard.shape
+    assert result["root_phase_tensors_Pa"].shape==(args.hazard_n_phase,2,2)
     assert np.all(np.isfinite(result["rho_gp"])) and result["ledger_increments"]["plastic_work"] >= 0.0
     np.testing.assert_array_equal(state.site_status,state_before.site_status)
     np.testing.assert_array_equal(state.birth_cumulative_hazard,state_before.birth_cumulative_hazard)

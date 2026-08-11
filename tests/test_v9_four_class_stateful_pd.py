@@ -7,7 +7,7 @@ import numpy as np
 from arrhenius_fracture.sn_arrhenius_chain import AuditedExpFloorBarrier
 from arrhenius_fracture.sn_feature_geometry_v8_7 import BluntNotchGeometry
 from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
-    ScratchExpFloorBarrier, build_parser as build_pd_parser,
+    ScratchExpFloorBarrier, _checkpoint_signature, build_parser as build_pd_parser,
 )
 from scripts.run_v9_four_class_stateful_pd import build_parser as build_four_class_parser
 
@@ -26,6 +26,8 @@ class FourClassStatefulPDTests(unittest.TestCase):
         ])
         self.assertEqual(args.pd_image_policy, "none")
         self.assertEqual(args.shared_root_internal_max_cycles, 1.0e5)
+        self.assertEqual(args.shared_root_transition_max_cycles, 1.0e5)
+        self.assertEqual(args.shared_root_poststable_max_cycles, 1.0e5)
         refined = build_four_class_parser().parse_args([
             "--material-class", "Peak", "--sigma-a-MPa", "500",
             "--source-root", "/tmp/source",
@@ -34,6 +36,13 @@ class FourClassStatefulPDTests(unittest.TestCase):
         self.assertEqual(refined.shared_root_internal_max_cycles, 2500.0)
         legacy = build_pd_parser().parse_args([])
         self.assertEqual(legacy.pd_image_policy, "selected")
+
+    def test_future_step_selectors_and_endpoint_do_not_invalidate_state_capsule(self):
+        a=build_pd_parser().parse_args([]);b=build_pd_parser().parse_args([])
+        b.fatigue_endpoint="stable_crack_birth"
+        b.shared_root_transition_max_cycles=.6103515625
+        b.shared_root_poststable_max_cycles=625.
+        self.assertEqual(_checkpoint_signature(a,"shielded",2000.),_checkpoint_signature(b,"shielded",2000.))
 
     def test_audited_exp_floor_matches_definition(self):
         barrier = AuditedExpFloorBarrier(

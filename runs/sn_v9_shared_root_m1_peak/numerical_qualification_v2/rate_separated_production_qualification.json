@@ -1,0 +1,15 @@
+{
+  "source_generation": "generation_fb1f3445c7344342b6c43edc1b8c1da2",
+  "pretransition_ceiling_cycles": 0.6103515625,
+  "transition_ceiling_cycles": 0.6103515625,
+  "poststable_ceiling_cycles": 625.0,
+  "N_attempt": 565.8156533396242,
+  "N_stable": 568.592134194267,
+  "N_softening": 9942.371431069267,
+  "N_root_connected": 493692.3714310693,
+  "N_front_capture": 544942.3714310692,
+  "front_capture_relative_difference_vs_full_156p25": 0.001051033988061781,
+  "action_identity": true,
+  "summary_sha256": "e77806656cdf1b9b377e078cb7974734081b0f775e7e9626ae221b6114cc45ca",
+  "checkpoint_sha256": "786930682158ebb454703b34b660d47958d4ed41f103cf893ee31ff2ba4f3db9"
+}

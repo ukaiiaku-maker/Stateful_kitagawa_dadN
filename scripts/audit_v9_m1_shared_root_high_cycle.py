@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""Package direct/accelerated/restart qualification of shared-root Peak m1."""
+from __future__ import annotations
+import csv,hashlib,json
+from pathlib import Path
+ROOT=Path("runs/sn_v9_shared_root_m1_peak");OUT=ROOT/"numerical_qualification_v2"
+PAIRS=[("64_cycle_overlap","shared_root_high_cycle_overlap_v2","shared_root_high_cycle_overlap_direct_v2"),("100000_cycle_overlap","shared_root_high_cycle_overlap_1e5","shared_root_high_cycle_overlap_1e5_direct"),("1e8_cycle_overlap","shared_root_high_cycle_1e8","shared_root_high_cycle_1e8_direct_macro"),("persisted_restart_to_1p1e8","shared_root_high_cycle_restart_1e8_to_1p1e8","shared_root_high_cycle_1p1e8")]
+def case(name):return ROOT/name/"Peak/shielded/sigmaA_1500MPa"
+def load(p):return json.loads(Path(p).read_text())
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def main():
+ OUT.mkdir(parents=True,exist_ok=True);rows=[]
+ for label,a,b in PAIRS:
+  pa,pb=case(a),case(b);sa,sb=load(pa/"summary.json"),load(pb/"summary.json");ca=load(pa/"v9_pd_high_cycle_controller.json") if (pa/"v9_pd_high_cycle_controller.json").exists() else {}
+  H1,H2=sa["H_attempt_final"],sb["H_attempt_final"];e1,e2=sa["signed_mpz_state_final"]["emitted_total"],sb["signed_mpz_state_final"]["emitted_total"]
+  rows.append(dict(comparison=label,accelerated_or_restart=a,direct_or_uninterrupted=b,cycles=sa["cycles_total"],cycle_identity=sa["cycles_total"]==sb["cycles_total"],H_attempt_accelerated=H1,H_attempt_direct=H2,H_relative_error=abs(H1-H2)/max(abs(H2),1e-300),emitted_total_accelerated=e1,emitted_total_direct=e2,emitted_relative_error=abs(e1-e2)/max(abs(e2),1e-300),tip_radius_absolute_error_m=abs(sa["signed_mpz_state_final"]["tip_radius_m"]-sb["signed_mpz_state_final"]["tip_radius_m"]),threshold_identity=sa["global_threshold_action_final"]==sb["global_threshold_action_final"],attempt_count_identity=sa["global_attempt_count_final"]==sb["global_attempt_count_final"],campaign_accepted_projected_cycles=ca.get("campaign_accepted_projected_cycles",0.),campaign_exact_map_evaluations=ca.get("campaign_exact_map_evaluations",0),cycles_per_exact_map=(ca.get("campaign_accepted_projected_cycles",0.)/ca.get("campaign_exact_map_evaluations",1) if ca.get("campaign_exact_map_evaluations",0) else 0.),accelerated_summary_sha256=sha(pa/"summary.json"),direct_summary_sha256=sha(pb/"summary.json")))
+ with (OUT/"shared_root_high_cycle_overlap.csv").open("w",newline="") as f:w=csv.DictWriter(f,list(rows[0]),lineterminator="\n");w.writeheader();w.writerows(rows)
+ accelerated_event=load(case("shared_root_high_cycle_event_guard")/"summary.json");direct_event=load(case("Peak_1500_VHCF")/"summary.json")
+ event_guard={"accelerated_attempt_cycle":accelerated_event["cycles_first_embryo"],"direct_attempt_cycle":direct_event["cycles_first_embryo"],"absolute_cycle_error":abs(accelerated_event["cycles_first_embryo"]-direct_event["cycles_first_embryo"]),"relative_cycle_error":abs(accelerated_event["cycles_first_embryo"]-direct_event["cycles_first_embryo"])/direct_event["cycles_first_embryo"],"threshold_action_identity":accelerated_event["H_attempt_final"]==direct_event["H_attempt_final"],"accelerated_attempt_count":accelerated_event["global_attempt_count_final"],"post_attempt_transition_run":False}
+ audit={"schema":"V9_M1_SHARED_ROOT_HIGH_CYCLE_QUALIFICATION_1","stress_MPa":1500.,"new_stress_condition":False,"active_inventory":["FEM ep/rho/epsp/u","PD smooth dormant state","signed MPZ mobile/retained/slip/wake and accumulated scalars"],"protected_inventory":["global action ledger","global threshold","hazard RNG","spatial-mark RNG","attempt count/last mark","PD transition thresholds/actions/outcomes","PD topology"],"event_guard":"remaining global action; direct ordered-phase driver resumes before crossing","event_guard_localization":event_guard,"rows":rows,"qualified":max(r["H_relative_error"] for r in rows)<1e-8 and max(r["emitted_relative_error"] for r in rows)<1e-6 and all(r["threshold_identity"] for r in rows) and event_guard["relative_cycle_error"]<1e-9,"important_accounting":"acceleration is claimed only where campaign_accepted_projected_cycles > 0"}
+ (OUT/"shared_root_high_cycle_audit.json").write_text(json.dumps(audit,indent=2)+"\n")
+ manifest=load(OUT/"manifest.json") if (OUT/"manifest.json").exists() else {"schema":"V9_M1_NUMERICAL_QUALIFICATION_V2"};manifest["shared_root_high_cycle"]={"qualified":audit["qualified"],"overlap_csv_sha256":sha(OUT/"shared_root_high_cycle_overlap.csv"),"audit_sha256":sha(OUT/"shared_root_high_cycle_audit.json")};(OUT/"manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+if __name__=="__main__":main()

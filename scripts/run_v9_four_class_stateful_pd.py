@@ -153,6 +153,8 @@ def build_parser():
     parser.add_argument("--cycles-max", type=float, default=1.0e8)
     parser.add_argument("--block-cycles", type=float, default=1.0e5)
     parser.add_argument("--shared-root-internal-max-cycles", type=float, default=1.0e5)
+    parser.add_argument("--shared-root-transition-max-cycles", type=float, default=1.0e5)
+    parser.add_argument("--shared-root-poststable-max-cycles", type=float, default=1.0e5)
     parser.add_argument("--min-block-cycles", type=float, default=1.0e-6)
     parser.add_argument("--max-blocks", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
@@ -168,6 +170,7 @@ def build_parser():
     parser.add_argument("--pd-high-cycle", action="store_true")
     parser.add_argument("--pd-high-cycle-start-cycles", type=float, default=1.0e4)
     parser.add_argument("--pd-high-cycle-max-segment", type=float, default=1.0e8)
+    parser.add_argument("--fatigue-endpoint", choices=("stable_crack_birth","stable_spatial_crack_birth","completed_global_cleavage_event"))
     parser.add_argument("--restart-source-checkpoint", type=Path)
     parser.add_argument("--restart-source-generation", default="")
     parser.add_argument("--restart-source-sigma-a-MPa", type=float)
@@ -178,7 +181,7 @@ def main(argv=None):
     cli = build_parser().parse_args(argv)
     args = build_legacy_parser().parse_args([])
     for name in (
-        "cycles_max", "block_cycles", "shared_root_internal_max_cycles", "min_block_cycles", "max_blocks", "seed",
+        "cycles_max", "block_cycles", "shared_root_internal_max_cycles", "shared_root_transition_max_cycles", "shared_root_poststable_max_cycles", "min_block_cycles", "max_blocks", "seed",
         "pd_seed", "global_cleavage_seed", "spatial_mark_seed",
         "site_density_m2", "resume", "checkpoint_every_blocks", "print_every", "pd_image_policy",
         "resolution_profile",
@@ -189,6 +192,8 @@ def main(argv=None):
     args.out = str(cli.out / cli.material_class)
     configure_four_class(args, cli.material_class, cli.source_root,
                          cli.shared_root_mode)
+    if cli.fatigue_endpoint is not None:
+        args.fatigue_endpoint=cli.fatigue_endpoint
     if cli.restart_source_checkpoint is not None:
         if cli.restart_source_sigma_a_MPa is None:
             raise SystemExit("--restart-source-sigma-a-MPa is required with --restart-source-checkpoint")
@@ -207,6 +212,8 @@ def main(argv=None):
         "option_id": args.four_class_option_id,
         "analytic_notch_root_radius_m": 600.0e-6,
         "shared_root_internal_macro_ceiling_cycles": cli.shared_root_internal_max_cycles,
+        "shared_root_transition_ceiling_cycles":cli.shared_root_transition_max_cycles,
+        "shared_root_poststable_ceiling_cycles":cli.shared_root_poststable_max_cycles,
         "external_block_partition_changes_physical_path": False,
         "pd_image_policy": args.pd_image_policy,
         "transfer": args.four_class_transfer_contract,

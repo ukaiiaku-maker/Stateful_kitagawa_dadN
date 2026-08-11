@@ -1,0 +1,78 @@
+{
+  "schema": "V9_M1_NUMERICAL_QUALIFICATION_V2",
+  "new_stress_conditions": false,
+  "pd_image_policy": "none",
+  "refinement_rows": 5,
+  "transition_refinement_rows": 4,
+  "transition_qualification": {
+    "relative_attempt_difference_finest_pair": 0.0002715798455760287,
+    "absolute_attempt_difference_cycles_finest_pair": 0.15366412775847493,
+    "transition_delay_spread_cycles": 0.0,
+    "relative_attempt_tolerance": 0.0005,
+    "persistent_competing_clock_qualified": true,
+    "production_internal_transition_ceiling_cycles": 0.6103515625,
+    "note": "attempt coordinate retains the stated sub-cycle discretization uncertainty; stable-minus-attempt delay is partition invariant"
+  },
+  "rate_separated_production": {
+    "source_generation": "generation_fb1f3445c7344342b6c43edc1b8c1da2",
+    "pretransition_ceiling_cycles": 0.6103515625,
+    "transition_ceiling_cycles": 0.6103515625,
+    "poststable_ceiling_cycles": 625.0,
+    "N_attempt": 565.8156533396242,
+    "N_stable": 568.592134194267,
+    "N_softening": 9942.371431069267,
+    "N_root_connected": 493692.3714310693,
+    "N_front_capture": 544942.3714310692,
+    "front_capture_relative_difference_vs_full_156p25": 0.001051033988061781,
+    "action_identity": true,
+    "summary_sha256": "e77806656cdf1b9b377e078cb7974734081b0f775e7e9626ae221b6114cc45ca",
+    "checkpoint_sha256": "786930682158ebb454703b34b660d47958d4ed41f103cf893ee31ff2ba4f3db9"
+  },
+  "restart": {
+    "schema": "V9_M1_PERSISTED_RESTART_AFTER_TRANSITION_1",
+    "source_generation": "generation_9f2e88cb61d74708bec307a2dc5ea432",
+    "source_boundary_cycles": 568.7777746616391,
+    "endpoint_deltas": {
+      "cycles_first_embryo": 0.0,
+      "cycles_first_stable": 0.0,
+      "cycles_first_softening": 0.0,
+      "cycles_root_connected": 0.0,
+      "cycles_front_capture": 0.0,
+      "H_attempt_final": 0.0
+    },
+    "endpoint_identity": true,
+    "selected_site_identity": true,
+    "global_action_identity": true,
+    "global_threshold_identity": true,
+    "maximum_array_absolute_difference": 1.7857360035122838e-10,
+    "array_differences_nonzero": {
+      "pd__bond_damage": 5.228040222959862e-13,
+      "pd__healed_cumulative": 2.6411851967704696e-26,
+      "pd__delivery_memory": 7.034617818501796e-27,
+      "pd__completion": 4.2365193728470134e-42,
+      "pd_v9__log_birth_cumulative_hazard": 1.7857360035122838e-10,
+      "pd_v9__log_delivery_memory": 2.3078428057488054e-11,
+      "last_residual": 3.194255801179739e-18,
+      "u": 5.675120746603812e-20,
+      "ep_gp": 6.8358250268679095e-31,
+      "epsp_acc_gp": 5.556608816110986e-31,
+      "pd__inactive": 2.6413035259062528e-27
+    },
+    "qualification": "endpoint/action/threshold identity; floating reconstruction tolerance for fields"
+  },
+  "attempt_quantile_semantics": "S_no_attempt=exp(-H_attempt); does not include stabilization, healing, or front capture",
+  "files": {
+    "persisted_restart_after_transition.json": "e2e9e06f7a745294806f68c7eef9c905e394c377874d87e1642ca0f609ecb8c7",
+    "internal_macro_refinement.csv": "00f63ee39fc147e8f09afcd642afea805556cedf45f74542185e24896fe6889f",
+    "shared_root_high_cycle_audit.json": "90ad70c316adebf70e223c4a7277df11df1fa98b459b0e6ba2913b95ee5068f4",
+    "shared_root_high_cycle_overlap.csv": "ab24efc907aa72991fd3680e1b8fec610a49bde8e1469816b3dba85513df9a7d",
+    "transition_clock_refinement.csv": "6408afb6fe7821636a3b5fb258c64bb05f48d9de845b5225acd843f9828d0cb1",
+    "analytical_attempt_quantiles.csv": "3a11dfba1d5d2906392bce8c8bfd9648fbf47d0eda42c10d12ebe7bc8edcf78c",
+    "rate_separated_production_qualification.json": "745bab9b7752b3889434cd2a4cd0db9eceb7b1a4267e8b90b478e9e984273cdb"
+  },
+  "shared_root_high_cycle": {
+    "qualified": true,
+    "overlap_csv_sha256": "ab24efc907aa72991fd3680e1b8fec610a49bde8e1469816b3dba85513df9a7d",
+    "audit_sha256": "90ad70c316adebf70e223c4a7277df11df1fa98b459b0e6ba2913b95ee5068f4"
+  }
+}
