@@ -6,6 +6,7 @@ from pathlib import Path
 from arrhenius_fracture.v9_canonical_four_class_birth import CanonicalFourClassBirthState
 from arrhenius_fracture.v9_four_class_registry import EXPECTED
 from arrhenius_fracture.v9_pd_shared_root_marked_cleavage import (
+    M1_PRODUCTION_MODEL_ID, M3_PARITY_MODEL_ID,
     SharedRootMarkedCleavageState, normalized_available_site_marks,
 )
 
@@ -71,6 +72,45 @@ def test_no_mark_support_fails_closed():
         assert "no available" in str(exc)
     else:
         raise AssertionError("missing mark support did not fail closed")
+
+
+def test_m1_is_raw_action_and_m3_is_only_preevent_renewal_difference():
+    tensors = np.array([[[1., 0.], [0., 0.]], [[2., 0.], [0., 0.]]])
+    common = dict(option_id="test", source_root=".", shear_modulus_Pa=1.,
+                  poisson=.3, burgers_m=1e-10, initial_tip_radius_m=1e-4,
+                  hazard_seed=4, mark_seed=9)
+    m1 = SharedRootMarkedCleavageState(
+        **common, mpz=FakeMPZ(), m_hits=1., model_id=M1_PRODUCTION_MODEL_ID,
+        endpoint_semantics="elementary_attempt_to_reversible_PD_embryo")
+    m3 = SharedRootMarkedCleavageState(
+        **common, mpz=FakeMPZ(), m_hits=3., model_id=M3_PARITY_MODEL_ID,
+        endpoint_semantics="completed_cooperative_front_increment_terminate")
+    for clock in (m1, m3): clock.global_threshold_action = 1e100
+    a = m1.propose_phase_block(2., 4., 300., tensors)
+    b = m3.propose_phase_block(2., 4., 300., tensors)
+    # FakeMPZ raw rate is exactly 2/s; elapsed time is 0.5 s.
+    np.testing.assert_allclose(a["detail"]["action_increment"], 1.0, rtol=1e-15)
+    assert b["detail"]["action_increment"] < a["detail"]["action_increment"]
+    assert a["state"].mpz.value == b["state"].mpz.value
+    assert a["detail"]["phase_average_opening_stress_Pa"] == b["detail"]["phase_average_opening_stress_Pa"]
+    assert m1.audit["legacy_K2_delivery_gate"] is False
+    assert m1.audit["renewal_m_hits"] == 1.0
+
+
+def test_m3_completed_event_consumes_no_mark_and_injects_no_embryo():
+    clock = SharedRootMarkedCleavageState(
+        "test", ".", shear_modulus_Pa=1., poisson=.3, burgers_m=1e-10,
+        initial_tip_radius_m=1e-4, hazard_seed=4, mark_seed=9,
+        mpz=FakeMPZ(), m_hits=3., model_id=M3_PARITY_MODEL_ID,
+        endpoint_semantics="completed_cooperative_front_increment_terminate")
+    clock.global_threshold_action = .1
+    clock.global_cumulative_action = .1
+    clock.log_global_cumulative_action = math.log(.1)
+    mark_before = clock.capsule()["mark_rng_state"]
+    event = clock.commit_completed_event(cycle=2.5, phase_index=3, phase_fraction=.25)
+    assert event["spatial_mark_drawn"] is False
+    assert event["reversible_embryo_injected"] is False
+    assert clock.capsule()["mark_rng_state"] == mark_before
 
 
 def test_phase_block_proposal_is_transactional_and_partition_equivalent():
@@ -151,3 +191,38 @@ def test_real_canonical_shared_root_action_and_mpz_parity():
     for key in canonical.mpz._CAPSULE_ARRAYS:
         np.testing.assert_array_equal(getattr(s["state"].mpz.state, key),
                                       getattr(canonical.mpz.state, key))
+
+
+def test_real_m1_action_is_raw_canonical_cleavage_action():
+    source = Path("/Volumes/Data/Data/Nanopillar_calculation/PF-fracture-fatigue_v10_2_21_persistent_sites_top1")
+    option = next(iter(EXPECTED))
+    kwargs = dict(shear_modulus_Pa=160.15625e9, poisson=.28,
+                  burgers_m=2.74e-10, initial_tip_radius_m=1e-6)
+    canonical = CanonicalFourClassBirthState(option, source, hazard_seed=1720, **kwargs)
+    m1 = SharedRootMarkedCleavageState(
+        option, source, hazard_seed=1720, mark_seed=1721, m_hits=1.,
+        model_id=M1_PRODUCTION_MODEL_ID,
+        endpoint_semantics="elementary_attempt_to_reversible_PD_embryo", **kwargs)
+    m1.global_threshold_action = 1e100
+    tensors = np.array([
+        [[2.0e9, .3e9], [.3e9, 3.0e9]],
+        [[1.0e9, -.2e9], [-.2e9, 1.5e9]],
+        [[.5e9, .1e9], [.1e9, .8e9]],
+    ])
+    result = m1.propose_phase_block(.75, 1000., 300., tensors)
+    midpoint = canonical.copy()
+    drives = [midpoint.mpz.resolve_root_tensor(t) for t in tensors]
+    midpoint.mpz.advance(
+        .5 * .75 / 1000., 300.,
+        float(np.mean([d["opening_stress_Pa"] for d in drives])),
+        np.mean(np.stack([d["tau_signed_Pa"] for d in drives]), axis=0),
+    )
+    raw_logs = np.array([
+        midpoint.mpz.cleavage_log_rate_s(d["opening_stress_Pa"], 300.)
+        for d in drives
+    ])
+    expected = np.exp(np.logaddexp.reduce(raw_logs) - math.log(len(raw_logs))) * .75 / 1000.
+    np.testing.assert_allclose(result["detail"]["phase_log_rate_s"], raw_logs,
+                               rtol=0., atol=0.)
+    np.testing.assert_allclose(result["detail"]["action_increment"], expected,
+                               rtol=2e-15)

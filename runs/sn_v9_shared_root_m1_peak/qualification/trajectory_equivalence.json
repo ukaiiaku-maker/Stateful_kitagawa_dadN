@@ -1,0 +1,33 @@
+{
+  "schema": "V9_SHARED_ROOT_M1_TRAJECTORY_EQUIVALENCE_1",
+  "comparisons": {
+    "caller_partition_10x": {
+      "comparison_path": "runs/sn_v9_shared_root_m1_peak/partition_2000_block1e4_v2/Peak/shielded/sigmaA_2000MPa",
+      "endpoint_cycle_deltas": {
+        "cycles_first_embryo": 0.0,
+        "cycles_first_stable": 0.0,
+        "cycles_first_softening": 0.0,
+        "cycles_root_connected": 0.0,
+        "cycles_front_capture": 0.0
+      },
+      "selected_site_identity_equal": true,
+      "attempt_action_equal": true,
+      "threshold_equal": true,
+      "final_PD_arrays_byte_equal": true
+    },
+    "persisted_restart_before_mark": {
+      "comparison_path": "runs/sn_v9_shared_root_m1_peak/restart_2000_across_marked_crossing_v2/Peak/shielded/sigmaA_2000MPa",
+      "endpoint_cycle_deltas": {
+        "cycles_first_embryo": 0.0,
+        "cycles_first_stable": 0.0,
+        "cycles_first_softening": 0.0,
+        "cycles_root_connected": -1.1029187589883804e-06,
+        "cycles_front_capture": -1.1029187589883804e-06
+      },
+      "selected_site_identity_equal": true,
+      "attempt_action_equal": true,
+      "threshold_equal": true,
+      "final_PD_arrays_byte_equal": false
+    }
+  }
+}

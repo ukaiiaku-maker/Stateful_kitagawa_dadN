@@ -17,6 +17,9 @@ from .v9_four_class_signed_mpz import SignedMPZPreBirthState
 
 
 MODEL_ID = "v9_four_class_stateful_PD_shared_root_MPZ_marked_cleavage_v1"
+M1_PRODUCTION_MODEL_ID = "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1"
+M3_PARITY_MODEL_ID = "v9_four_class_stateful_PD_shared_root_m3_completed_event_parity_v1"
+SHARED_ROOT_MODEL_IDS = frozenset((MODEL_ID, M1_PRODUCTION_MODEL_ID, M3_PARITY_MODEL_ID))
 CAPSULE_SCHEMA = "V9_SHARED_ROOT_MPZ_MARKED_CLEAVAGE_CAPSULE_1"
 
 
@@ -69,7 +72,8 @@ class SharedRootMarkedCleavageState:
     def __init__(self, option_id, source_root, *, shear_modulus_Pa, poisson,
                  burgers_m, initial_tip_radius_m, hazard_seed, mark_seed,
                  engine_id=0, minimum_threshold=1e-12, m_hits=3.0,
-                 tau_c_s=1e-6, mpz=None):
+                 tau_c_s=1e-6, mpz=None, model_id=MODEL_ID,
+                 endpoint_semantics="reversible_embryo_after_completed_event"):
         self.mpz = mpz if mpz is not None else SignedMPZPreBirthState(
             option_id, source_root, shear_modulus_Pa=shear_modulus_Pa,
             poisson=poisson, burgers_m=burgers_m,
@@ -80,6 +84,8 @@ class SharedRootMarkedCleavageState:
         self.m_hits = float(m_hits)
         self.tau_c_s = float(tau_c_s)
         self.minimum_threshold = max(float(minimum_threshold), 1e-300)
+        self.model_id = str(model_id)
+        self.endpoint_semantics = str(endpoint_semantics)
         self.hazard_seed, self.mark_seed, self.engine_id = (
             int(hazard_seed), int(mark_seed), int(engine_id)
         )
@@ -95,15 +101,20 @@ class SharedRootMarkedCleavageState:
         self.attempt_count = 0
         self.time_s = 0.0
         self.last_attempt = None
+        semantic_audit = {} if self.model_id == MODEL_ID else {
+            "renewal_m_hits": self.m_hits,
+            "renewal_tau_c_s": self.tau_c_s,
+            "endpoint_semantics": self.endpoint_semantics,
+        }
         self.audit = copy.deepcopy(getattr(self.mpz, "audit", {})) | {
-            "model_id": MODEL_ID,
+            "model_id": self.model_id,
             "global_cleavage_clock_count": 1,
             "signed_mpz_state_count": 1,
             "legacy_K2_delivery_gate": False,
             "candidate_density_multiplies_global_hazard": False,
             "mark_rng_separate_from_cleavage_rng": True,
             "primary_PD_endpoint": "first_front_capture_after_stable_spatial_seed",
-        }
+        } | semantic_audit
 
     def _draw_threshold(self):
         return max(float(self._hazard_rng.exponential(1.0)), self.minimum_threshold)
@@ -158,6 +169,10 @@ class SharedRootMarkedCleavageState:
     def cleavage_log_rate_s(self, nominal_root_stress_Pa, T_K):
         sigma = self.effective_opening_stress_Pa(nominal_root_stress_Pa)
         raw = self.mpz.cleavage_log_rate_s(sigma, T_K)
+        if self.m_hits == 1.0:
+            # Production elementary-attempt semantics: no cooperative
+            # completion/renewal transform and therefore no 1/tau ceiling.
+            return float(raw)
         return canonical_effective_cleavage_log_rate(raw, self.m_hits, self.tau_c_s)
 
     def add_log_action(self, log_increment):
@@ -330,4 +345,23 @@ class SharedRootMarkedCleavageState:
         self.global_threshold_action = (
             self.global_cumulative_action + self._draw_threshold()
         )
+        return event
+
+    def commit_completed_event(self, *, cycle, phase_index, phase_fraction):
+        """Commit an m=3 canonical completed event without a reversible embryo."""
+        if not self.threshold_crossed():
+            raise RuntimeError("cannot commit a completed event before global first passage")
+        event = {
+            "attempt_index": self.attempt_count + 1,
+            "cycle": float(cycle),
+            "phase_index": int(phase_index),
+            "phase_fraction": float(phase_fraction),
+            "threshold_action": self.global_threshold_action,
+            "cumulative_action": self.global_cumulative_action,
+            "event_semantics": "completed_cooperative_front_increment",
+            "spatial_mark_drawn": False,
+            "reversible_embryo_injected": False,
+        }
+        self.attempt_count += 1
+        self.last_attempt = event
         return event

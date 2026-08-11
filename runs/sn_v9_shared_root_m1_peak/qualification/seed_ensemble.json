@@ -1,0 +1,13 @@
+{
+  "schema": "V9_SHARED_ROOT_M1_PEAK_MARK_TRANSITION_ENSEMBLE_1",
+  "stress_MPa": 1500.0,
+  "observation_horizon_cycles": 300000000.0,
+  "n": 4,
+  "stabilized": 4,
+  "front_captured": 3,
+  "P_stabilize_given_realized_attempt_empirical": 1.0,
+  "P_front_capture_given_stabilized_seed_empirical": 0.75,
+  "stable_front_survival_empirical": 0.25,
+  "qualification": "small diagnostic ensemble; not a converged survival estimate",
+  "attempt_survival_semantics": "S_no_attempt=exp(-H_attempt), distinct from stable-front survival"
+}

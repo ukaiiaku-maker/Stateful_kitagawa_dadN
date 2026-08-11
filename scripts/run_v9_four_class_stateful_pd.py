@@ -13,9 +13,16 @@ from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
 )
 from arrhenius_fracture.v9_four_class_registry import select_canonical_option
 from arrhenius_fracture.v9_four_class_signed_mpz import load_audited_modules
+from arrhenius_fracture.v9_pd_shared_root_marked_cleavage import (
+    MODEL_ID, M1_PRODUCTION_MODEL_ID, M3_PARITY_MODEL_ID,
+)
 
 
-MODEL_ID = "v9_four_class_stateful_PD_shared_root_MPZ_marked_cleavage_v1"
+MODELS = {
+    "m1_production": M1_PRODUCTION_MODEL_ID,
+    "m3_parity": M3_PARITY_MODEL_ID,
+    "m3_rejected_hybrid_control": MODEL_ID,
+}
 OPTIONS = {
     "Peak": "v913_paper_peak01_0242980_persistent_sites",
     "DBTT": "v913_paper_dbtt01_0202500_persistent_sites",
@@ -40,7 +47,8 @@ def _surface(barrier):
     }
 
 
-def configure_four_class(args, material_class, source_root):
+def configure_four_class(args, material_class, source_root,
+                         shared_root_mode="m1_production"):
     option_id = OPTIONS[material_class]
     selected, registry_audit = select_canonical_option(option_id, source_root)
     modules, source_hashes, _paths = load_audited_modules(source_root)
@@ -50,9 +58,12 @@ def configure_four_class(args, material_class, source_root):
     args.cases = ["shielded"]
     args.fatigue_model = "custom"
     args.fatigue_model_preset_applied = False
-    args.fatigue_endpoint = "stable_spatial_crack_birth"
+    args.fatigue_endpoint = (
+        "completed_global_cleavage_event" if shared_root_mode == "m3_parity"
+        else "stable_spatial_crack_birth"
+    )
     args.pd_image_policy = args.pd_image_policy
-    args.cleavage_clock_model = MODEL_ID
+    args.cleavage_clock_model = MODELS[shared_root_mode]
     args.four_class_source_root = str(Path(source_root).resolve())
     args.align_blocks_to_birth_clock = False
     args.birth_scale = 0.0
@@ -97,11 +108,11 @@ def configure_four_class(args, material_class, source_root):
         "constitutive_source_hashes": source_hashes,
     }
     args.four_class_transfer_contract = {
-        "model_id": MODEL_ID,
+        "model_id": args.cleavage_clock_model,
         "exactly_transferred": [
             "cleavage_EXP_floor_surface", "emission_EXP_floor_surface_and_delivery",
             "Peierls_transport_surface", "Taylor_transport_surface",
-            "attempt_frequencies",
+            "attempt_frequencies", "signed_mobile_retained_MPZ_state",
         ],
         "parallel_spatial_PD_physics": [
             "candidate_site_population", "normalized_spatial_mark",
@@ -122,7 +133,6 @@ def configure_four_class(args, material_class, source_root):
         "not_claimed_exact_signed_MPZ_parity": [
             "scalar_FEM_plastic_state", "spatial_mark_field",
             "PD_stabilization_healing", "PD_bond_growth_linkage",
-            "signed_mobile_retained_populations",
         ],
         "primary_endpoint": "first_front_capture_after_stable_spatial_seed",
         "transient_embryo_is_failure": False,
@@ -137,6 +147,8 @@ def build_parser():
     parser.add_argument("--material-class", choices=tuple(OPTIONS), required=True)
     parser.add_argument("--sigma-a-MPa", type=float, required=True)
     parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--shared-root-mode", choices=tuple(MODELS),
+                        default="m1_production")
     parser.add_argument("--out", type=Path, default=Path("runs/sn_v9_four_class_stateful_pd"))
     parser.add_argument("--cycles-max", type=float, default=1.0e8)
     parser.add_argument("--block-cycles", type=float, default=1.0e5)
@@ -155,6 +167,9 @@ def build_parser():
     parser.add_argument("--pd-high-cycle", action="store_true")
     parser.add_argument("--pd-high-cycle-start-cycles", type=float, default=1.0e4)
     parser.add_argument("--pd-high-cycle-max-segment", type=float, default=1.0e8)
+    parser.add_argument("--restart-source-checkpoint", type=Path)
+    parser.add_argument("--restart-source-generation", default="")
+    parser.add_argument("--restart-source-sigma-a-MPa", type=float)
     return parser
 
 
@@ -171,16 +186,27 @@ def main(argv=None):
         setattr(args, name, getattr(cli, name))
     args.sigma_a_MPa = [float(cli.sigma_a_MPa)]
     args.out = str(cli.out / cli.material_class)
-    configure_four_class(args, cli.material_class, cli.source_root)
+    configure_four_class(args, cli.material_class, cli.source_root,
+                         cli.shared_root_mode)
+    if cli.restart_source_checkpoint is not None:
+        if cli.restart_source_sigma_a_MPa is None:
+            raise SystemExit("--restart-source-sigma-a-MPa is required with --restart-source-checkpoint")
+        args.stress_step_source_checkpoint = str(cli.restart_source_checkpoint)
+        args.stress_step_source_generation = cli.restart_source_generation
+        args.stress_step_source_sigma_a_MPa = cli.restart_source_sigma_a_MPa
+        args.protocol_label = "same_stress_persisted_restart_qualification"
     apply_resolution_profile(args)
     cli.out.mkdir(parents=True, exist_ok=True)
     contract = {
         "schema": "V9_FOUR_CLASS_STATEFUL_PD_CAMPAIGN_CONTRACT_1",
-        "model_id": MODEL_ID,
+        "model_id": args.cleavage_clock_model,
+        "shared_root_mode": cli.shared_root_mode,
         "temperature_K": 300.0,
         "material_class": cli.material_class,
         "option_id": args.four_class_option_id,
         "analytic_notch_root_radius_m": 600.0e-6,
+        "authoritative_macro_transaction_ceiling_cycles": 1.0e5,
+        "external_block_partition_changes_physical_path": False,
         "pd_image_policy": args.pd_image_policy,
         "transfer": args.four_class_transfer_contract,
         "registry": args.four_class_registry_audit,

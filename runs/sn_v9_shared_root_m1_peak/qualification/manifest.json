@@ -1,0 +1,45 @@
+{
+  "schema": "V9_SHARED_ROOT_M1_PEAK_SUMMARY_1",
+  "cases": {
+    "m1_2000_seed42": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_2000/Peak/shielded/sigmaA_2000MPa",
+      "summary_sha256": "643a3680cfd6da45fdee519f1af4df6c8ad6a53dd048ff6be26d48ff85b454a3",
+      "checkpoint_sha256": "1b393acd26fe06714889946fb922928fb6939ef3f47caf032de5058a40507016",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_1500_seed42": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_VHCF/Peak/shielded/sigmaA_1500MPa",
+      "summary_sha256": "a3df1f1a156e9d74b06a419f2b7b18f0b853a799f933e2b0f263d0011112b8b3",
+      "checkpoint_sha256": "81d9e98c3f6cbdb3f060e4940072f5631ac0aa70fcd2ba74f3fc25ab7ceae350",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_1500_seed43": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed43/Peak/shielded/sigmaA_1500MPa",
+      "summary_sha256": "52e53e87bbcbd9dfccd63109edff0e2162592c0184193e9e345e7ddf8f638fcb",
+      "checkpoint_sha256": "c9abec49b5df3fcd7b1a2e1f1b64a2027138039f1114ed77d21daa21620e7438",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_1500_seed44": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed44/Peak/shielded/sigmaA_1500MPa",
+      "summary_sha256": "63e8e7503dd718c697bd871bc5953772553198f2cf1c7adf94df2df62eebbba8",
+      "checkpoint_sha256": "a13e7d45a9aad31d39d2820f129451bccc477791d8ffa9c7137edfa2bb6b931d",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    },
+    "m1_1500_seed45": {
+      "path": "runs/sn_v9_shared_root_m1_peak/Peak_1500_seed45/Peak/shielded/sigmaA_1500MPa",
+      "summary_sha256": "c80760c0064e26554bc82666c03bd27ca3ef9b140c9ce08521545b63da279091",
+      "checkpoint_sha256": "e6b9c003e3787040e27ce12153f365f6528d8a9c3dcaf1e7a0222427a7da754f",
+      "model_id": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
+      "restart_provenance": "hash-verified atomic v9 generation store"
+    }
+  },
+  "generated": {
+    "endpoint_results.csv": "af4c5ded51fa47ac504b7d98e20ffc7998d00009b5fddf04512f0e1c33c1423d",
+    "seed_ensemble.json": "1cb687464e7328579bd9d2845327f927f432d0c77527c78d2bfda11497ff9285",
+    "trajectory_equivalence.json": "3f4417a255357bfaab6cb81e2ca5de1de31d75c600778fa258cb1de3cbd1087b"
+  }
+}
