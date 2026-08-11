@@ -1,6 +1,6 @@
 {
   "schema": "V9_BOUNDED_REGRESSION_MANIFEST_1",
-  "source_commit": "b956d88b422342a4ee973eef6222535df2ced478",
+  "source_commit": "745903ccb06ef30dd74ab983c97daca5a7b9444e",
   "groups": [
     {
       "test_group": "tests/test_endurance.py",
@@ -59,7 +59,23 @@
       "passed": 9
     },
     {
+      "test_group": "tests/test_v9_conditioned_premark_atomic.py",
+      "collected": 3,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 3
+    },
+    {
       "test_group": "tests/test_v9_conditioned_premark_converter.py",
+      "collected": 1,
+      "failed": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "passed": 1
+    },
+    {
+      "test_group": "tests/test_v9_conditioned_premark_real_checkpoint.py",
       "collected": 1,
       "failed": 0,
       "skipped": 0,
@@ -228,8 +244,8 @@
     }
   ],
   "totals": {
-    "collected": 208,
-    "passed": 208,
+    "collected": 212,
+    "passed": 212,
     "failed": 0,
     "skipped": 0
   },
