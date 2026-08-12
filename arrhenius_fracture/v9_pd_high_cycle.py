@@ -616,7 +616,23 @@ class DormantPDHighCycleEngine:
                     break
                 if accepted_window:
                     continue
-            ev = private_cycle(self.adapter); self.exact_map_evaluations += 1
+            try:
+                ev = private_cycle(self.adapter)
+                self.exact_map_evaluations += 1
+            except RuntimeError as exc:
+                # Some evolving material states require a sub-cycle embedded
+                # FEM transaction even when the one-cycle private admission
+                # probe is too large.  This is a rejected accelerator
+                # admission, not a failed physical trajectory.  The adapter's
+                # private evaluator restores all protected state before the
+                # exception escapes; return control to the authoritative
+                # direct macro-stepper without consuming cycles or action.
+                self.mode_history.append(ModeRecord(
+                    "exact_private_cycle_reject", 0.0, 1, False,
+                    {"reason": "private_cycle_physical_transaction_reject",
+                     "detail": str(exc)},
+                ))
+                break
             current_residual, current_fields = active_distance(self.adapter, ev.state_start, ev.state_end)
             if current_residual <= self.config.periodic_admission_distance:
                 periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)

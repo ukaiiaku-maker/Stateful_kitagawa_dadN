@@ -258,6 +258,22 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Missing-class action generations created immediately before the
+        # accelerator learned to treat rejected private macro/one-cycle probes
+        # as admission failures and return to direct integration.  Rejected
+        # probes were side-effect-free; state representation and every accepted
+        # physical transaction are unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "bd5281838d74f37600e9001ea25f8c3b9bc97ad961a613627b8f99d3b62ed2c7",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "28959188b13288ce129fc1445300875f1e647dce5a78c458d26d1696c28190f1",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Conditioned Peak ensemble generations produced before the resume
         # metadata-persistence repair.  The repair changes checkpoint metadata
         # only; physical arrays, clocks, topology, and RNG representations are

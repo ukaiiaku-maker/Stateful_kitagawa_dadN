@@ -245,6 +245,26 @@ def test_rejected_private_window_refines_without_mutating_physical_state():
     np.testing.assert_allclose(model.x, [32e-6], rtol=0.0, atol=1e-18)
 
 
+def test_rejected_one_cycle_admission_returns_to_direct_path_unchanged():
+    class RejectPrivateCycle(SyntheticDormantPD):
+        def exact_private_cycle(self):
+            raise RuntimeError("embedded FEM step needs subdivision")
+
+    model = RejectPrivateCycle(rate=1e-8, threshold=10.0,
+                               contraction=1.0, drift=2e-6)
+    before = model.protected_signatures()
+    result = DormantPDHighCycleEngine(model, cfg(
+        private_window_training=False,
+    )).advance(100)
+    assert result.cycles_consumed == 0.0
+    assert result.accepted_projected_cycles == 0.0
+    assert model.cycles == 0.0
+    assert model.protected_signatures() == before
+    assert result.modes[-1].mode == "exact_private_cycle_reject"
+    assert result.modes[-1].detail["reason"] == \
+        "private_cycle_physical_transaction_reject"
+
+
 def test_private_window_event_guard_converts_per_second_rate_at_nondefault_frequency():
     class PerSecondWindow(SyntheticDormantPD):
         def __init__(self, frequency_hz):
