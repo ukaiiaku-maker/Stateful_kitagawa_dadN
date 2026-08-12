@@ -1,0 +1,7 @@
+sigma_a_MPa,branch_id,observation,source_path,image_path
+2500,B001,captured,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/front_2500/B001/Peak/shielded/sigmaA_2500MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/2500_B001_captured.png
+2500,B000,censored,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/front_2500/B000/Peak/shielded/sigmaA_2500MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/2500_B000_censored.png
+2250,B001,captured,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/front_2250/B001/Peak/shielded/sigmaA_2250MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/2250_B001_captured.png
+2250,B000,censored,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/front_2250/B000/Peak/shielded/sigmaA_2250MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/2250_B000_censored.png
+1500,B004,captured,runs/sn_v9_shared_root_m1_peak/conditioned_ensemble_1500_v1/B004/Peak/shielded/sigmaA_1500MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/1500_B004_captured.png
+1500,B005,censored,runs/sn_v9_shared_root_m1_peak/conditioned_ensemble_1500_v1/B005/Peak/shielded/sigmaA_1500MPa,runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/end_states/1500_B005_censored.png

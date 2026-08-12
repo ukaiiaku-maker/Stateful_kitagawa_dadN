@@ -1,0 +1,10 @@
+sigma_a_MPa,physical_branch_count,capture_count,administrative_censor_count,partial_count,capture_fraction_at_1e6,N10_front_status,N10_front_or_bound,N50_front_status,N50_front_or_bound,N90_front_status,N90_front_or_bound,median_identifiable
+2500,4,2,2,0,0.6666666666666666,identified,533129.1785116781,identified,533129.3848851743,lower_bound,1000001.021811266,True
+2250,4,2,2,0,0.6666666666666666,identified,535701.2462919799,identified,535710.9165910028,lower_bound,1000075.974614402,True
+2000,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
+1820,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
+1630,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
+1500,8,6,2,0,0.75,identified,3377702546.089775,identified,3377702663.873793,lower_bound,3381398480.7595873,True
+1460,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
+1290,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
+1172,0,0,0,0,,unavailable,,unavailable,,unavailable,,False
