@@ -258,6 +258,21 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Weak-T 1220/1120 MPa generations created immediately before the
+        # projective/periodic private-probe rejection path was made fail-safe.
+        # The change only converts a side-effect-free rejected accelerator
+        # probe into direct-path fallback; accepted physical state is intact.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "714cc0166594e03cf221b8fd44fb11c42728e3a00afcb261e68f3d4312e95bb8",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "ad6af7447b77b366fa8c54e44332dbf3286ca786318dd5ed197787881496b9ef",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Weak-T 445 MPa accepted generation written under the committed
         # private-cycle fallback. The subsequent driver edit only appended an
         # exact compatible-source record; all physical and engine hashes match.
