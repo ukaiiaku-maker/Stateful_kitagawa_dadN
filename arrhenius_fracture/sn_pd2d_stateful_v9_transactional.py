@@ -258,6 +258,20 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Ceramic 955 MPa ACTIVE generation before projective training-domain
+        # ValueError received the same fail-safe classification as a rejected
+        # private window. Accepted physical state/representation are unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "4f78580efc6f811968dae76beb7be488fc9e94da0e9823b12afcf0c14ccba891",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "93342034879c1f857f3883e3e2ae97e2928bc28005962a3cfe17f233d67ce61e",
+        "pd_high_cycle_engine": "f45bc9db1e7cb82d7a376fdfcfba1d5e2b59447d509d0a57cc842c71a8ad2174",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Ceramic 955 MPa ACTIVE generation after accepted-state rollback was
         # qualified and before projected-domain ValueError was classified as
         # an admission rejection. The latter changes failed-probe scheduling
