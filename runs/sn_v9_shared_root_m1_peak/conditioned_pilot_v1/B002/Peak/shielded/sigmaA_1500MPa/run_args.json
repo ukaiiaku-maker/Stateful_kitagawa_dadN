@@ -59,96 +59,23 @@
   "cases": [
     "shielded"
   ],
-  "checkpoint_every_blocks": 25,
+  "checkpoint_every_blocks": 250,
   "checkpoint_path": "runs/sn_v9_shared_root_m1_peak/conditioned_pilot_v1/B002/Peak/shielded/sigmaA_1500MPa/checkpoint_latest.npz",
   "cleavage_clock_model": "v9_four_class_stateful_PD_shared_root_m1_marked_embryo_v1",
   "conditional_survival_protocol": {
     "analysis_only": false,
-    "branch_id": "B002",
-    "conditioned_attempt_committed": true,
-    "conditioned_first_attempt_pending": false,
-    "protocol": "conditioned_physical_attempt_branch",
-    "renewed_global_threshold": 1.1341444931779714,
-    "source_analysis_generation": "generation_06a0249923524aa7abcdd580fb44ca24",
-    "source_conditioned_capsule_sha256": "68243cad7497a6fb3a9ec73e8dc304debc5b3d3cf6434981dea39f71edece4b7",
-    "source_replay_generation": "generation_6d332259a6c5435d8c062bab2a18db4e",
-    "stream_ids": {
-      "mark_stream_id": "B002",
-      "renewal_stream_id": "B002",
-      "transition_stream_id": "B002"
-    },
+    "mark_rng_consumed": null,
+    "physical_threshold_draw": true,
+    "protocol": "physical_threshold_first_passage",
+    "stop_at_exact_action_boundary": false,
+    "threshold_override_action": null,
     "topology_continuation_permitted": true
   },
-  "conditioned_branch_id": "B002",
-  "conditioned_branch_metadata": {
-    "analysis_only": false,
-    "branch_id": "B002",
-    "conditioned_attempt_committed": true,
-    "conditioned_first_attempt_pending": false,
-    "protocol": "conditioned_physical_attempt_branch",
-    "renewed_global_threshold": 1.1341444931779714,
-    "source_analysis_generation": "generation_06a0249923524aa7abcdd580fb44ca24",
-    "source_conditioned_capsule_sha256": "68243cad7497a6fb3a9ec73e8dc304debc5b3d3cf6434981dea39f71edece4b7",
-    "source_replay_generation": "generation_6d332259a6c5435d8c062bab2a18db4e",
-    "stream_ids": {
-      "mark_stream_id": "B002",
-      "renewal_stream_id": "B002",
-      "transition_stream_id": "B002"
-    },
-    "topology_continuation_permitted": true
-  },
-  "conditioned_branch_summary": {
-    "attempt_count": 1,
-    "branch_id": "B002",
-    "event": {
-      "attempt_index": 1,
-      "cumulative_action": 0.6931471805599453,
-      "cycle": 3377055123.1199546,
-      "local_fields": {
-        "conditioned_action": 0.6931471805599453,
-        "effective_opening_stress_Pa": 6726836893.4105835,
-        "local_backstress_Pa": 4.440892098500626e-07,
-        "local_cleavage_log_propensity_s": -4.9348441528026115,
-        "local_state_shift_eV": 1.27675647831893e-16,
-        "phase_fraction": 0.9635495302556407
-      },
-      "mark_log_weight": -6.726603622030666,
-      "mark_probability": 0.11541407775877782,
-      "pd_node_id": 124,
-      "phase_index": 0,
-      "site_id": 803,
-      "threshold_action": 0.6931471805599453
-    },
-    "mark_entropy_nats": 2.901663976272813,
-    "renewed_global_threshold_action": 1.1341444931779714,
-    "schema": "V9_CONDITIONED_PREMARK_ATOMIC_BRANCH_1",
-    "selected_site_transition_cumulative_action": 0.0,
-    "selected_site_transition_outcome_uniform": 0.7068104771423399,
-    "selected_site_transition_threshold": 1.3193416697245375,
-    "source_analysis_checkpoint": "2f29c2653a2918d1b40ec188d51e85a9145b18d769dfbbc1cf3295fbba57b2af",
-    "source_replay_checkpoint": "dde6d48bcadc085904198c24c055860f44990224178ec86b709d892c69a1a9c7",
-    "stream_ids": {
-      "mark_stream_id": "B002",
-      "renewal_stream_id": "B002",
-      "transition_stream_id": "B002"
-    },
-    "stream_seeds": {
-      "embryo_transition": 10716306781625771927,
-      "renewal_hazard": 17827687241713206229,
-      "spatial_mark": 14461431666319936466
-    },
-    "transition_rng_state": {
-      "bit_generator": "PCG64",
-      "has_uint32": 0,
-      "state": {
-        "inc": 185305424552412217327575144145085827061,
-        "state": 6227025356206041789246712465625852535
-      },
-      "uinteger": 0
-    }
-  },
+  "conditioned_branch_id": "",
+  "conditioned_branch_summary": null,
   "conditioned_mark_stream_id": "",
-  "conditioned_premark_dir": "runs/sn_v9_shared_root_m1_peak/conditioned_premark_1500_N50_v1",
+  "conditioned_operation": "",
+  "conditioned_premark_dir": "",
   "conditioned_renewal_stream_id": "",
   "conditioned_transition_stream_id": "",
   "crack_G00_eV": 4.011803912930191,
@@ -163,7 +90,7 @@
   "crack_sT_GPa_per_K": -0.0012099820682778002,
   "crack_sigc0_GPa": 7.349638969637454,
   "crack_sigc_mu_power": 1.0,
-  "cycles_max": 3377055223.1199546,
+  "cycles_max": 3378055125.758638,
   "delivery_event_strain": 1e-05,
   "delivery_hit_count": 2.0,
   "delivery_memory_s": 0.001,
@@ -396,7 +323,7 @@
   "link_orientation_power": 8.0,
   "link_stress_GPa": 1.1,
   "link_width_GPa": 0.2,
-  "max_blocks": 1000,
+  "max_blocks": 5000,
   "max_dep_phase": 2e-05,
   "max_rho_rel_phase": 0.02,
   "max_surface_move_fraction": 0.2,
@@ -482,10 +409,10 @@
   "primary_seed_reselection_patience_updates": 24,
   "primary_seed_stress_score_weight": 1.0,
   "primary_seed_surface_score_horizons": 2.0,
-  "print_every": 10,
+  "print_every": 100,
   "protocol_label": "",
   "resolution_profile": "h15",
-  "resume": false,
+  "resume": true,
   "resumed": true,
   "rho0": 1000000000000.0,
   "rho_cap": 1e+17,
@@ -510,12 +437,12 @@
   "source_sha256": {
     "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
     "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
-    "driver": "418fdfb684106aad050ee0346f3efe2381829320523dc3cbaa1f9313f8072688",
+    "driver": "3e0381309cccfb7a3af1848c707257900c05c78c60d3b6e792f27881fef1c788",
     "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
     "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
     "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
     "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
-    "pd_module": "1d164d367994b8119cfc48552e89221adec26aaf5259820b32a731ecc67185e7",
+    "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
     "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3"
   },
   "spatial_mark_seed": 42018,
