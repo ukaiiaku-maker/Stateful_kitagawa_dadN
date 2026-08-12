@@ -332,7 +332,11 @@ class DormantPDHighCycleEngine:
             self.exact_map_evaluations += 1
             return ev
         finally:
-            self.adapter.restore_active_state(base, base.vector)
+            rollback = getattr(self.adapter, "restore_accepted_active_state", None)
+            if rollback is None:
+                self.adapter.restore_active_state(base, base.vector)
+            else:
+                rollback(base)
             self.adapter.set_physical_cycles(cycles)
             _assert_private(self.adapter, protected)
 
@@ -351,7 +355,11 @@ class DormantPDHighCycleEngine:
             self.exact_map_evaluations += 1
             return evaluation
         finally:
-            self.adapter.restore_active_state(base, base.vector)
+            rollback = getattr(self.adapter, "restore_accepted_active_state", None)
+            if rollback is None:
+                self.adapter.restore_active_state(base, base.vector)
+            else:
+                rollback(base)
             self.adapter.set_physical_cycles(physical_cycles)
             _assert_private(self.adapter, protected)
 

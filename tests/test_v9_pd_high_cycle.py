@@ -88,6 +88,22 @@ def test_shared_root_adapter_carries_mpz_and_protects_threshold_and_rng():
     assert adapter.shared_clock._mark_rng.bit_generator.state==mrng
 
 
+def test_accepted_snapshot_rollback_does_not_widen_projected_state_domain():
+    adapter = SpatialPDDormantAdapter.__new__(SpatialPDDormantAdapter)
+    n = len(adapter.active_state.__func__.__globals__["ACTIVE_NAMES"])
+    shapes = ((3, 1), (1,), (1,), (1,), (1,), (1,), (1,), (1,), (1,), (1,))
+    spec = tuple((name, shape, "float64") for name, shape in zip(
+        adapter.active_state.__func__.__globals__["ACTIVE_NAMES"], shapes))
+    vector = np.zeros(sum(int(np.prod(s)) for s in shapes))
+    vector[0] = -4502.0  # outside projection envelope but finite accepted state
+    snapshot = ActiveState(vector, spec)
+    adapter.pd_state = SimpleNamespace()
+    adapter.restore_accepted_active_state(snapshot)
+    np.testing.assert_allclose(adapter.ep_gp.ravel()[0], -0.4502)
+    with np.testing.assert_raises_regex(ValueError, "projected ep_gp"):
+        adapter.restore_active_state(snapshot, snapshot.vector)
+
+
 def test_private_cycle_preserves_clocks_rng_ledgers_topology_and_time():
     model = SyntheticDormantPD(rate=0.2, contraction=0.5)
     before = model.protected_signatures(); state = model.active_state(); cycles = model.cycles

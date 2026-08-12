@@ -102,7 +102,7 @@ class SpatialPDDormantAdapter:
         vector = np.concatenate([a.ravel() for a in transformed]) if arrays else np.empty(0)
         return ActiveState(vector, spec)
 
-    def restore_active_state(self, snapshot, vector):
+    def _restore_active_state(self, snapshot, vector, *, validate):
         x = np.asarray(vector, float)
         offset, restored = 0, []
         names = []
@@ -127,7 +127,7 @@ class SpatialPDDormantAdapter:
             below = field < rule["lower"]
             above = field > rule["upper"]
             nan = np.isnan(field)
-            if np.any(below) or np.any(above) or np.any(nan):
+            if validate and (np.any(below) or np.any(above) or np.any(nan)):
                 raise ValueError(
                     f"projected {name} violates its constitutive domain "
                     f"(coordinate=[{float(np.min(value)):.17g}, {float(np.max(value)):.17g}], "
@@ -142,6 +142,18 @@ class SpatialPDDormantAdapter:
         self.pd_state.delivery_memory = np.where(np.isfinite(logmem),np.exp(np.minimum(logmem,709.0)),0.0)
         self.pd_state.available=available; self.pd_state.embryo=embryo; self.pd_state.stable=stable
         self.pd_state.inactive=inactive; self.pd_state.completion=completion
+
+    def restore_active_state(self, snapshot, vector):
+        self._restore_active_state(snapshot, vector, validate=True)
+
+    def restore_accepted_active_state(self, snapshot):
+        """Restore an exact accepted snapshot without projection-domain tests.
+
+        Direct physical integration may legitimately leave the conservative
+        accelerator projection envelope.  Such a state is ineligible for a
+        projected proposal, but rollback must still reproduce it exactly.
+        """
+        self._restore_active_state(snapshot, snapshot.vector, validate=False)
 
     def active_residual(self, a, b):
         offset = 0; by_field = {}
@@ -393,6 +405,15 @@ class SharedRootSpatialPDDormantAdapter(SpatialPDDormantAdapter):
     def restore_active_state(self,snapshot,vector):
         base_spec=tuple(x for x in snapshot.specification if not x[0].startswith("shared_mpz_"));n=sum(int(np.prod(x[1])) for x in base_spec);v=np.asarray(vector,float)
         super().restore_active_state(ActiveState(v[:n],base_spec),v[:n]);cap=self.shared_clock.mpz.capsule();offset=n
+        for name,shape,_ in snapshot.specification[len(base_spec):]:
+            size=int(np.prod(shape));value=v[offset:offset+size].reshape(shape);offset+=size;kind,key=name.split(":",1)
+            if kind=="shared_mpz_array":cap["arrays"][key]=value*self._mpz_scales[("array",key)]
+            else:cap["scalars"][key]=float(value[0]*self._mpz_scales[("scalar",key)])
+        self.shared_clock.mpz.restore_capsule(cap)
+
+    def restore_accepted_active_state(self, snapshot):
+        base_spec=tuple(x for x in snapshot.specification if not x[0].startswith("shared_mpz_"));n=sum(int(np.prod(x[1])) for x in base_spec);v=np.asarray(snapshot.vector,float)
+        super()._restore_active_state(ActiveState(v[:n],base_spec),v[:n],validate=False);cap=self.shared_clock.mpz.capsule();offset=n
         for name,shape,_ in snapshot.specification[len(base_spec):]:
             size=int(np.prod(shape));value=v[offset:offset+size].reshape(shape);offset+=size;kind,key=name.split(":",1)
             if kind=="shared_mpz_array":cap["arrays"][key]=value*self._mpz_scales[("array",key)]
