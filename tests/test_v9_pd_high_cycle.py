@@ -213,6 +213,38 @@ def test_exact_private_window_training_partition_guard_and_restart():
     assert guarded.action[0] < guarded.threshold[0]
 
 
+def test_rejected_private_window_refines_without_mutating_physical_state():
+    class RejectLargeWindows(SyntheticDormantPD):
+        def exact_private_window(self, dN):
+            if dN > 4:
+                raise RuntimeError("synthetic physical transaction rejection")
+            n = float(dN)
+            start = self.active_state()
+            end = ActiveState(start.vector + n * self.drift, start.specification)
+            return CycleEvaluation(
+                start, end, np.array([self.log_rate + math.log(n)]),
+                {"ledger": n}, np.array([0.0, 1.0]),
+                np.array([[self.log_rate], [self.log_rate]]), {}, "dormant",
+                self.protected_signatures().topology,
+            )
+
+    model = RejectLargeWindows(rate=1e-8, threshold=10.0,
+                               contraction=1.0, drift=2e-6)
+    result = DormantPDHighCycleEngine(model, cfg(
+        periodic_admission_distance=0.0,
+        private_window_initial_cycles=16,
+        minimum_projected_cycles_per_exact_map=0.0,
+    )).advance(16)
+    assert result.cycles_consumed == 16
+    assert any(row.mode == "exact_private_window_reject"
+               and row.detail.get("reason") ==
+               "private_window_physical_transaction_reject"
+               for row in result.modes)
+    assert model.cycles == 16
+    assert model.ledger == 16
+    np.testing.assert_allclose(model.x, [32e-6], rtol=0.0, atol=1e-18)
+
+
 def test_private_window_event_guard_converts_per_second_rate_at_nondefault_frequency():
     class PerSecondWindow(SyntheticDormantPD):
         def __init__(self, frequency_hz):

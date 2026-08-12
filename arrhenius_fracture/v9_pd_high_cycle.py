@@ -583,7 +583,20 @@ class DormantPDHighCycleEngine:
                 proposal = max(min(proposal, max(self.config.private_window_initial_cycles, 2)), 2)
                 accepted_window = False
                 while proposal >= 2 and self.exact_map_evaluations + 3 <= self.config.max_exact_map_evaluations:
-                    accepted_window, window = self._private_window_trial(proposal)
+                    try:
+                        accepted_window, window = self._private_window_trial(proposal)
+                    except RuntimeError as exc:
+                        # A macro-window may legitimately fail the underlying
+                        # physical transaction tolerance even though a smaller
+                        # window (or the exact one-cycle map) is admissible.
+                        # Treat that as an adaptive rejection.  The private
+                        # evaluator restores the complete protected state in
+                        # its finally block, so no failed proposal is committed.
+                        accepted_window = False
+                        window = {
+                            "reason": "private_window_physical_transaction_reject",
+                            "detail": str(exc),
+                        }
                     public_detail = {k: v for k, v in window.items()
                                      if k not in {"start", "end_vector", "log_action", "ledgers"}}
                     self.mode_history.append(ModeRecord(
