@@ -638,8 +638,16 @@ class DormantPDHighCycleEngine:
                 periodic, residual, iterations, maps = solve_periodic_state(self.adapter, self.config)
                 self.exact_map_evaluations += maps
                 distance, field_distance = active_distance(self.adapter, self.adapter.active_state(), periodic)
-                verified = self._private_at(periodic, periodic.vector)
-                verified2 = self._private_at(periodic, verified.state_end.vector)
+                try:
+                    verified = self._private_at(periodic, periodic.vector)
+                    verified2 = self._private_at(periodic, verified.state_end.vector)
+                except RuntimeError as exc:
+                    self.mode_history.append(ModeRecord(
+                        "periodic_verification_reject", 0.0, maps, False,
+                        {"reason": "private_cycle_physical_transaction_reject",
+                         "detail": str(exc)},
+                    ))
+                    break
                 verify_residual, verify_fields = active_distance(self.adapter, periodic, verified.state_end)
                 verify_hazard = _hazard_error(verified.log_birth_action, verified2.log_birth_action)
                 ledger_names = set(verified.ledger_increments) | set(verified2.ledger_increments)
@@ -684,7 +692,14 @@ class DormantPDHighCycleEngine:
                     ))
                     budget_exhausted = True
                     break
+            try:
                 accepted, trial = self._projective_trial(proposal)
+            except RuntimeError as exc:
+                accepted = False
+                trial = {
+                    "reason": "private_cycle_physical_transaction_reject",
+                    "detail": str(exc),
+                }
                 efficiency = proposal / 4.0
                 if accepted and efficiency < self.config.minimum_projected_cycles_per_exact_map:
                     accepted = False

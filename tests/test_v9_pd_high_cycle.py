@@ -265,6 +265,32 @@ def test_rejected_one_cycle_admission_returns_to_direct_path_unchanged():
         "private_cycle_physical_transaction_reject"
 
 
+def test_rejected_projective_probe_returns_to_direct_path_unchanged():
+    class RejectProjectedProbe(SyntheticDormantPD):
+        calls = 0
+
+        def exact_private_cycle(self):
+            self.calls += 1
+            if self.calls >= 3:
+                raise RuntimeError("projected FEM state needs subdivision")
+            return super().exact_private_cycle()
+
+    model = RejectProjectedProbe(rate=1e-8, threshold=10.0,
+                                 contraction=1.0, drift=2e-6)
+    before = model.protected_signatures()
+    result = DormantPDHighCycleEngine(model, cfg(
+        private_window_training=False,
+        periodic_admission_distance=0.0,
+    )).advance(100)
+    assert result.cycles_consumed == 0.0
+    assert result.accepted_projected_cycles == 0.0
+    assert model.cycles == 0.0
+    assert model.protected_signatures() == before
+    assert any(row.detail.get("reason") ==
+               "private_cycle_physical_transaction_reject"
+               for row in result.modes)
+
+
 def test_private_window_event_guard_converts_per_second_rate_at_nondefault_frequency():
     class PerSecondWindow(SyntheticDormantPD):
         def __init__(self, frequency_hz):
