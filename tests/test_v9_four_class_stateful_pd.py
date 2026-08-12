@@ -76,6 +76,23 @@ class FourClassStatefulPDTests(unittest.TestCase):
         ):
             with self.assertRaises(RuntimeError): _resolve_conditioned_operation(**kwargs)
 
+    def test_conditioned_protocol_metadata_overrides_generic_protocol(self):
+        args = build_pd_parser().parse_args([])
+        stored = {
+            "protocol": "conditioned_physical_attempt_branch",
+            "branch_id": "B005",
+            "stream_ids": {
+                "mark_stream_id": "B005",
+                "transition_stream_id": "B005",
+                "renewal_stream_id": "B005",
+            },
+        }
+        args.conditioned_branch_metadata = stored.copy()
+        self.assertEqual(
+            getattr(args, "conditioned_branch_metadata", _conditional_survival_protocol(args)),
+            stored,
+        )
+
     def test_audited_exp_floor_matches_definition(self):
         barrier = AuditedExpFloorBarrier(
             G00_eV=2.4, gT_eV_per_K=0.002, sigc0_Pa=5e9,

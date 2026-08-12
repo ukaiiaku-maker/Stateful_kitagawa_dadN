@@ -258,6 +258,21 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Conditioned Peak ensemble generations produced before the resume
+        # metadata-persistence repair.  The repair changes checkpoint metadata
+        # only; physical arrays, clocks, topology, and RNG representations are
+        # unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "3e0381309cccfb7a3af1848c707257900c05c78c60d3b6e792f27881fef1c788",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "92fd06e9103f2bdcae248c43f93748231e1afc94d50bf063fb12ce913c02daba",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Standardized conditioned Peak pilot generations at 999d8c8.  The
         # follow-on repair changes only branch dispatch and ensures future
         # externally marked embryos receive fresh persistent transition draws;
@@ -1470,6 +1485,16 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
         if conditioned_dir:
             source_capsule, source_manifest, _, _ = load_verified_conditioned_capsule(conditioned_dir)
             stored = restored.get("conditional_survival_protocol", {})
+            if (stored.get("protocol") != "conditioned_physical_attempt_branch"
+                    and branch_manifest_existing.exists()):
+                # Repair checkpoints written by the pre-fix resume path.  The
+                # immutable branch manifest is the authoritative identity;
+                # physical arrays, clocks, and RNG capsules remain untouched.
+                manifest_protocol = json.loads(branch_manifest_existing.read_text())
+                stored = {
+                    key: value for key, value in manifest_protocol.items()
+                    if key not in {"schema", "branch_summary"}
+                }
             expected_ids = {
                 "mark_stream_id": str(getattr(args, "conditioned_mark_stream_id", "") or getattr(args, "conditioned_branch_id", "")),
                 "transition_stream_id": str(getattr(args, "conditioned_transition_stream_id", "") or getattr(args, "conditioned_branch_id", "")),
@@ -1483,6 +1508,12 @@ def run_case_stress(args, case_name: str, sigma_a_MPa: float):
                 raise RuntimeError("conditioned resume branch ID mismatch")
             if stored.get("stream_ids") != expected_ids:
                 raise RuntimeError("conditioned resume stream identity mismatch")
+            # Keep the verified physical-branch identity active for every
+            # subsequent checkpoint.  Without this assignment, a resumed
+            # branch was saved with the generic physical-clock protocol and
+            # therefore failed closed on its next resume despite unchanged
+            # physical arrays and RNG state.
+            args.conditioned_branch_metadata = deepcopy(stored)
         rows = restored["rows"]
         controller_next_block_cycles = restored["controller_next_block_cycles"]
         resumed = True
