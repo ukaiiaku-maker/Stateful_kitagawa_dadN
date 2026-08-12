@@ -593,7 +593,7 @@ class DormantPDHighCycleEngine:
                 while proposal >= 2 and self.exact_map_evaluations + 3 <= self.config.max_exact_map_evaluations:
                     try:
                         accepted_window, window = self._private_window_trial(proposal)
-                    except RuntimeError as exc:
+                    except (RuntimeError, ValueError) as exc:
                         # A macro-window may legitimately fail the underlying
                         # physical transaction tolerance even though a smaller
                         # window (or the exact one-cycle map) is admissible.

@@ -261,6 +261,29 @@ def test_rejected_private_window_refines_without_mutating_physical_state():
     np.testing.assert_allclose(model.x, [32e-6], rtol=0.0, atol=1e-18)
 
 
+def test_projected_domain_private_window_rejection_returns_to_direct_path():
+    class RejectProjectedDomain(SyntheticDormantPD):
+        def exact_private_window(self, dN):
+            raise ValueError("projected ep_gp violates its constitutive domain")
+
+    model = RejectProjectedDomain(rate=1e-8, threshold=10.0,
+                                  contraction=1.0, drift=2e-6)
+    before = model.protected_signatures()
+    result = DormantPDHighCycleEngine(model, cfg(
+        exact_retry_cycles=0,
+        minimum_projected_cycles_per_exact_map=0.0,
+    )).advance(16)
+    assert any(row.mode == "exact_private_window_reject" and
+               row.detail.get("reason") ==
+               "private_window_physical_transaction_reject"
+               for row in result.modes)
+    # The rejected window itself commits nothing. A distinct, independently
+    # qualified projective route may still advance this synthetic model.
+    assert math.isclose(model.ledger, result.cycles_consumed, rel_tol=2e-16)
+    assert math.isclose(model.action[0], result.cycles_consumed * 1e-8,
+                        rel_tol=2e-15)
+
+
 def test_rejected_one_cycle_admission_returns_to_direct_path_unchanged():
     class RejectPrivateCycle(SyntheticDormantPD):
         def exact_private_cycle(self):
