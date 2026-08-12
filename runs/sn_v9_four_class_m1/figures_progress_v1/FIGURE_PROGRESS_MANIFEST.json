@@ -1,0 +1,109 @@
+{
+  "completed_rows_only": true,
+  "counts": {
+    "DBTT": {
+      "action_curve_complete": true,
+      "class": "DBTT",
+      "class_complete": false,
+      "completed_action_rows": 12,
+      "completed_conditioned_rows": 0,
+      "completed_physical_branches": 0,
+      "completed_physical_rows": 0,
+      "highest_completed_N50_attempt": 939537672980.812,
+      "largest_adjacent_gap_decades": 1.3269537871590655,
+      "lowest_completed_N50_attempt": 2.674688580939921,
+      "physical_matrix_complete": false,
+      "required_action_rows": 10,
+      "required_conditioned_rows": 10,
+      "required_physical_branches": 40,
+      "required_physical_rows": 10
+    },
+    "Peak": {
+      "action_curve_complete": false,
+      "class": "Peak",
+      "class_complete": false,
+      "completed_action_rows": 9,
+      "completed_conditioned_rows": 3,
+      "completed_physical_branches": 16,
+      "completed_physical_rows": 3,
+      "highest_completed_N50_attempt": 133925803589374.98,
+      "largest_adjacent_gap_decades": 2.3336432394349966,
+      "lowest_completed_N50_attempt": 1.225975283980834,
+      "physical_matrix_complete": false,
+      "required_action_rows": 10,
+      "required_conditioned_rows": 10,
+      "required_physical_branches": 40,
+      "required_physical_rows": 10
+    },
+    "ceramic": {
+      "action_curve_complete": false,
+      "class": "ceramic",
+      "class_complete": false,
+      "completed_action_rows": 1,
+      "completed_conditioned_rows": 0,
+      "completed_physical_branches": 0,
+      "completed_physical_rows": 0,
+      "highest_completed_N50_attempt": 2.311682815762712,
+      "largest_adjacent_gap_decades": 0.0,
+      "lowest_completed_N50_attempt": 2.311682815762712,
+      "physical_matrix_complete": false,
+      "required_action_rows": 10,
+      "required_conditioned_rows": 10,
+      "required_physical_branches": 40,
+      "required_physical_rows": 10
+    },
+    "weakT": {
+      "action_curve_complete": false,
+      "class": "weakT",
+      "class_complete": false,
+      "completed_action_rows": 1,
+      "completed_conditioned_rows": 0,
+      "completed_physical_branches": 0,
+      "completed_physical_rows": 0,
+      "highest_completed_N50_attempt": 2.2061706387648172,
+      "largest_adjacent_gap_decades": 0.0,
+      "lowest_completed_N50_attempt": 2.2061706387648172,
+      "physical_matrix_complete": false,
+      "required_action_rows": 10,
+      "required_conditioned_rows": 10,
+      "required_physical_branches": 40,
+      "required_physical_rows": 10
+    }
+  },
+  "generated_outputs": [
+    "DBTT_attempt_SN_progress.pdf",
+    "DBTT_attempt_SN_progress.png",
+    "Four_class_attempt_SN_progress.pdf",
+    "Four_class_attempt_SN_progress.png",
+    "Four_class_campaign_progress.csv",
+    "Peak_attempt_SN_progress.pdf",
+    "Peak_attempt_SN_progress.png",
+    "ceramic_attempt_SN_progress.pdf",
+    "ceramic_attempt_SN_progress.png",
+    "weakT_attempt_SN_progress.pdf",
+    "weakT_attempt_SN_progress.png"
+  ],
+  "schema": "V9_FOUR_CLASS_PROGRESS_FIGURES_1",
+  "sources": [
+    {
+      "path": "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/figure_data/attempt_SN_current.csv",
+      "sha256": "e2ea5ba6a332d808317e1d5297c07664340330dbf4b69022e4ea8065bf3ad36c"
+    },
+    {
+      "path": "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/figures_v1/figure_data/front_branches_current.csv",
+      "sha256": "ef11a0dffc1ebfb80ee8b450f25351135c787ebc6aa0aca3e7e0d88858e8b2e5"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/DBTT/DBTT_blunt_m1_attempt_SN_v1.csv",
+      "sha256": "02b11d738ac6334c0b43a68c7c30367dda26df3df165f31d03a47f684f7547b6"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1320_N90_v4/weak-T/shielded/sigmaA_1320MPa/sn_stateful_pd_history.csv",
+      "sha256": "103e1689bfae02a9994bddab09d62a136513bcf53d71cdb047dd2c83e3c27325"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/ceramic/action/1390_N90_v1/ceramic/shielded/sigmaA_1390MPa/sn_stateful_pd_history.csv",
+      "sha256": "1f7e5c2874ee6c5722a7bac49a979abedb496a0058ca86ffd9fe7cb0bd6bddfa"
+    }
+  ]
+}

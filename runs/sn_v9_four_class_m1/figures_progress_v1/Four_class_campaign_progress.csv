@@ -1,0 +1,5 @@
+class,completed_action_rows,required_action_rows,completed_conditioned_rows,required_conditioned_rows,completed_physical_rows,required_physical_rows,completed_physical_branches,required_physical_branches,lowest_completed_N50_attempt,highest_completed_N50_attempt,largest_adjacent_gap_decades,action_curve_complete,physical_matrix_complete,class_complete
+Peak,9,10,3,10,3,10,16,40,1.225975283980834,133925803589374.98,2.3336432394349966,False,False,False
+DBTT,12,10,0,10,0,10,0,40,2.674688580939921,939537672980.812,1.3269537871590655,True,False,False
+weakT,1,10,0,10,0,10,0,40,2.2061706387648172,2.2061706387648172,0.0,False,False,False
+ceramic,1,10,0,10,0,10,0,40,2.311682815762712,2.311682815762712,0.0,False,False,False
