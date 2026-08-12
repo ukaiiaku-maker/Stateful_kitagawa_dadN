@@ -649,7 +649,7 @@ class DormantPDHighCycleEngine:
                 try:
                     verified = self._private_at(periodic, periodic.vector)
                     verified2 = self._private_at(periodic, verified.state_end.vector)
-                except RuntimeError as exc:
+                except (RuntimeError, ValueError) as exc:
                     self.mode_history.append(ModeRecord(
                         "periodic_verification_reject", 0.0, maps, False,
                         {"reason": "private_cycle_physical_transaction_reject",
@@ -702,7 +702,7 @@ class DormantPDHighCycleEngine:
                     break
                 try:
                     accepted, trial = self._projective_trial(proposal)
-                except RuntimeError as exc:
+                except (RuntimeError, ValueError) as exc:
                     accepted = False
                     trial = {
                         "reason": "private_cycle_physical_transaction_reject",
