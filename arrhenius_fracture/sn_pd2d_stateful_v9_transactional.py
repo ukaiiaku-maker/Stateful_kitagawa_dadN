@@ -258,6 +258,21 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Weak-T 1220 and ceramic 955 MPa ACTIVE generations immediately
+        # before accepted-snapshot rollback was separated from projected-state
+        # validation. The repair changes rejected private-probe rollback only;
+        # accepted FEM/PD/MPZ state and its representation are unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "67a9ad13e4ebd9a5d953f89c0604cacf3a0f97a4d78cce909066fd8413ded1b0",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "09b64f6b25f6dd90c7ac27e2a851f7207dd400dc2c54d25c32a602de9d24bc14",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Weak-T 1220/1120 MPa generations created immediately before the
         # projective/periodic private-probe rejection path was made fail-safe.
         # The change only converts a side-effect-free rejected accelerator
