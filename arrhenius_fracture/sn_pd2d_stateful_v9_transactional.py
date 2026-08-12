@@ -258,6 +258,34 @@ def _active_source_sha256() -> dict[str, str]:
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
     {
+        # Weak-T 445 MPa accepted generation written under the committed
+        # private-cycle fallback. The subsequent driver edit only appended an
+        # exact compatible-source record; all physical and engine hashes match.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "34a5dab10392fda68cda778ce4d55f3ef830864a85dd60978ed3caee7ee42c49",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "ad6af7447b77b366fa8c54e44332dbf3286ca786318dd5ed197787881496b9ef",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
+        # Ceramic 955 MPa accepted generation written during the same audited
+        # fallback campaign; its driver differs only by the preceding exact
+        # compatible-source entry. Physical and engine hashes are identical.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "6887cf870b4686f7894c2a35d3521c1ec69226da162775b70e8cdfa59a4da9fb",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "ad752c27cd9475f6945634826b0b1b7916e80a078dd9b9f2ac75655909978d0a",
+        "pd_high_cycle_engine": "ad6af7447b77b366fa8c54e44332dbf3286ca786318dd5ed197787881496b9ef",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
+    {
         # Ceramic 955 MPa accepted generations written after the private-cycle
         # fallback repair was loaded but before its provenance-list update was
         # committed.  The engine hash is the repaired implementation; only the
