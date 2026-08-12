@@ -692,14 +692,14 @@ class DormantPDHighCycleEngine:
                     ))
                     budget_exhausted = True
                     break
-            try:
-                accepted, trial = self._projective_trial(proposal)
-            except RuntimeError as exc:
-                accepted = False
-                trial = {
-                    "reason": "private_cycle_physical_transaction_reject",
-                    "detail": str(exc),
-                }
+                try:
+                    accepted, trial = self._projective_trial(proposal)
+                except RuntimeError as exc:
+                    accepted = False
+                    trial = {
+                        "reason": "private_cycle_physical_transaction_reject",
+                        "detail": str(exc),
+                    }
                 efficiency = proposal / 4.0
                 if accepted and efficiency < self.config.minimum_projected_cycles_per_exact_map:
                     accepted = False

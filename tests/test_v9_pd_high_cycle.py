@@ -281,6 +281,7 @@ def test_rejected_projective_probe_returns_to_direct_path_unchanged():
     result = DormantPDHighCycleEngine(model, cfg(
         private_window_training=False,
         periodic_admission_distance=0.0,
+        exact_retry_cycles=0,
     )).advance(100)
     assert result.cycles_consumed == 0.0
     assert result.accepted_projected_cycles == 0.0
