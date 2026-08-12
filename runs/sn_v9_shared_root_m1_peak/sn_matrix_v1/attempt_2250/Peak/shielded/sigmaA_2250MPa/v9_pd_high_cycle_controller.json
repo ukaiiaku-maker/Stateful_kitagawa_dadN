@@ -1,0 +1,73 @@
+{
+  "accepted_projected_cycles": 100000.0,
+  "exact_map_evaluations": 3,
+  "mode_history": [
+    {
+      "accepted": true,
+      "cycles": 100000,
+      "detail": {
+        "event_safe": true,
+        "guard_log_action_upper_bound": -1.6259572270550915,
+        "ledger_error": 1.3868236343543608e-29,
+        "ledger_error_by_name": {
+          "born_cumulative": 0.0,
+          "healed_cumulative": 0.0,
+          "plastic_work": 1.3868236343543608e-29
+        },
+        "log_hazard_error": 2.0192825189724317e-10,
+        "partition_cycles": [
+          50000,
+          50000
+        ],
+        "phase_rate_seconds_per_cycle": 0.001,
+        "projected_cycles_per_exact_map": 33333.333333333336,
+        "reason": "accepted",
+        "state_error": 7.639069407153136e-11,
+        "state_error_by_field": {
+          "available": 0.0,
+          "completion": 3.32734817107767e-41,
+          "embryo": 0.0,
+          "ep_gp": 3.0092824862885666e-27,
+          "epsp_acc_gp": 3.2959397481039094e-26,
+          "inactive": 0.0,
+          "log_delivery_memory": 6.364963656820995e-26,
+          "rho_gp": 0.0,
+          "shared_mpz_array:accumulated_slip_negative": 7.639029439124093e-11,
+          "shared_mpz_array:accumulated_slip_positive": 7.639049423138613e-11,
+          "shared_mpz_array:mobile_negative": 7.639029439124093e-11,
+          "shared_mpz_array:mobile_positive": 7.639049423138613e-11,
+          "shared_mpz_array:retained_negative": 2.0255199896021393e-45,
+          "shared_mpz_array:retained_positive": 2.0255193214109617e-45,
+          "shared_mpz_array:wake_mobile_negative": 0.0,
+          "shared_mpz_array:wake_mobile_positive": 0.0,
+          "shared_mpz_array:wake_retained_negative": 0.0,
+          "shared_mpz_array:wake_retained_positive": 0.0,
+          "shared_mpz_array:wake_slip_negative": 0.0,
+          "shared_mpz_array:wake_slip_positive": 0.0,
+          "shared_mpz_scalar:advance_total_m": 0.0,
+          "shared_mpz_scalar:emitted_total": 7.639029439124093e-11,
+          "shared_mpz_scalar:escaped_total": 0.0,
+          "shared_mpz_scalar:recovered_total": 0.0,
+          "shared_mpz_scalar:signed_line_content_emitted_total": 7.639029439124093e-11,
+          "shared_mpz_scalar:signed_source_activations_total": 7.639069407153136e-11,
+          "shared_mpz_scalar:time_s": 0.0,
+          "shared_mpz_scalar:wake_discarded_mobile_total": 0.0,
+          "shared_mpz_scalar:wake_discarded_retained_total": 0.0,
+          "shared_mpz_scalar:wake_discarded_slip_total": 0.0,
+          "shared_mpz_scalar:wake_length_m": 0.0,
+          "stable": 0.0,
+          "u": 5.168033947971476e-12
+        },
+        "transition_preserved": true,
+        "validation_log_margin": 2.7831894596585675e-10
+      },
+      "exact_map_evaluations": 3,
+      "mode": "exact_private_window"
+    }
+  ],
+  "model_id": "v9_stateful_pd_dormant_high_cycle_event_engine_v1",
+  "physical_cycles": 1000000.0,
+  "topology_signature": "02ddd5d7801bc6c4e9953b1d095203e3060c40ff83a9306a60c6df9261b95368",
+  "campaign_accepted_projected_cycles": 900000.0,
+  "campaign_exact_map_evaluations": 27
+}

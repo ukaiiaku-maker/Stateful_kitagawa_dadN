@@ -1,0 +1,68 @@
+{
+  "analysis_only": false,
+  "branch_id": "B003",
+  "branch_summary": {
+    "attempt_count": 1,
+    "branch_id": "B003",
+    "event": {
+      "attempt_index": 1,
+      "cumulative_action": 0.6931471805599453,
+      "cycle": 1.02181126596808,
+      "local_fields": {
+        "conditioned_action": 0.6931471805599453,
+        "effective_opening_stress_Pa": 10815791007.292099,
+        "local_backstress_Pa": 0.0,
+        "local_cleavage_log_propensity_s": 13.689739659438128,
+        "local_state_shift_eV": 0.0,
+        "phase_fraction": 0.6979605109785613
+      },
+      "mark_log_weight": 12.381233348072904,
+      "mark_probability": 0.046171988143423354,
+      "pd_node_id": 297,
+      "phase_index": 0,
+      "site_id": 2620,
+      "threshold_action": 0.6931471805599453
+    },
+    "mark_entropy_nats": 3.659199822150958,
+    "renewed_global_threshold_action": 0.8543851123908692,
+    "schema": "V9_CONDITIONED_PREMARK_ATOMIC_BRANCH_1",
+    "selected_site_transition_cumulative_action": 0.0,
+    "selected_site_transition_outcome_uniform": 0.5814024950948947,
+    "selected_site_transition_threshold": 1.9584311893394684,
+    "source_analysis_checkpoint": "dce717f7dc5212dc906f5a0f8bb702fab2a47a0c5a015718a1f9bced98f60cee",
+    "source_replay_checkpoint": "dce717f7dc5212dc906f5a0f8bb702fab2a47a0c5a015718a1f9bced98f60cee",
+    "stream_ids": {
+      "mark_stream_id": "B003",
+      "renewal_stream_id": "B003",
+      "transition_stream_id": "B003"
+    },
+    "stream_seeds": {
+      "embryo_transition": 6867826629500333586,
+      "renewal_hazard": 14730991977865748159,
+      "spatial_mark": 119371693980962716
+    },
+    "transition_rng_state": {
+      "bit_generator": "PCG64",
+      "has_uint32": 0,
+      "state": {
+        "inc": 200794819081134519982563270046680834667,
+        "state": 320954435585601149445468589909068602897
+      },
+      "uinteger": 0
+    }
+  },
+  "conditioned_attempt_committed": true,
+  "conditioned_first_attempt_pending": false,
+  "protocol": "conditioned_physical_attempt_branch",
+  "renewed_global_threshold": 0.8543851123908692,
+  "schema": "V9_CONDITIONED_PHYSICAL_ATTEMPT_BRANCH_MANIFEST_1",
+  "source_analysis_generation": "generation_cfeaa7d13a624dc0b215b187e9c939d3",
+  "source_conditioned_capsule_sha256": "409c620645e881b8a007d7ca552abd289bab8a0fcfd4c81f500224222748e343",
+  "source_replay_generation": "generation_e8c9922dd61e42909c91f4e8b74556cf",
+  "stream_ids": {
+    "mark_stream_id": "B003",
+    "renewal_stream_id": "B003",
+    "transition_stream_id": "B003"
+  },
+  "topology_continuation_permitted": true
+}

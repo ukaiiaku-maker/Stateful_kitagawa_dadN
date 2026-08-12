@@ -33,9 +33,20 @@ def main(argv=None):
         if int(z["primary_seed_node"])!=-1 or bool(z["active_front"]):raise RuntimeError("conditioned boundary has seed/front topology")
         candidate_hash=hashlib.sha256(np.ascontiguousarray(z["candidate_sites"]).view(np.uint8)).hexdigest()
         geometry_hash=hashlib.sha256(np.ascontiguousarray(z["xy"]).view(np.uint8)).hexdigest()
-    modes=json.loads((a.replay/"v9_pd_high_cycle_mode_history.json").read_text())
-    bracket=[{"cycles":row["cycles_total"],"H":row["H_attempt_after_segment"]}
-             for row in modes if "H_attempt_after_segment" in row][-2:]
+    mode_path=a.replay/"v9_pd_high_cycle_mode_history.json"
+    if mode_path.exists():
+        modes=json.loads(mode_path.read_text())
+        bracket=[{"cycles":row["cycles_total"],"H":row["H_attempt_after_segment"]}
+                 for row in modes if "H_attempt_after_segment" in row][-2:]
+    else:
+        # Direct ordered-phase localizations do not create a high-cycle mode
+        # history.  Their accepted checkpoint rows contain the exact strict
+        # pre-crossing state and the localized crossing endpoint.
+        with np.load(a.replay/"checkpoint_latest.npz",allow_pickle=False) as z:
+            metadata=json.loads(str(z["metadata_json"].item()))
+        bracket=[{"cycles":row["cycles_total"],"H":row["H_attempt"]}
+                 for row in metadata.get("rows",[])
+                 if float(row["H_attempt"]) < TARGET][-2:]
     if not bracket or bracket[-1]["H"]>=TARGET:raise RuntimeError("replay lacks a strict pre-crossing action bracket")
     probs=np.asarray(loc["normalized_mark_probability"],float)
     if np.any(probs<0) or not math.isclose(float(probs.sum()),1.,rel_tol=0,abs_tol=2e-14):raise RuntimeError("invalid mark normalization")

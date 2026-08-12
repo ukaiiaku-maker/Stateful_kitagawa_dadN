@@ -1,0 +1,9 @@
+{
+  "capsule_sha256": "409c620645e881b8a007d7ca552abd289bab8a0fcfd4c81f500224222748e343",
+  "source_files": {
+    "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/N50_2500/Peak/shielded/sigmaA_2500MPa/checkpoint_latest.npz": "dce717f7dc5212dc906f5a0f8bb702fab2a47a0c5a015718a1f9bced98f60cee",
+    "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/N50_2500/Peak/shielded/sigmaA_2500MPa/summary.json": "0532cd7b81739a411037c492746f312401ff00bdef05f6375997f3c9a4f90977",
+    "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/N50_2500_replay/Peak/shielded/sigmaA_2500MPa/checkpoint_latest.npz": "dce717f7dc5212dc906f5a0f8bb702fab2a47a0c5a015718a1f9bced98f60cee",
+    "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/N50_2500_replay/Peak/shielded/sigmaA_2500MPa/summary.json": "3e2a12e2baff67a36da37562b80d78e59d9b6ca7fc79983be3a9c9a6954f6699"
+  }
+}
