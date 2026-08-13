@@ -44,11 +44,11 @@
       "completed_conditioned_rows": 0,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
-      "full_quantile_rows": 3,
-      "highest_completed_N50_attempt": 156.24087073360673,
+      "full_quantile_rows": 4,
+      "highest_completed_N50_attempt": 83197.20456383676,
       "largest_adjacent_gap_decades": 0.9567977366436018,
       "lowest_completed_N50_attempt": 2.311682815762712,
-      "median_complete_rows": 3,
+      "median_complete_rows": 5,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -66,7 +66,7 @@
       "highest_completed_N50_attempt": 27928.593958686746,
       "largest_adjacent_gap_decades": 0.3891301897883146,
       "lowest_completed_N50_attempt": 2.2061706387648172,
-      "median_complete_rows": 5,
+      "median_complete_rows": 6,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -118,6 +118,10 @@
       "sha256": "332edefdbf2975eb11ea8526fefb4667e05e5dc137c28167dde67f5f7df5909f"
     },
     {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1235_N90_v1/weak-T/shielded/sigmaA_1235MPa/sn_stateful_pd_history_partial.csv",
+      "sha256": "79053397dc0600f28f35d38467a74251d1e59db56c2615299bb2a521febf9c08"
+    },
+    {
       "path": "runs/sn_v9_four_class_m1/weakT/action/1220_N90_v1/weak-T/shielded/sigmaA_1220MPa/sn_stateful_pd_history.csv",
       "sha256": "d640c4926374b6a6ad9cd1aac62f38918ce04246e666bf1716ed0754c3dc66e5"
     },
@@ -132,6 +136,14 @@
     {
       "path": "runs/sn_v9_four_class_m1/ceramic/action/1190_N90_v1/ceramic/shielded/sigmaA_1190MPa/sn_stateful_pd_history.csv",
       "sha256": "f9d959efafe995feb30ae30626fb3ca3bd14da1b3737dc4224a2302f2a325aa7"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/ceramic/action/1130_N90_v1/ceramic/shielded/sigmaA_1130MPa/sn_stateful_pd_history.csv",
+      "sha256": "cb1590562c9abbd008650b7004fe6333abbca8c5f140fe357c8dd46cd4c64c6f"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/ceramic/action/955_N90_v1/ceramic/shielded/sigmaA_955MPa/sn_stateful_pd_history.csv",
+      "sha256": "549487622d2b0dd7e07338a09eb62ec0d3731e3937b5b30fd7a6165f575dbb80"
     }
   ]
 }
