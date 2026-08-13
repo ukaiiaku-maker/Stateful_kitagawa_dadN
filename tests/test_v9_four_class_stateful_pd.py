@@ -1,4 +1,7 @@
 import math
+import json
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 import unittest
 
@@ -8,13 +11,29 @@ from arrhenius_fracture.sn_arrhenius_chain import AuditedExpFloorBarrier
 from arrhenius_fracture.sn_feature_geometry_v8_7 import BluntNotchGeometry
 from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
     ScratchExpFloorBarrier, _checkpoint_signature, _conditional_survival_protocol,
-    _resolve_conditioned_operation,
+    _resolve_conditioned_operation, _read_checkpoint_history,
     build_parser as build_pd_parser,
 )
 from scripts.run_v9_four_class_stateful_pd import build_parser as build_four_class_parser
 
 
 class FourClassStatefulPDTests(unittest.TestCase):
+    def test_checkpoint_history_is_external_hash_verified_and_unbounded(self):
+        rows = [{"block": i, "value": i + 0.25, "flag": i % 2 == 0} for i in range(2000)]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sidecar = root / "checkpoint_history.json.gz"
+            import gzip
+            with gzip.open(sidecar, "wt", encoding="utf-8") as stream:
+                json.dump(rows, stream, separators=(",", ":"))
+            import hashlib
+            digest = hashlib.sha256(sidecar.read_bytes()).hexdigest()
+            reference = {"filename": sidecar.name, "row_count": len(rows), "sha256": digest}
+            self.assertEqual(_read_checkpoint_history(root / "checkpoint_latest.npz", reference), rows)
+            reference["sha256"] = "0" * 64
+            with self.assertRaisesRegex(RuntimeError, "hash mismatch"):
+                _read_checkpoint_history(root / "checkpoint_latest.npz", reference)
+
     def test_historical_blunt_notch_contract(self):
         geometry = BluntNotchGeometry()
         self.assertEqual(geometry.depth_a, 150e-6)

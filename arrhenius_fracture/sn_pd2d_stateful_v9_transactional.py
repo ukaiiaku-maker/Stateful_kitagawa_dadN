@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
 import json
 import hashlib
 import math
@@ -257,6 +258,21 @@ def _active_source_sha256() -> dict[str, str]:
 
 SOURCE_SHA256 = _active_source_sha256()
 VERIFIED_COMPATIBLE_PREDECESSOR_SOURCES = (
+    {
+        # Weak-T 1220 and ceramic 955 MPa accepted generations immediately
+        # before the unbounded diagnostic-row ledger was externalized from
+        # checkpoint metadata.  The repair changes checkpoint representation
+        # only; accepted FEM/PD/MPZ state and RNG streams are unchanged.
+        "array_codec": "e99fc4a65d0b1343c7e945124ecd3dd69703345dcddc8b607e77a386372a8f3a",
+        "cached_fem": "e5679ac0a613b0bcaefe7013c874671edc5829ac405f86738e3fac404d6a8490",
+        "driver": "bf3a628bf956c3db40387f1cf6415540288c84bbbb8861afc80d31a53ef4f8f4",
+        "fem_transaction": "5c8c5467bf7043c4d8ccaae59ab1ad2ea4f2e043459b9cf3aa4b7023d9be9d7e",
+        "pd_base_module": "38af95dcaf22a05d247b1a6568a57c5263ad5f19f2b209f18c8c5c7ca36779a6",
+        "pd_high_cycle_adapter": "93342034879c1f857f3883e3e2ae97e2928bc28005962a3cfe17f233d67ce61e",
+        "pd_high_cycle_engine": "f45bc9db1e7cb82d7a376fdfcfba1d5e2b59447d509d0a57cc842c71a8ad2174",
+        "pd_module": "6842c4dedf574b0a96700917bd5f986ad8f9c6d6b8a96d53d8b0d054b50692a5",
+        "physical_integrator": "a087d2dacdcf52497de5964f0ed9170f44f7a5a77daa15a90cc9774f3bc97fe3",
+    },
     {
         # Ceramic 955 MPa ACTIVE generation before projective training-domain
         # ValueError received the same fail-safe classification as a rejected
@@ -849,6 +865,20 @@ def _write_csv(path: Path, rows):
         w.writerows(rows)
 
 
+def _read_checkpoint_history(path: Path, reference):
+    """Load the hash-pinned diagnostic ledger kept beside physical state."""
+    history_path = path.parent / reference["filename"]
+    if not history_path.is_file():
+        raise RuntimeError("checkpoint diagnostic history sidecar is missing")
+    if _sha256_file(history_path) != reference["sha256"]:
+        raise RuntimeError("checkpoint diagnostic history sidecar hash mismatch")
+    with gzip.open(history_path, "rt", encoding="utf-8") as stream:
+        rows = json.load(stream)
+    if len(rows) != int(reference["row_count"]):
+        raise RuntimeError("checkpoint diagnostic history sidecar row-count mismatch")
+    return rows
+
+
 
 _CHECKPOINT_VERSION = 9
 _CHECKPOINT_EXCLUDED_ARGS = {
@@ -997,6 +1027,20 @@ def _save_case_checkpoint(
             pd_scalars[field.name] = _json_safe(value)
     for name, value in patch.v9_extra_state_arrays(pd_state).items():
         arrays[f"pd_v9__{name}"] = value
+    history_tmp = path.parent / "checkpoint_history_pending.json.gz"
+    with gzip.open(history_tmp, "wt", encoding="utf-8") as stream:
+        json.dump(_json_safe(rows), stream, allow_nan=True, separators=(",", ":"))
+    history_sha256 = _sha256_file(history_tmp)
+    history_path = path.parent / f"checkpoint_history_{history_sha256}.json.gz"
+    if history_path.exists():
+        history_tmp.unlink()
+    else:
+        os.replace(history_tmp, history_path)
+    history_reference = {
+        "filename": history_path.name,
+        "row_count": len(rows),
+        "sha256": history_sha256,
+    }
     metadata = {
         "checkpoint_version": _CHECKPOINT_VERSION,
         "model_id": MODEL_ID,
@@ -1009,7 +1053,7 @@ def _save_case_checkpoint(
         "pd_scalars": pd_scalars,
         "candidate_rng_state": _json_safe(patch._candidate_rng.bit_generator.state),
         "event_rng_state": _json_safe(patch._event_rng.bit_generator.state),
-        "rows": _json_safe(rows),
+        "diagnostic_history": history_reference,
         "shared_root_marked_clock_capsule": (
             _json_safe(shared_clock.capsule()) if shared_clock is not None else None
         ),
@@ -1114,7 +1158,12 @@ def _load_case_checkpoint(
         "epsp_acc_gp": np.asarray(data["epsp_acc_gp"], float).copy(),
         "u": np.asarray(data["u"], float).copy(),
         "last_residual": np.asarray(data["last_residual"], float).copy(),
-        "pd_state": state, "rows": list(metadata.get("rows", [])),
+        "pd_state": state,
+        "rows": (
+            _read_checkpoint_history(path, metadata["diagnostic_history"])
+            if "diagnostic_history" in metadata
+            else list(metadata.get("rows", []))
+        ),
         "shared_root_marked_clock_capsule": metadata.get(
             "shared_root_marked_clock_capsule"
         ),
