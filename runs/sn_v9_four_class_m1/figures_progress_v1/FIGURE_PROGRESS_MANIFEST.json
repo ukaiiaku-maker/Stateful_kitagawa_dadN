@@ -5,13 +5,14 @@
       "action_curve_complete": true,
       "class": "DBTT",
       "class_complete": false,
-      "completed_action_rows": 12,
       "completed_conditioned_rows": 0,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
+      "full_quantile_rows": 12,
       "highest_completed_N50_attempt": 939537672980.812,
       "largest_adjacent_gap_decades": 1.3269537871590655,
       "lowest_completed_N50_attempt": 2.674688580939921,
+      "median_complete_rows": 12,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -22,13 +23,14 @@
       "action_curve_complete": false,
       "class": "Peak",
       "class_complete": false,
-      "completed_action_rows": 9,
       "completed_conditioned_rows": 3,
       "completed_physical_branches": 16,
       "completed_physical_rows": 3,
+      "full_quantile_rows": 9,
       "highest_completed_N50_attempt": 133925803589374.98,
       "largest_adjacent_gap_decades": 2.3336432394349966,
       "lowest_completed_N50_attempt": 1.225975283980834,
+      "median_complete_rows": 9,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -39,13 +41,14 @@
       "action_curve_complete": false,
       "class": "ceramic",
       "class_complete": false,
-      "completed_action_rows": 1,
       "completed_conditioned_rows": 0,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
-      "highest_completed_N50_attempt": 2.311682815762712,
-      "largest_adjacent_gap_decades": 0.0,
+      "full_quantile_rows": 3,
+      "highest_completed_N50_attempt": 156.24087073360673,
+      "largest_adjacent_gap_decades": 0.9567977366436018,
       "lowest_completed_N50_attempt": 2.311682815762712,
+      "median_complete_rows": 3,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -56,13 +59,14 @@
       "action_curve_complete": false,
       "class": "weakT",
       "class_complete": false,
-      "completed_action_rows": 1,
       "completed_conditioned_rows": 0,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
-      "highest_completed_N50_attempt": 2.2061706387648172,
-      "largest_adjacent_gap_decades": 0.0,
+      "full_quantile_rows": 4,
+      "highest_completed_N50_attempt": 27928.593958686746,
+      "largest_adjacent_gap_decades": 0.3891301897883146,
       "lowest_completed_N50_attempt": 2.2061706387648172,
+      "median_complete_rows": 5,
       "physical_matrix_complete": false,
       "required_action_rows": 10,
       "required_conditioned_rows": 10,
@@ -102,8 +106,32 @@
       "sha256": "103e1689bfae02a9994bddab09d62a136513bcf53d71cdb047dd2c83e3c27325"
     },
     {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1305_N90_v1/weak-T/shielded/sigmaA_1305MPa/sn_stateful_pd_history.csv",
+      "sha256": "9e166b49ebfdb410d23a9dc67b9568c42d304350f7822d0f508dab50d88bfc18"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1280_N90_v1/weak-T/shielded/sigmaA_1280MPa/sn_stateful_pd_history.csv",
+      "sha256": "b198271ac800e43e080adb6ca006d7855a3655252b2d1c5ce885dcc9c71208f4"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1250_N90_v1/weak-T/shielded/sigmaA_1250MPa/sn_stateful_pd_history.csv",
+      "sha256": "332edefdbf2975eb11ea8526fefb4667e05e5dc137c28167dde67f5f7df5909f"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1220_N90_v1/weak-T/shielded/sigmaA_1220MPa/sn_stateful_pd_history.csv",
+      "sha256": "d640c4926374b6a6ad9cd1aac62f38918ce04246e666bf1716ed0754c3dc66e5"
+    },
+    {
       "path": "runs/sn_v9_four_class_m1/ceramic/action/1390_N90_v1/ceramic/shielded/sigmaA_1390MPa/sn_stateful_pd_history.csv",
       "sha256": "1f7e5c2874ee6c5722a7bac49a979abedb496a0058ca86ffd9fe7cb0bd6bddfa"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/ceramic/action/1280_N90_v1/ceramic/shielded/sigmaA_1280MPa/sn_stateful_pd_history.csv",
+      "sha256": "da2746090e8cfaaf83c54835b15a8f19f7b4b843559997a41c6b397f8e878389"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/ceramic/action/1190_N90_v1/ceramic/shielded/sigmaA_1190MPa/sn_stateful_pd_history.csv",
+      "sha256": "f9d959efafe995feb30ae30626fb3ca3bd14da1b3737dc4224a2302f2a325aa7"
     }
   ]
 }
