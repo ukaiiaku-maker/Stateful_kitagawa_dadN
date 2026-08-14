@@ -26,6 +26,39 @@ OPTIONS = {
     "ceramic":"v913_paper_ceramic01_0077080_persistent_sites",
 }
 
+def verified_conditioned_capsules(root=ROOT):
+    """Return hash-verified, independently replayed N50 capsule manifests."""
+    roots = {
+        "Peak": [
+            Path("runs/sn_v9_shared_root_m1_peak/conditioned_premark_1500_N50_v1"),
+            Path("runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/conditioned_premark_2250_N50"),
+            Path("runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/conditioned_premark_2500_N50"),
+        ],
+        "DBTT": list((root / "DBTT/conditioned").glob("premark_*_N50_v1")),
+        "weakT": list((root / "weakT/conditioned").glob("premark_*_N50_v1")),
+        "ceramic": list((root / "ceramic/conditioned").glob("premark_*_N50_v1")),
+    }
+    verified = {cls: [] for cls in CLASSES}
+    for cls, directories in roots.items():
+        for directory in directories:
+            if "invalid" in directory.name:
+                continue
+            manifest_path = directory / "manifest.json"
+            capsule_path = directory / "conditioned_premark_capsule.json"
+            if not manifest_path.is_file() or not capsule_path.is_file():
+                continue
+            manifest = json.loads(manifest_path.read_text())
+            capsule_bytes = capsule_path.read_bytes()
+            capsule = json.loads(capsule_bytes)
+            if hashlib.sha256(capsule_bytes).hexdigest() != manifest.get("capsule_sha256"):
+                continue
+            if capsule.get("schema") != "V9_CONDITIONED_ATTEMPT_PREMARK_CAPSULE_1":
+                continue
+            if capsule.get("source_generation") == capsule.get("replay_generation"):
+                continue
+            verified[cls].append(manifest_path)
+    return verified
+
 def read(path):
     with path.open(newline="") as stream: return list(csv.DictReader(stream))
 
@@ -116,7 +149,8 @@ def main():
     peak_branches=read(PEAK_BRANCHES)
     physical={c:{"rows":0,"branches":0} for c in CLASSES}
     physical["Peak"]={"rows":len(set(r["sigma_a_MPa"] for r in peak_branches)),"branches":len(peak_branches)}
-    conditioned={c:physical[c]["rows"] for c in CLASSES}
+    capsule_manifests = verified_conditioned_capsules()
+    conditioned={c:len(capsule_manifests[c]) for c in CLASSES}
     fields=["class","median_complete_rows","full_quantile_rows","required_action_rows","completed_conditioned_rows","required_conditioned_rows","completed_physical_rows","required_physical_rows","completed_physical_branches","required_physical_branches","lowest_completed_N50_attempt","highest_completed_N50_attempt","largest_adjacent_gap_decades","action_curve_complete","physical_matrix_complete","class_complete"]
     progress=[]
     for cls in CLASSES:
@@ -125,6 +159,7 @@ def main():
     with (OUT/"Four_class_campaign_progress.csv").open("w",newline="") as f:
         w=csv.DictWriter(f,fieldnames=fields); w.writeheader(); w.writerows(progress)
     sources=[PEAK,PEAK_BRANCHES,DBTT]+[Path(r["source_history"]) for c in ("weakT","ceramic") for r in data[c]]
+    sources += [p for c in CLASSES for p in capsule_manifests[c]]
     manifest={"schema":"V9_FOUR_CLASS_PROGRESS_FIGURES_1","completed_rows_only":True,"generated_outputs":sorted(p.name for p in OUT.iterdir() if p.name not in {"FIGURE_PROGRESS_MANIFEST.json","README.md"}),"sources":[{"path":str(p),"sha256":hashlib.sha256(p.read_bytes()).hexdigest()} for p in sources],"counts":{r["class"]:r for r in progress}}
     (OUT/"FIGURE_PROGRESS_MANIFEST.json").write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n")
     (OUT/"README.md").write_text("# Four-class campaign progress figures\n\nCompleted executable action trajectories only. Partial/restartable trajectories and estimates are excluded from S–N points. Lines are visual guides, not fitted curves. The progress CSV applies the full requirement of 10 action rows, 10 exact conditioned rows, 10 physical rows, and 40 unbiased branches per class.\n")
