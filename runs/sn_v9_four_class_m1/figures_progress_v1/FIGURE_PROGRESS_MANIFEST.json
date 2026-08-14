@@ -59,7 +59,7 @@
       "action_curve_complete": true,
       "class": "weakT",
       "class_complete": false,
-      "completed_conditioned_rows": 0,
+      "completed_conditioned_rows": 10,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
       "full_quantile_rows": 10,
@@ -216,6 +216,46 @@
     {
       "path": "runs/sn_v9_four_class_m1/DBTT/conditioned/premark_2161_N50_v1/manifest.json",
       "sha256": "415ad1a905cf83bfb3629a465d0fcabf3788a8a5fbfe001a20865d4e0d29df5b"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1340_N50_v1/manifest.json",
+      "sha256": "0277acde99973f300d1ac595c702921a1d0cfa17590a783dfc2fa3a2463271e1"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1250_N50_v1/manifest.json",
+      "sha256": "4ad3058d2f1d98b04d8b9d76b17d31fa95b0c3836042d89ffa757a3dd20646d6"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1305_N50_v1/manifest.json",
+      "sha256": "82564ef7c23d7d11ccbd3e452daba9af52edc35cac3c28647e191622ead6bb1d"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1225_N50_v1/manifest.json",
+      "sha256": "bc426e8db37f452804e856bf2a50602ba0287b7d6d61f4507e61cedbec37093d"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1360_N50_v1/manifest.json",
+      "sha256": "06f3b4740860ae467464c588e0a6775315e91c21ade8a59933dee033805c81d0"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1235_N50_v1/manifest.json",
+      "sha256": "2845fcb66670f37234f406a6320d03c775540c268908df96cf2c2d348118679e"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1230_N50_v1/manifest.json",
+      "sha256": "230356a0c684668f1735fcdf2f6e27f69d0c39530b6f7a3ccade2e35198b978b"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1320_N50_v1/manifest.json",
+      "sha256": "a102be8ff454023f458cdbaec0c96880633a67b840a8de99e19ed99a802750d8"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1280_N50_v1/manifest.json",
+      "sha256": "2da194aeff52617bd868fd86f0632e3167bbb782f83d78d43b8e7b34b56d553f"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1380_N50_v1/manifest.json",
+      "sha256": "86af46c31a0126083cb6a9f76230661efe2e411d8f2d10ed1fce9372551502c0"
     },
     {
       "path": "runs/sn_v9_four_class_m1/ceramic/conditioned/premark_1340_N50_v1/manifest.json",
