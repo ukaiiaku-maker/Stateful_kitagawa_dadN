@@ -15,9 +15,31 @@ from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
     build_parser as build_pd_parser,
 )
 from scripts.run_v9_four_class_stateful_pd import build_parser as build_four_class_parser
+from scripts.convert_v9_analysis_boundary_to_conditioned_premark import checkpoint_rows
 
 
 class FourClassStatefulPDTests(unittest.TestCase):
+    def test_conditioned_converter_reads_hash_verified_external_history(self):
+        rows = [{"cycles_total": 1.0, "H_attempt": 0.25}]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            sidecar = root / "checkpoint_history.json.gz"
+            import gzip
+            with gzip.open(sidecar, "wt", encoding="utf-8") as stream:
+                json.dump(rows, stream, separators=(",", ":"))
+            import hashlib
+            reference = {
+                "filename": sidecar.name,
+                "row_count": len(rows),
+                "sha256": hashlib.sha256(sidecar.read_bytes()).hexdigest(),
+            }
+            checkpoint = root / "checkpoint_latest.npz"
+            self.assertEqual(
+                checkpoint_rows(checkpoint, {"rows": [], "diagnostic_history": reference}),
+                rows,
+            )
+            self.assertEqual(checkpoint_rows(checkpoint, {"rows": rows}), rows)
+
     def test_checkpoint_history_is_external_hash_verified_and_unbounded(self):
         rows = [{"block": i, "value": i + 0.25, "flag": i % 2 == 0} for i in range(2000)]
         with tempfile.TemporaryDirectory() as td:

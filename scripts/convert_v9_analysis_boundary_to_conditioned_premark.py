@@ -5,6 +5,10 @@ import argparse,hashlib,json,math
 from pathlib import Path
 import numpy as np
 
+from arrhenius_fracture.sn_pd2d_stateful_v9_transactional import (
+    _read_checkpoint_history,
+)
+
 TARGET=math.log(2.0)
 
 def sha(path):
@@ -12,6 +16,17 @@ def sha(path):
     with Path(path).open("rb") as f:
         for chunk in iter(lambda:f.read(1<<20),b""):h.update(chunk)
     return h.hexdigest()
+
+
+def checkpoint_rows(checkpoint: Path, metadata):
+    """Return the hash-verified diagnostic ledger for either checkpoint schema."""
+    rows = metadata.get("rows", [])
+    if rows:
+        return rows
+    reference = metadata.get("diagnostic_history")
+    if reference is None:
+        return []
+    return _read_checkpoint_history(checkpoint, reference)
 
 def main(argv=None):
     p=argparse.ArgumentParser();p.add_argument("--source",type=Path,required=True)
@@ -42,10 +57,11 @@ def main(argv=None):
         # Direct ordered-phase localizations do not create a high-cycle mode
         # history.  Their accepted checkpoint rows contain the exact strict
         # pre-crossing state and the localized crossing endpoint.
-        with np.load(a.replay/"checkpoint_latest.npz",allow_pickle=False) as z:
+        checkpoint = a.replay/"checkpoint_latest.npz"
+        with np.load(checkpoint,allow_pickle=False) as z:
             metadata=json.loads(str(z["metadata_json"].item()))
         bracket=[{"cycles":row["cycles_total"],"H":row["H_attempt"]}
-                 for row in metadata.get("rows",[])
+                 for row in checkpoint_rows(checkpoint, metadata)
                  if float(row["H_attempt"]) < TARGET][-2:]
     if not bracket or bracket[-1]["H"]>=TARGET:raise RuntimeError("replay lacks a strict pre-crossing action bracket")
     probs=np.asarray(loc["normalized_mark_probability"],float)
