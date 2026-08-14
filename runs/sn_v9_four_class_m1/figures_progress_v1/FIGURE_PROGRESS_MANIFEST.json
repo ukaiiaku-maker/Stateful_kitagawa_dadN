@@ -5,7 +5,7 @@
       "action_curve_complete": true,
       "class": "DBTT",
       "class_complete": false,
-      "completed_conditioned_rows": 1,
+      "completed_conditioned_rows": 2,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
       "full_quantile_rows": 12,
@@ -56,15 +56,15 @@
       "required_physical_rows": 10
     },
     "weakT": {
-      "action_curve_complete": false,
+      "action_curve_complete": true,
       "class": "weakT",
       "class_complete": false,
       "completed_conditioned_rows": 0,
       "completed_physical_branches": 0,
       "completed_physical_rows": 0,
-      "full_quantile_rows": 9,
+      "full_quantile_rows": 10,
       "highest_completed_N50_attempt": 27928.593958686746,
-      "largest_adjacent_gap_decades": 0.3891301897883146,
+      "largest_adjacent_gap_decades": 1.3894211068721385,
       "lowest_completed_N50_attempt": 0.7167329195348477,
       "median_complete_rows": 13,
       "physical_matrix_complete": false,
@@ -142,8 +142,8 @@
       "sha256": "8886c9086b0cb54cf1b1c9a2c727791b752b132d64811dd3e0c63a8083eaec89"
     },
     {
-      "path": "runs/sn_v9_four_class_m1/weakT/action/1225_N90_v1/weak-T/shielded/sigmaA_1225MPa/sn_stateful_pd_history_partial.csv",
-      "sha256": "29a7f6e1981028deb366addf4c672cd3308005116d2e2505601f8ae57b2c61ab"
+      "path": "runs/sn_v9_four_class_m1/weakT/action/1225_N90_v1/weak-T/shielded/sigmaA_1225MPa/sn_stateful_pd_history.csv",
+      "sha256": "296891bc4be41aafdc290691e52071b22e73e5b7f9330319fb4e60ee95f6d397"
     },
     {
       "path": "runs/sn_v9_four_class_m1/weakT/action/1223_N90_v1/weak-T/shielded/sigmaA_1223MPa/sn_stateful_pd_history_partial.csv",
@@ -212,6 +212,10 @@
     {
       "path": "runs/sn_v9_four_class_m1/DBTT/conditioned/premark_2302_N50_v1/manifest.json",
       "sha256": "e1306431ffc4846a6637a4e602cf3a7156d5b89a9e30fa1888c7181946675547"
+    },
+    {
+      "path": "runs/sn_v9_four_class_m1/DBTT/conditioned/premark_2161_N50_v1/manifest.json",
+      "sha256": "415ad1a905cf83bfb3629a465d0fcabf3788a8a5fbfe001a20865d4e0d29df5b"
     },
     {
       "path": "runs/sn_v9_four_class_m1/ceramic/conditioned/premark_1340_N50_v1/manifest.json",
