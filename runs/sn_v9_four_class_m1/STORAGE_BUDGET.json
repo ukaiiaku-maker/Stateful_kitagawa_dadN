@@ -1,0 +1,60 @@
+{
+  "schema": "V9_FOUR_CLASS_M1_STORAGE_BUDGET_1",
+  "measurement_commit": "24aba8a",
+  "measurement_date": "2026-08-14",
+  "units": "bytes unless otherwise stated",
+  "measurements": {
+    "conditioned_capsule_weakT_1380_bytes_allocated": 319488,
+    "conditioned_capsule_ceramic_1390_bytes_allocated": 303104,
+    "zero_age_physical_generation_bytes_allocated": 475136,
+    "active_physical_generation_bytes_allocated": 8486912,
+    "maximum_observed_generation_bytes_allocated": 8486912,
+    "maximum_temporary_atomic_write_bytes": 8486912,
+    "completed_sparse_peak_branch_bytes_allocated": 44150784,
+    "free_space_at_measurement_bytes": 16945278976
+  },
+  "measurement_sources": {
+    "conditioned_capsule_weakT": "runs/sn_v9_four_class_m1/weakT/conditioned/premark_1380_N50_v1",
+    "conditioned_capsule_ceramic": "runs/sn_v9_four_class_m1/ceramic/conditioned/premark_1390_N50_v1",
+    "completed_sparse_peak_branch": "runs/sn_v9_shared_root_m1_peak/sn_matrix_v1/front_2500/B000",
+    "zero_age_generation": "generation_ba766c5be3e047a1bc427d207626d24c",
+    "active_and_maximum_generation": "generation_1c769d24f6724321904412c79d8eecf1"
+  },
+  "atomic_write_budget": {
+    "two_full_generation_writes_bytes": 16973824,
+    "fixed_safety_reserve_bytes": 10737418240,
+    "fixed_safety_reserve_basis": "retained 10 GiB hard floor from the governing production plan",
+    "minimum_required_free_bytes": 10754392064,
+    "measured_headroom_above_minimum_bytes": 6190886912,
+    "permitted_new_physical_branch_concurrency": 1
+  },
+  "rolling_retention": {
+    "retain": [
+      "conditioned zero-age generation",
+      "healing or stabilization boundary",
+      "first softening boundary",
+      "root-connection boundary",
+      "front-capture or administrative-censor boundary",
+      "current ACTIVE generation",
+      "one previous hash-verified restart generation",
+      "compact history/controller/manifest files"
+    ],
+    "remove_after_new_active_hash_verification": [
+      "superseded intermediate physical generations"
+    ],
+    "never_remove": [
+      "exact action histories",
+      "source/replay final generations",
+      "conditioned capsules",
+      "event-boundary generations",
+      "final branch states",
+      "manifests and hashes"
+    ]
+  },
+  "launch_policy": {
+    "pd_image_policy": "none",
+    "one_new_physical_branch_at_a_time": true,
+    "required_free_space_expression": "fixed_safety_reserve_bytes + 2 * maximum_temporary_atomic_write_bytes",
+    "storage_limits_concurrency_not_campaign_progress": true
+  }
+}
